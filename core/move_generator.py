@@ -73,7 +73,7 @@ class Move_generator:
                 current_rank = square // 9
                 current_file = square - current_rank * 9
                 max_difference = max(abs(current_rank - target_rank), abs(current_file - target_file))
-                if max_difference > 2 or target_square < 0:
+                if max_difference > 2 or not -1 < target_square < 90:
                     continue
                 horse_moves[square].append((square, target_square))
 
@@ -117,25 +117,26 @@ class Move_generator:
 
     def generate_horse_moves(self, current_square):
         legal_moves = self.horse_moves[current_square]
+        illegal_moves = set()
 
         for dir_idx in range(4):
-            blocking_square = current_square + Move_generator.dir_offsets[dir_idx]
             if self.dist_to_edge[current_square][dir_idx] < 1:
-                print("OOB")
                 continue
+
+            blocking_square = current_square + self.dir_offsets[dir_idx]
             is_blocking_move = self.board.squares[blocking_square]
             if is_blocking_move:
-                print("BLOOOOOOOCK")
                 blocked_squares = [current_square + self.horse_jumps[dir_idx * 2 - i] for i in range(2)]
-                self.illegal_moves.add((current_square, blocked_squares[0]))
-                self.illegal_moves.add((current_square, blocked_squares[1]))
-        legal_moves = list(set(legal_moves) - self.illegal_moves)
+
+                illegal_moves.add((current_square, blocked_squares[0]))
+                illegal_moves.add((current_square, blocked_squares[1]))
+        legal_moves = list(set(legal_moves) - illegal_moves)
         # legal_moves = list(filter(lambda move: move in illegal_moves, legal_moves))
 
 
         for move in legal_moves:
             target_square = move[1]
-
+            print(target_square)
             if self.board.squares[target_square]:
                 target_piece = self.board.squares[target_square]
                 if target_piece[0] == self.friendly:

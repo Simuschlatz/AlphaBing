@@ -133,7 +133,7 @@ def human_event_handler(event, board, game, m_g):
         selected_piece= None
 
 def main():
-    board = Board("3h/3h/R")
+    board = Board(INITIAL_FEN)
     game = Game(True, 610, "Papa", "Mama")
     m_g = Move_generator(board)
     m_g.load_moves(game.color_to_move)
