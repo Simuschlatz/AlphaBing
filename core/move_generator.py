@@ -111,7 +111,6 @@ class Move_generator:
                 # All of the target squares' only move is back to the 
                 # palace_middle_square, so add move to target_square and back
                 advisor_moves[color][middle_square] = advisor_moves[color].get(middle_square, []) + [target_square]
-                # only one move from palast's corners, so no .get()
                 advisor_moves[color][target_square] = advisor_moves[color].get(target_square, []) + [middle_square]
         return advisor_moves
 
