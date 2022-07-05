@@ -1,8 +1,3 @@
-from distutils.command.build_scripts import first_line_re
-from os import stat
-from turtle import pos
-
-from numpy import block
 from piece import Piece
 
 class Move_generator:

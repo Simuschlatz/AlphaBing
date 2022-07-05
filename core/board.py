@@ -1,6 +1,6 @@
 from piece import Piece
-from game import Game
 import numpy as np
+
 class Board:
     WIDTH = 691
     HEIGHT = 778
