@@ -10,7 +10,7 @@
 - alpha-beta pruning
 - iterative deepening
 
-### Computer Vision
+### Computer Vision (not implemented yet)
 - supervised learning with tensorflow
 - classification on physical board (types & positions)
 
