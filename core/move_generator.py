@@ -5,11 +5,10 @@ class Move_generator:
     dir_offsets = [-9, 1, 9, -1, -8, 10, 8, -10]
     def __init__(self, board) -> None:
         # Was too lazy counting the offsets by force, required to be in a specific order
-        self.horse_jumps = self.jumps_from_orthogonal_offsets()
+        self.dir_offsets.extend(self.jumps_from_orthogonal_offsets())
         self.dist_to_edge = self.precompute_dists()
         self.moves = set()
         self.illegal_moves = set()
-        # Here you wouldn't have to add the -9, but it makes moves generation a lot easier
         self.horse_moves = self.precompute_horse_moves()
         self.board = board
         self.friendly = None
@@ -62,12 +61,19 @@ class Move_generator:
         return horse_offsets
 
     def precompute_horse_moves(self) -> list:
-        dir_offsets = Move_generator.dir_offsets[:4] + [-9]
+        """
+        :return: a list of tuples containing the start and end indices of all possible horse moves
+        """
+        # (not accounting for move blocks, )
+
+        horse_offsets = self.dir_offsets[8:16]
         horse_moves = []
         for square in range(89):
             horse_moves.append([])
             for dir_index in range(8):
-                target_square = square + self.horse_jumps[dir_index]
+                # board is a 1d array, so if jump is outside of file (illegal), it will just jump to new rank
+                # fix to illegal jumps perceived as legal by computer 
+                target_square = square + horse_offsets[dir_index]
                 target_rank = target_square // 9
                 target_file = target_square - target_rank * 9
                 current_rank = square // 9
@@ -81,7 +87,7 @@ class Move_generator:
 
     def load_moves(self, color_to_move) -> list:
         """
-        :return: a tuple containing the start and end indices of all possible moves
+        :return: a list of tuples containing the start and end indices of all possible moves
         color_to_move : int
         """
         # variable "color_to_move" can be used for indexing and determining the color of piece 
@@ -109,16 +115,15 @@ class Move_generator:
     def generate_king_moves():
         pass
 
-    def generate_cannon_moves(self, square):
-        pass
-
     def generate_diagonal_moves():
         pass
 
     def generate_horse_moves(self, current_square):
+        horse_offsets = self.dir_offsets[8:16]
         legal_moves = self.horse_moves[current_square]
         illegal_moves = set()
 
+        # removing moves blocked by other pieces
         for dir_idx in range(4):
             if self.dist_to_edge[current_square][dir_idx] < 1:
                 continue
@@ -126,10 +131,13 @@ class Move_generator:
             blocking_square = current_square + self.dir_offsets[dir_idx]
             is_blocking_move = self.board.squares[blocking_square]
             if is_blocking_move:
-                blocked_squares = [current_square + self.horse_jumps[dir_idx * 2 - i] for i in range(2)]
-
+                
+                # make use of the order of horse_jumps
+                # use the dir_idx for calculating the blocking square to also get the moves blocked by it
+                blocked_squares = [current_square + horse_offsets[dir_idx * 2 - i] for i in range(2)]
                 illegal_moves.add((current_square, blocked_squares[0]))
                 illegal_moves.add((current_square, blocked_squares[1]))
+
         legal_moves = list(set(legal_moves) - illegal_moves)
         # legal_moves = list(filter(lambda move: move in illegal_moves, legal_moves))
 

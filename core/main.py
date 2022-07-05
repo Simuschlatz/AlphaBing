@@ -62,9 +62,11 @@ def draw_moves(board, target_indices):
     for index in target_indices:
         file = index % 9
         rank = index // 9
-        x = OFFSET_X + (file + 0.5) * board.UNIT - CIRCLE_DIAMETER / 2
-        y = OFFSET_Y + (rank + 0.5) * board.UNIT - CIRCLE_DIAMETER / 2
-        pygame.draw.ellipse(WIN, (0, 0, 250), (x, y, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
+        x = OFFSET_X + (file + 0.5) * board.UNIT
+        y = OFFSET_Y + (rank + 0.5) * board.UNIT
+        if board.squares[index]:
+            pygame.draw.rect(WIN, RED, (x - board.UNIT / 2, y - board.UNIT / 2, board.UNIT, board.UNIT))
+        pygame.draw.ellipse(WIN, RED, (x, y, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
 
 def draw(board, legal_target_squares, remainig_times):
     WIN.fill((209, 188, 140))
