@@ -16,4 +16,4 @@
 
 ### Move Generation
 - precomputed data + procedual generation
-- finished: rook, cannon, horse
+- finished: rook, cannon, horse, advisor
