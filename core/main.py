@@ -31,7 +31,7 @@ DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", FONT_SIZE)
 # sys.path.append("/Xiangqi/assets")
 _pieces_img = pygame.image.load(os.path.join("assets/imgs", "high_res (1).png"))
 pieces_img = [_pieces_img.subsurface(j * 77, i * 77, 75, 72) for i in range(2) for j in range(7)]
-board_img = pygame.image.load(os.path.join("assets", "clean_board.png"))
+board_img = pygame.image.load(os.path.join("assets/imgs", "clean_board.png"))
 pygame.display.set_icon(pieces_img[0])
 
 INITIAL_FEN = "rheakaehr/9/1c5c/p1p1p1p1p/9/9/P1P1P1P1P/1C5C/9/RHEAKAEHR"
@@ -64,13 +64,14 @@ def draw_moves(board, target_indices):
         rank = index // 9
         x = OFFSET_X + (file + 0.5) * board.UNIT
         y = OFFSET_Y + (rank + 0.5) * board.UNIT
+        # If piece on target, it must be opponent's, otherwise it would've been removed
         if board.squares[index]:
             pygame.draw.rect(WIN, RED, (x - board.UNIT / 2, y - board.UNIT / 2, board.UNIT, board.UNIT))
         pygame.draw.ellipse(WIN, RED, (x, y, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
 
 def draw(board, legal_target_squares, remainig_times):
     WIN.fill((209, 188, 140))
-    WIN.blit(board_img, (OFFSET_X, OFFSET_Y))
+    WIN.blit(board_img, (OFFSET_X + board.UNIT / 2, OFFSET_Y + board.UNIT / 2))
     move_feedback(board)
 
     # Drawing reamining time
@@ -107,8 +108,10 @@ def human_event_handler(event, board, game, m_g):
 
         # Check if selected square is not empty
         if board.squares[rank * 9 + file]:
-            # If not a friendly color return
-            if rank * 9 + file not in board.piece_square[game.color_to_move]:
+            current_square = rank * 9 + file
+            
+            # If not a friendly color or no moves possible return
+            if current_square not in board.piece_square[game.color_to_move] or current_square not in m_g.target_squares:
                 return
             selected_square = rank * 9 + file
             selected_piece = board.squares[selected_square]

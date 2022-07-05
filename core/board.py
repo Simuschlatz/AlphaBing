@@ -43,7 +43,6 @@ class Board:
                 file += 1
             if char.isdigit():
                 file += int(char)
-        print(self.piece_square)
 
     def load_fen_from_board(self) -> str:
         """:return: a Forsyth-Edwards-Notation (FEN) string from the current board
@@ -76,7 +75,6 @@ class Board:
 
         if target_square in self.piece_square[1 - color_to_move]:
             self.piece_square[1 - color_to_move].remove(target_square)
-        print(self.piece_square)
 
         if is_human_move:
             self.make_human_move(piece, target_square)
