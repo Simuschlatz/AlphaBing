@@ -1,3 +1,4 @@
+from multiprocessing.pool import INIT
 import pygame
 import os
 from board import Board
@@ -19,20 +20,44 @@ GREY = (200, 200, 200)
 
 WIDTH = 1200
 HEIGHT = 1000
+UNIT = 80
 FONT_SIZE = 50
 CIRCLE_DIAMETER = 15
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Xiangqi")
-
 pygame.font.init()
+pygame.mixer.init()
+
 DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", FONT_SIZE)
 
-# sys.path.append("/Xiangqi/assets")
-_pieces_img = pygame.image.load(os.path.join("assets/imgs", "high_res (1).png"))
-pieces_img = [_pieces_img.subsurface(j * 77, i * 77, 75, 72) for i in range(2) for j in range(7)]
+pieces_file_names = ["general.png",
+                     "elephant.png",
+                     "advisor.png",
+                     "cannon.png",
+                     "soldier.png",
+                     "rook.png",
+                     "horse.png"]
+# _pieces_img = pygame.image.load(os.path.join("assets/imgs/Pieces", "all_pieces.png"))
+# pieces_imgs = [_pieces_img.subsurface(j * 77, i * 77, 75, 72) for i in range(2) for j in range(7)]
+pieces_style_western = False
+_pieces_imgs = [pygame.image.load(os.path.join("assets/imgs/Pieces", file_name))
+                 for file_name in pieces_file_names]
+size_img = _pieces_imgs[0].get_size()
+piece_width, piece_height = size_img[0] / 4, size_img[1]
+
+pieces_imgs = [img.subsurface((color * piece_width * 2 + pieces_style_western * piece_width, 0,
+                                piece_width, piece_height)) 
+                for color in [1, 0] for img in _pieces_imgs]
+
+pieces_imgs = [pygame.transform.scale(img, (UNIT, UNIT)) for img in pieces_imgs]
 board_img = pygame.image.load(os.path.join("assets/imgs", "clean_board.png"))
-pygame.display.set_icon(pieces_img[0])
+board_img = pygame.transform.scale(board_img, (UNIT * 8, UNIT * 9))
+
+move_sfx = pygame.mixer.Sound("assets/sfx/move.wav")
+capture_sfx = pygame.mixer.Sound("assets/sfx/capture.wav")
+
+pygame.display.set_icon(pieces_imgs[1])
 
 INITIAL_FEN = "rheakaehr/9/1c5c/p1p1p1p1p/9/9/P1P1P1P1P/1C5C/9/RHEAKAEHR"
 
@@ -40,15 +65,15 @@ def move_feedback(board):
     if selected_square != None:
         l_file = selected_square % 9
         l_rank = selected_square // 9
-        l_x = OFFSET_X + l_file * board.UNIT
-        l_y = OFFSET_Y + l_rank * board.UNIT
-        pygame.draw.ellipse(WIN, (220, 200, 140), (l_x + board.UNIT / 3, l_y + board.UNIT / 3, board.UNIT / 3, board.UNIT / 3))
+        l_x = OFFSET_X + l_file * UNIT
+        l_y = OFFSET_Y + l_rank * UNIT
+        pygame.draw.ellipse(WIN, (220, 200, 140), (l_x + UNIT / 3, l_y + UNIT / 3, UNIT / 3, UNIT / 3))
     if moved_to != None:
         c_file = moved_to % 9
         c_rank = moved_to // 9
-        c_x = OFFSET_X + c_file * board.UNIT
-        c_y = OFFSET_Y + c_rank * board.UNIT
-        pygame.draw.rect(WIN, (220, 200, 140), (c_x, c_y, board.UNIT, board.UNIT))
+        c_x = OFFSET_X + c_file * UNIT
+        c_y = OFFSET_Y + c_rank * UNIT
+        pygame.draw.rect(WIN, (220, 200, 140), (c_x, c_y, UNIT, UNIT))
 
 OFFSET_X = (WIDTH - Board.WIDTH) / 2
 OFFSET_Y = (HEIGHT - Board.HEIGHT) / 2
@@ -62,16 +87,16 @@ def draw_moves(board, target_indices):
     for index in target_indices:
         file = index % 9
         rank = index // 9
-        x = OFFSET_X + (file + 0.5) * board.UNIT
-        y = OFFSET_Y + (rank + 0.5) * board.UNIT
+        x = OFFSET_X + (file + 0.5) * UNIT
+        y = OFFSET_Y + (rank + 0.5) * UNIT
         # If piece on target, it must be opponent's, otherwise it would've been removed
         if board.squares[index]:
-            pygame.draw.rect(WIN, RED, (x - board.UNIT / 2, y - board.UNIT / 2, board.UNIT, board.UNIT))
+            pygame.draw.rect(WIN, RED, (x - UNIT / 2, y - UNIT / 2, UNIT, UNIT))
         pygame.draw.ellipse(WIN, RED, (x, y, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
 
 def draw(board, legal_target_squares, remainig_times):
-    WIN.fill((209, 188, 140))
-    WIN.blit(board_img, (OFFSET_X + board.UNIT / 2, OFFSET_Y + board.UNIT / 2))
+    WIN.fill((230, 205, 160))
+    WIN.blit(board_img, (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2))
     move_feedback(board)
 
     # Drawing reamining time
@@ -88,12 +113,12 @@ def draw(board, legal_target_squares, remainig_times):
         if piece:
             file = i % 9
             rank = i // 9
-            WIN.blit(pieces_img[piece[0] * 7 + piece[1]], (OFFSET_X + file * board.UNIT, OFFSET_Y + rank * board.UNIT))
+            WIN.blit(pieces_imgs[piece[0] * 7 + piece[1]], (OFFSET_X + file * UNIT, OFFSET_Y + rank * UNIT))
     
     #Dragging the selected piece
     if selected_piece:
         mouse_pos = pygame.mouse.get_pos()
-        WIN.blit(pieces_img[selected_piece[0] * 7 + selected_piece[1]], (mouse_pos[0] - (board.UNIT // 2), (mouse_pos[1] - board.UNIT // 2)))
+        WIN.blit(pieces_imgs[selected_piece[0] * 7 + selected_piece[1]], (mouse_pos[0] - (UNIT // 2), (mouse_pos[1] - UNIT // 2)))
     
     pygame.display.update()
 
@@ -104,7 +129,7 @@ def human_event_handler(event, board, game, m_g):
 
         # Account for the offsets the board's (0,0) coordinate is replaced by on the window
         mouse_pos_on_board = (mouse_pos[0] - OFFSET_X, mouse_pos[1] - OFFSET_Y)
-        file, rank = Board.get_board_pos(mouse_pos_on_board, board.UNIT)
+        file, rank = Board.get_board_pos(mouse_pos_on_board, UNIT)
 
         # Check if selected square is not empty
         if board.squares[rank * 9 + file]:
@@ -123,15 +148,23 @@ def human_event_handler(event, board, game, m_g):
     if event.type == pygame.MOUSEBUTTONUP and selected_piece:
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_on_board = (mouse_pos[0] - OFFSET_X, mouse_pos[1] - OFFSET_Y)
-        file, rank = Board.get_board_pos(mouse_pos_on_board, board.UNIT)
+        file, rank = Board.get_board_pos(mouse_pos_on_board, UNIT)
         target_square = rank * 9 + file
         # Check whether move is legal
         if target_square not in m_g.target_squares[selected_square]:
             board.squares[selected_square] = selected_piece
             selected_piece = None
             return
+
+        if board.squares[target_square]:
+            capture_sfx.play()
+        else:
+            move_sfx.play()
+
         moved_to = target_square
+
         board.make_move(selected_square, target_square, game.color_to_move, is_human_move=True, piece=selected_piece)
+
         game.switch_player_to_move()
         # Load moves for next player
         m_g.load_moves(game.color_to_move)
