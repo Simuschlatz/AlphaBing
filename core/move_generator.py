@@ -7,10 +7,18 @@ class Move_generator:
         # Was too lazy counting the offsets by force, required to be in a specific order
         self.dir_offsets.extend(self.jumps_from_orthogonal_offsets())
         self.dist_to_edge = self.precompute_dists()
+
         self.moves = set()
         self.illegal_moves = set()
+
         self.horse_moves = self.precompute_horse_moves()
         self.advisor_moves = self.precompute_advisor_moves()
+        # Used to determine whether pawn can push foward
+        self.is_foward_move = (lambda rank: 0 < rank < 7, lambda rank: 9 > rank > 2)
+        # Used to determine whether pawn can move sideways (after crossing river)
+        self.crossed_river = (lambda rank: rank < 5, lambda rank: rank > 4)
+
+        self.pawn_moves = self.precompute_pawn_moves()
         self.board = board
         self.friendly = None
         self.target_squares = {}
@@ -48,6 +56,11 @@ class Move_generator:
 
     @staticmethod
     def jumps_from_orthogonal_offsets():
+        """
+        :return: a list of integers representing the offsets of a horse jump,
+        ordered in a way where precompute_horse_moves() can use them to exclude
+        illegal moves blocked by a piece
+        """
         horse_offsets = []
         dir_offsets = Move_generator.dir_offsets[:4] + [-9]
 
@@ -89,15 +102,16 @@ class Move_generator:
     def precompute_advisor_moves(self):
         """
         :return: a list of two dictionaries containing all start indices as keys 
-        and the possible targets of those positions as value \n
+        and the possible targets of those positions as value of a particular color\n
         output : [{-12: [-20, -2, -4, -22], -20: [-12], -2: ...}, {...}]
         """
         advisor_moves = []
-        #______
+        # _____
         #|\ | /|
         #|--+--| the + marks the middle
         #|/ | \| of the so-called palace
-        #-------
+        # -----
+
         palace_middle_squares = [89 - 13, 13]
         for color in range(2):
             advisor_moves.append({})
@@ -114,6 +128,27 @@ class Move_generator:
                 advisor_moves[color][target_square] = advisor_moves[color].get(target_square, []) + [middle_square]
         return advisor_moves
 
+    def precompute_pawn_moves(self):
+        pawn_moves = []
+        dir_idx_push_move = [-9, 9]
+        for color in range(2):
+            pawn_moves.append({})
+            for square in range(89):
+                rank = square // 9
+                is_river_crossed = self.crossed_river[color](rank)
+                is_foward_move = self.is_foward_move[color](rank)
+                if is_river_crossed:
+                    for dir_idx in [1, 3]:
+                        if self.dist_to_edge[square][dir_idx] < 1:
+                            continue
+                        offset = self.dir_offsets[dir_idx]
+                        pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
+                if is_foward_move:
+                    offset = dir_idx_push_move[color]
+                    pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
+        return pawn_moves
+        
+            
     def load_moves(self, color_to_move) -> list:
         """
         :return: a list of tuples containing the start and end indices of all possible moves
@@ -138,14 +173,26 @@ class Move_generator:
                 self.generate_horse_moves(square)
             if piece_type == Piece.advisor:
                 self.generate_advisor_moves(square)
+            if piece_type == Piece.pawn:
+                self.generate_pawn_moves(square)
             # if piece_type == Piece.king:
             #     self.generate_king_moves()
         print(self.moves)
         return self.moves
 
+    def generate_pawn_moves(self, current_square):
+        moves = self.pawn_moves[self.friendly][current_square]
+        for target_square in moves:
+            if self.board.squares[target_square]:
+                piece = self.board.squares[target_square]
+                if piece[0] == self.friendly:
+                    continue
+            self.moves.add((current_square, target_square))
+            self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
+
     def generate_king_moves():
         pass
-    
+
     def generate_advisor_moves(self, current_square):
         moves = self.advisor_moves[self.friendly][current_square]
         
