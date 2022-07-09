@@ -5,7 +5,6 @@ class Board:
     WIDTH = 691
     HEIGHT = 778
     initial_fen = "pheakaehp/9/1c5c/p1p1p1p1p/9/9/P1P1P1P1P/1C5C/9/PHEAKAEHP"
-    UNIT = 78
     def __init__(self, FEN) -> None:
         self.squares = list(np.zeros(90, dtype=np.int16))
         # To keep track of the pieces' indices
@@ -28,7 +27,7 @@ class Board:
         """Loads a board from Forsyth-Edwards-Notation (FEN)
         White: upper case
         Red: lower case
-        King:K, Advisor:A, Elephant:E, Rook:R, Cannon:C, Horse:H, PAWN:P
+        King:K, Advisor:A, Elephant:E, Rook:R, Cannon:C, Horse:H, Pawn:P
         """
         file, rank = 0, 0
         for char in FEN:
@@ -73,14 +72,17 @@ class Board:
         self.piece_square[color_to_move].remove(selected_square)  
         self.piece_square[color_to_move].append(target_square)
 
+        is_capture = False
+
         if target_square in self.piece_square[1 - color_to_move]:
             self.piece_square[1 - color_to_move].remove(target_square)
-
+            is_capture = True
         if is_human_move:
             self.make_human_move(piece, target_square)
-            return
+            return is_capture
         self.squares[target_square] = self.squares[selected_square]
         self.squares[selected_square] = 0
+        return is_capture
 
     def make_human_move(self, piece, target_square):
         self.squares[target_square] = piece

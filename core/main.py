@@ -40,7 +40,7 @@ pieces_file_names = ["general.png",
                      "horse.png"]
 # _pieces_img = pygame.image.load(os.path.join("assets/imgs/Pieces", "all_pieces.png"))
 # pieces_imgs = [_pieces_img.subsurface(j * 77, i * 77, 75, 72) for i in range(2) for j in range(7)]
-pieces_style_western = False
+pieces_style_western = True
 _pieces_imgs = [pygame.image.load(os.path.join("assets/imgs/Pieces", file_name))
                  for file_name in pieces_file_names]
 size_img = _pieces_imgs[0].get_size()
@@ -91,7 +91,7 @@ def draw_moves(board, target_indices):
         y = OFFSET_Y + (rank + 0.5) * UNIT
         # If piece on target, it must be opponent's, otherwise it would've been removed
         if board.squares[index]:
-            pygame.draw.rect(WIN, RED, (x - UNIT / 2, y - UNIT / 2, UNIT, UNIT))
+            pygame.draw.ellipse(WIN, RED, (x - UNIT / 2 - 4, y - UNIT / 2 - 4, UNIT + 8, UNIT + 8))
         pygame.draw.ellipse(WIN, RED, (x, y, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
 
 def draw(board, legal_target_squares, remainig_times):
@@ -168,7 +168,7 @@ def human_event_handler(event, board, game, m_g):
         game.switch_player_to_move()
         # Load moves for next player
         m_g.load_moves(game.color_to_move)
-        selected_piece= None
+        selected_piece, selected_square = None, None
 
 def main():
     board = Board(INITIAL_FEN)
