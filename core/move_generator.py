@@ -1,3 +1,4 @@
+from re import S
 from piece import Piece
 
 class Move_generator:
@@ -13,11 +14,7 @@ class Move_generator:
 
         self.horse_moves = self.precompute_horse_moves()
         self.advisor_moves = self.precompute_advisor_moves()
-        # Used to determine whether pawn can push foward
-        self.is_foward_move = (lambda rank: 0 < rank < 7, lambda rank: 9 > rank > 2)
-        # Used to determine whether pawn can move sideways (after crossing river)
-        self.crossed_river = (lambda rank: rank < 5, lambda rank: rank > 4)
-
+        self.elephant_moves = self.precompute_elephant_moves()
         self.pawn_moves = self.precompute_pawn_moves()
         self.board = board
         self.friendly = None
@@ -55,7 +52,7 @@ class Move_generator:
         return distances
 
     @staticmethod
-    def jumps_from_orthogonal_offsets():
+    def jumps_from_orthogonal_offsets() -> list:
         """
         :return: a list of integers representing the offsets of a horse jump,
         ordered in a way where precompute_horse_moves() can use them to exclude
@@ -92,18 +89,18 @@ class Move_generator:
                 target_file = target_square - target_rank * 9
                 current_rank = square // 9
                 current_file = square - current_rank * 9
-                max_difference = max(abs(current_rank - target_rank), abs(current_file - target_file))
-                if max_difference > 2 or not -1 < target_square < 90:
+                max_dist = max(abs(current_rank - target_rank), abs(current_file - target_file))
+                if max_dist > 2 or not -1 < target_square < 90:
                     continue
                 horse_moves[square].append((square, target_square))
 
         return horse_moves
 
-    def precompute_advisor_moves(self):
+    def precompute_advisor_moves(self) -> list:
         """
         :return: a list of two dictionaries containing all start indices as keys 
         and the possible targets of those positions as value of a particular color\n
-        output : [{-12: [-20, -2, -4, -22], -20: [-12], -2: ...}, {...}]
+        output form : [{-12: [-20, -2, -4, -22], -20: [-12], -2: ...}, {...}]
         """
         advisor_moves = []
         # _____
@@ -128,27 +125,82 @@ class Move_generator:
                 advisor_moves[color][target_square] = advisor_moves[color].get(target_square, []) + [middle_square]
         return advisor_moves
 
-    def precompute_pawn_moves(self):
+    def precompute_pawn_moves(self) -> list:
+        """
+        :return: a list of two dictionaries containing all start indices as keys 
+        and the possible targets of those positions as value of a particular color\n
+        output form : [{-12: [-20, -2, -4, -22], -20: [-12], -2: ...}, {...}]
+        """
         pawn_moves = []
-        dir_idx_push_move = [-9, 9]
+        offset_push_move = [-9, 9]
+
+        # Used to determine whether pawn can push foward
+        is_foward_move = (lambda rank: 0 < rank < 7, lambda rank: 9 > rank > 2)
+        # Used to determine whether pawn can move sideways (after crossing river)
+        is_river_crossed = (lambda rank: rank < 5, lambda rank: rank > 4)
+
         for color in range(2):
             pawn_moves.append({})
             for square in range(89):
                 rank = square // 9
-                is_river_crossed = self.crossed_river[color](rank)
-                is_foward_move = self.is_foward_move[color](rank)
-                if is_river_crossed:
+                river_crossed = is_river_crossed[color](rank)
+                foward_move = is_foward_move[color](rank)
+                if river_crossed:
                     for dir_idx in [1, 3]:
                         if self.dist_to_edge[square][dir_idx] < 1:
                             continue
                         offset = self.dir_offsets[dir_idx]
                         pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
                 if is_foward_move:
-                    offset = dir_idx_push_move[color]
+                    offset = offset_push_move[color]
                     pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
         return pawn_moves
         
-            
+    def precompute_elephant_moves(self) -> list:
+        """
+        :return: a list of two dictionaries containing all start indices as keys 
+        and the possible targets of those positions as value of a particular color\n
+        output form : [{-12: [-20, -2, -4, -22], -20: [-12], -2: ...}, {...}]
+        """
+        elephant_moves = []
+        offsets = self.dir_offsets[4:8]
+
+        # if the normal range() function is used every time, is_river_crossed will be True 
+        # in the first iteration of white color / color = 0, so go backwards from last rank
+                                # Equivalent to "reversed(range(start + 1, stop + 1, step))"
+        iteration_sequence = (lambda start, stop, step: range(stop - 1, start - 1, -step),
+                            lambda start, stop, step: range(start, stop, step))
+        # Used to determine whether move or current position crosses river (in which case it's illegal)
+        is_river_crossed = (lambda rank: rank < 5, lambda rank: rank > 4)
+
+        for color in range(2):
+            elephant_moves.append({})
+            for rank in iteration_sequence[color](0, 10, 2):
+                # If current position crossed river, go to next color
+                if is_river_crossed[color](rank):
+                    break
+
+                for file in range(0, 9, 2):
+                    square = rank * 9 + file
+                    for offset in offsets:
+                        target_square = square + offset * 2
+                        # Avoiding moves to negative squares
+                        if not -1 < target_square < 90:
+                            continue
+
+                        target_rank = target_square // 9
+                        move_crosses_river = is_river_crossed[color](target_rank)
+                        if move_crosses_river:
+                            continue
+                        
+                        target_file = target_square % 9
+                        # Avoiding moves out of bounds, see "precompute_horse_moves()"
+                        max_dist = max(abs(target_rank - rank), abs(target_file - file))
+                        if max_dist > 2:
+                            continue
+                        elephant_moves[color][square] = elephant_moves[color].get(square, []) + [target_square]
+        return elephant_moves
+
     def load_moves(self, color_to_move) -> list:
         """
         :return: a list of tuples containing the start and end indices of all possible moves
@@ -166,47 +218,85 @@ class Move_generator:
             piece_type = self.board.squares[square][1]
             
             if piece_type == Piece.rook:
-                self.generate_sliding_moves(square, False)
+                self.generate_rook_moves(square)
             if piece_type == Piece.cannon:
-                self.generate_sliding_moves(square, True)
+                self.generate_cannon_moves(square)
             if piece_type == Piece.horse:
                 self.generate_horse_moves(square)
             if piece_type == Piece.advisor:
                 self.generate_advisor_moves(square)
             if piece_type == Piece.pawn:
                 self.generate_pawn_moves(square)
-            # if piece_type == Piece.king:
-            #     self.generate_king_moves()
-        print(self.moves)
+            if piece_type == Piece.elephant:
+                self.generate_elephant_moves(square)
+        
         return self.moves
 
     def generate_pawn_moves(self, current_square):
-        moves = self.pawn_moves[self.friendly][current_square]
-        for target_square in moves:
-            if self.board.squares[target_square]:
-                piece = self.board.squares[target_square]
-                if piece[0] == self.friendly:
-                    continue
+        """
+        extends move_generator.moves with legal pawn moves
+        """
+        target_squares = self.pawn_moves[self.friendly][current_square]
+        for target_square in target_squares:
+
+            target_piece = self.board.squares[target_square]
+            # Checking if target_piece is friendly while avoiding Errors 
+            # (piece is equal to 0 when target_square is empty) so piece[0] would raise TypeError
+            is_friendly = target_piece[0] == self.friendly if target_piece else False
+            if is_friendly:
+                continue
+
             self.moves.add((current_square, target_square))
             self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
 
-    def generate_king_moves():
-        pass
+    def generate_elephant_moves(self, current_square):
+        """
+        extends move_generator.moves with legal elephant moves
+        """
+        target_squares = self.elephant_moves[self.friendly][current_square]
+        illegal_squares = set()
+        for dir_idx in range(4, 8):
+            # Checking for blocks
+            if self.dist_to_edge[current_square][dir_idx] < 1:
+                continue
 
-    def generate_advisor_moves(self, current_square):
-        moves = self.advisor_moves[self.friendly][current_square]
+            offset = self.dir_offsets[dir_idx]
+            blocking_square = current_square + offset
+
+            if self.board.squares[blocking_square]:
+                illegal_squares.add(current_square + offset * 2)
+
+        # Removing illegal target squares
+        target_squares = list(set(target_squares) - illegal_squares)
         
-        for target_square in moves:
-            if self.board.squares[target_square]:
-                target_piece = self.board.squares[target_square]
-
-                if target_piece[0] == self.friendly:
-                    continue
+        for target_square in target_squares:
+            target_piece = self.board.squares[target_square]
+            is_friendly = target_piece[0] == self.friendly if target_piece else False
+            if is_friendly:
+                continue
+            
+            self.moves.add((current_square, target_square))
+            self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
+    
+    def generate_advisor_moves(self, current_square):
+        """
+        extends move_generator.moves with legal advisor moves
+        """
+        target_squares = self.advisor_moves[self.friendly][current_square]
+        
+        for target_square in target_squares:
+            target_piece = self.board.squares[target_square]
+            is_friendly = target_piece[0] == self.friendly if target_piece else False
+            if is_friendly:
+                continue
 
             self.moves.add((current_square, target_square))
             self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
         
     def generate_horse_moves(self, current_square):
+        """
+        extends move_generator.moves with legal horse moves
+        """
         horse_offsets = self.dir_offsets[8:16]
         legal_moves = self.horse_moves[current_square]
         illegal_moves = set()
@@ -230,35 +320,26 @@ class Move_generator:
         # legal_moves = list(filter(lambda move: move in illegal_moves, legal_moves))
         for move in legal_moves:
             target_square = move[1]
-            if self.board.squares[target_square]:
-                target_piece = self.board.squares[target_square]
-                if target_piece[0] == self.friendly:
-                    continue
+            target_piece = self.board.squares[target_square]
+            is_friendly = target_piece[0] == self.friendly if target_piece else False
+            if is_friendly:
+                continue
 
             self.moves.add((current_square, target_square))
             self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                 
-    def generate_sliding_moves(self, current_square, is_cannon):
+    def generate_rook_moves(self, current_square) -> None:
+        """
+        extends move_generator.moves with legal rook moves
+        """
         # Going through chosen direction indices
         for dir_index in range(4):
-            piece_along_ray = False
+            target_piece = False
             # "Walking" in direction using direction offsets
             for step in range(self.dist_to_edge[current_square][dir_index]):
-                target_square = current_square + Move_generator.dir_offsets[dir_index] * (step + 1)
-                target_piece = False
+                target_square = current_square + self.dir_offsets[dir_index] * (step + 1)
 
-                if piece_along_ray:
-                    if not self.board.squares[target_square]:
-                        continue
-                    target_piece = self.board.squares[target_square]
-                    if target_piece[0] == self.friendly:
-                        continue
-                        
-                elif self.board.squares[target_square]:
-                    if is_cannon:
-                        piece_along_ray = True
-                        continue
-
+                if self.board.squares[target_square]:
                     target_piece = self.board.squares[target_square]
                     if target_piece[0] == self.friendly:
                         break
@@ -267,5 +348,34 @@ class Move_generator:
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
 
                 # If piece on target square and not friendly, go to next direction
+                if target_piece:
+                    break
+
+    def generate_cannon_moves(self, current_square):
+        """
+        extends move_generator.moves with legal cannon moves
+        """
+        # Going through chosen direction indices
+        for dir_index in range(4):
+            in_attack_mode = False
+            target_piece = False
+            # "Walking" in direction using direction offsets
+            for step in range(self.dist_to_edge[current_square][dir_index]):
+                target_square = current_square + self.dir_offsets[dir_index] * (step + 1)
+
+                if in_attack_mode:
+                    if not self.board.squares[target_square]:
+                        continue
+                    target_piece = self.board.squares[target_square]
+                    # If target_piece is friendly, go to next direction
+                    if target_piece[0] == self.friendly:
+                        break
+                        
+                elif self.board.squares[target_square]:
+                    in_attack_mode = True
+                    continue
+                # If piece on target square and not friendly, add move and go to next direction
+                self.moves.add((current_square, target_square))
+                self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                 if target_piece:
                     break
