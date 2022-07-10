@@ -16,4 +16,5 @@
 
 ### Move Generation
 - precomputed data + procedual generation
-- finished: rook, cannon, horse, advisor, pawn
+- finished: rook, cannon, horse, advisor, pawn, elephant
+- unfinished: king moves, check, checkmate, classifying pinned pieces
