@@ -11,7 +11,7 @@ class Move_generator:
 
         self.moves = set()
         self.illegal_moves = set()
-
+        self.king_moves = self.precompute_king_moves()
         self.horse_moves = self.precompute_horse_moves()
         self.advisor_moves = self.precompute_advisor_moves()
         self.elephant_moves = self.precompute_elephant_moves()
@@ -70,6 +70,48 @@ class Move_generator:
                 new_offset = dir_offsets[dir_index] * first_dir_steps + dir_offsets[second_dir_idx] * second_dir_steps
                 horse_offsets.append(new_offset)
         return horse_offsets
+    
+    @staticmethod
+    def precompute_king_moves() -> list:
+        """
+        :return: a list of one dictionary for one side fo the board each, containing 
+        all start indices as keys and the possible targets of those positions as value\n
+        output form : [{int : [int, int...], int: [int]...}, {...}]
+        """
+        king_moves = []
+        offsets_for_rank = [[9], [9, -9], [-9]]
+        offsets_for_file = [[1], [1, -1], [-1]]
+        
+        # Precalculate offsets for each position in palace 
+        # by combining each rank's offset with that of every file
+        offsets = []
+        for hor in offsets_for_rank:
+            for ver in offsets_for_file:
+                offsets.append(hor + ver)
+
+        # These are the top-left corners of each palace
+        start_squares = [66 , 3]
+        #O-----+
+        #|\ | /|
+        #|--+--| Top-left marked by an "O"
+        #|/ | \|
+        #+-----+
+        
+        for color in range(2):
+            king_moves.append({})
+            # Iterating through each palace
+            for row in range(3):
+                for col in range(3):
+                    current_square = start_squares[color] + row * 9 + col
+                    # Get the offsets for the current position in the palace
+                    dir_idx = row * 3 + col
+                    for offset in offsets[dir_idx]:
+                        target_square = current_square + offset
+                        # Adding target square to current color at current square
+                        king_moves[color][current_square] = king_moves[color].get(current_square, []) + [target_square]
+        print
+        return king_moves
+
 
     def precompute_horse_moves(self) -> list:
         """
@@ -98,16 +140,16 @@ class Move_generator:
 
     def precompute_advisor_moves(self) -> list:
         """
-        :return: a list of two dictionaries containing all start indices as keys 
-        and the possible targets of those positions as value of a particular color\n
-        output form : [{-12: [-20, -2, -4, -22], -20: [-12], -2: ...}, {...}]
+        :return: a list of one dictionary for one side fo the board each, containing 
+        all start indices as keys and the possible targets of those positions as value\n
+        output form : [{int : [int, int...], int: [int]...}, {...}]
         """
         advisor_moves = []
-        # _____
+        #+-----+
         #|\ | /|
-        #|--+--| the + marks the middle
+        #|--O--| the O marks the middle
         #|/ | \| of the so-called palace
-        # -----
+        #+-----+
 
         palace_middle_squares = [89 - 13, 13]
         for color in range(2):
@@ -127,9 +169,9 @@ class Move_generator:
 
     def precompute_pawn_moves(self) -> list:
         """
-        :return: a list of two dictionaries containing all start indices as keys 
-        and the possible targets of those positions as value of a particular color\n
-        output form : [{-12: [-20, -2, -4, -22], -20: [-12], -2: ...}, {...}]
+        :return: a list of one dictionary for one side fo the board each, containing 
+        all start indices as keys and the possible targets of those positions as value\n
+        output form : [{int : [int, int...], int: [int]...}, {...}]
         """
         pawn_moves = []
         offset_push_move = [-9, 9]
@@ -151,16 +193,16 @@ class Move_generator:
                             continue
                         offset = self.dir_offsets[dir_idx]
                         pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
-                if is_foward_move:
+                if foward_move:
                     offset = offset_push_move[color]
                     pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
         return pawn_moves
         
     def precompute_elephant_moves(self) -> list:
         """
-        :return: a list of two dictionaries containing all start indices as keys 
-        and the possible targets of those positions as value of a particular color\n
-        output form : [{-12: [-20, -2, -4, -22], -20: [-12], -2: ...}, {...}]
+        :return: a list of one dictionary for one side fo the board each, containing 
+        all start indices as keys and the possible targets of those positions as value\n
+        output form : [{int : [int, int...], int: [int]...}, {...}]
         """
         elephant_moves = []
         offsets = self.dir_offsets[4:8]
@@ -216,7 +258,8 @@ class Move_generator:
 
         for square in self.board.piece_square[self.friendly]:
             piece_type = self.board.squares[square][1]
-            
+            if piece_type == Piece.king:
+                self.generate_king_moves(square)
             if piece_type == Piece.rook:
                 self.generate_rook_moves(square)
             if piece_type == Piece.cannon:
@@ -229,16 +272,11 @@ class Move_generator:
                 self.generate_pawn_moves(square)
             if piece_type == Piece.elephant:
                 self.generate_elephant_moves(square)
-        
         return self.moves
 
-    def generate_pawn_moves(self, current_square):
-        """
-        extends move_generator.moves with legal pawn moves
-        """
-        target_squares = self.pawn_moves[self.friendly][current_square]
+    def generate_king_moves(self, current_square) -> None:
+        target_squares = self.king_moves[self.friendly][current_square]
         for target_square in target_squares:
-
             target_piece = self.board.squares[target_square]
             # Checking if target_piece is friendly while avoiding Errors 
             # (piece is equal to 0 when target_square is empty) so piece[0] would raise TypeError
@@ -249,7 +287,22 @@ class Move_generator:
             self.moves.add((current_square, target_square))
             self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
 
-    def generate_elephant_moves(self, current_square):
+
+    def generate_pawn_moves(self, current_square) -> None:
+        """
+        extends move_generator.moves with legal pawn moves
+        """
+        target_squares = self.pawn_moves[self.friendly][current_square]
+        for target_square in target_squares:
+            target_piece = self.board.squares[target_square]
+            is_friendly = target_piece[0] == self.friendly if target_piece else False
+            if is_friendly:
+                continue
+
+            self.moves.add((current_square, target_square))
+            self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
+
+    def generate_elephant_moves(self, current_square) -> None:
         """
         extends move_generator.moves with legal elephant moves
         """
@@ -278,7 +331,7 @@ class Move_generator:
             self.moves.add((current_square, target_square))
             self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
     
-    def generate_advisor_moves(self, current_square):
+    def generate_advisor_moves(self, current_square) -> None:
         """
         extends move_generator.moves with legal advisor moves
         """
@@ -293,7 +346,7 @@ class Move_generator:
             self.moves.add((current_square, target_square))
             self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
         
-    def generate_horse_moves(self, current_square):
+    def generate_horse_moves(self, current_square) -> None:
         """
         extends move_generator.moves with legal horse moves
         """
@@ -351,7 +404,7 @@ class Move_generator:
                 if target_piece:
                     break
 
-    def generate_cannon_moves(self, current_square):
+    def generate_cannon_moves(self, current_square) -> None:
         """
         extends move_generator.moves with legal cannon moves
         """

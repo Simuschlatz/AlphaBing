@@ -35,10 +35,10 @@ class Board:
                 rank += 1
                 file = 0
             if char.lower() in Piece.letters:
-                white = char.isupper()
+                red = char.isupper()
                 piece = Piece.letters.index(char.lower())
-                self.squares[rank * 9 + file] = (int(not white), piece)
-                self.piece_square[not white].append(rank * 9 + file)
+                self.squares[rank * 9 + file] = (int(red), piece)
+                self.piece_square[red].append(rank * 9 + file)
                 file += 1
             if char.isdigit():
                 file += int(char)

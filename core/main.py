@@ -51,7 +51,7 @@ pieces_imgs = [img.subsurface((color * piece_width * 2 + pieces_style_western * 
                 for color in [1, 0] for img in _pieces_imgs]
 
 pieces_imgs = [pygame.transform.scale(img, (UNIT, UNIT)) for img in pieces_imgs]
-board_img = pygame.image.load(os.path.join("assets/imgs", "clean_board.png"))
+board_img = pygame.image.load(os.path.join("assets/imgs", "board.png"))
 board_img = pygame.transform.scale(board_img, (UNIT * 8, UNIT * 9))
 
 move_sfx = pygame.mixer.Sound("assets/sfx/move.wav")
@@ -59,9 +59,9 @@ capture_sfx = pygame.mixer.Sound("assets/sfx/capture.wav")
 
 pygame.display.set_icon(pieces_imgs[1])
 
-INITIAL_FEN = "rheakaehr/9/1c5c/p1p1p1p1p/9/9/P1P1P1P1P/1C5C/9/RHEAKAEHR"
+INITIAL_FEN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
 
-def move_feedback(board):
+def move_feedback():
     if selected_square != None:
         l_file = selected_square % 9
         l_rank = selected_square // 9
@@ -87,17 +87,18 @@ def draw_moves(board, target_indices):
     for index in target_indices:
         file = index % 9
         rank = index // 9
-        x = OFFSET_X + (file + 0.5) * UNIT
-        y = OFFSET_Y + (rank + 0.5) * UNIT
+        x = OFFSET_X + file * UNIT
+        y = OFFSET_Y + rank * UNIT
         # If piece on target, it must be opponent's, otherwise it would've been removed
         if board.squares[index]:
-            pygame.draw.ellipse(WIN, RED, (x - UNIT / 2 - 4, y - UNIT / 2 - 4, UNIT + 8, UNIT + 8))
-        pygame.draw.ellipse(WIN, RED, (x, y, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
+            pygame.draw.ellipse(WIN, RED, (x - 4, y - 4, UNIT + 8, UNIT + 8))
+        # Here, the -4 is just to correct for the unperfect aspect ratio of the board image
+        pygame.draw.ellipse(WIN, RED, (x + UNIT / 2 - 4, y + UNIT / 2 - 4, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
 
 def draw(board, legal_target_squares, remainig_times):
     WIN.fill((230, 205, 160))
     WIN.blit(board_img, (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2))
-    move_feedback(board)
+    move_feedback()
 
     # Drawing reamining time
     WIN.blit(remainig_times[0], (1000, HEIGHT / 2))
