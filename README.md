@@ -40,7 +40,7 @@
 - iterative deepening
 
 ## Screenshots
-![Example screenshot](./assets/screenshots/10.07.png)
+![Screenshot](./assets/screenshots/10.07.png)
 
 ## Dependencies
 - python 3
