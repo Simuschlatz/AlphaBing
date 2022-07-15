@@ -58,9 +58,9 @@ Project is: _in progress_
 
 
 ## Acknowledgements
-- Research done at chessprogramming.org
+- Research done at [chessprogramming wiki](https://www.chessprogramming.org/)
 - Many thanks to all contributors
 
 
 ## Contact
-Created by @MaSim07 simon.mama07@gmail.com - feel free to contact me!
+Created by [@MaSim07](https://github.com/MaSim07) - feel free to contact me at simon.mama07@gmail.com!
