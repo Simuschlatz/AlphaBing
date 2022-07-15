@@ -21,7 +21,7 @@
 > **What's the purpose of creating the Project?**
 - Artificial Intelligence and especially Machine Learning is very often perceived as this intangibly complicated domain of Computer Science, which is partly true, but not true enough to intimidate people into not even trying to get a fundamental grasp of it.
 - With undertaking this project, I want to show that consistently achieving minor goals, making slow but steady progress, can accumulate to exceeding and superceding human brain capacity.
-- I want people to know that if a normal 14 y/o, just with the help of a computer and research, can understand and implement the basics of AI and ML, can venture into the unknown territory of buzzwords and algorithms, anyone with the same resources can.
+- I want people to know that if a normal 14 y/o, just with the help of a computer and research, can understand and implement the basics of AI and ML, can penetrate the imposing barrier of buzzwords and brainfuck, anyone with the same resources can.
 
 ## Features
 
@@ -30,14 +30,14 @@
 - finished: rook, cannon, horse, advisor, pawn, elephant
 - unfinished: king moves, check, checkmate, classifying pinned pieces
 
-**Computer Vision (not implemented yet)**
-- supervised learning with tensorflow
-- classification on physical board (types & positions)
-
 **Optimized Minimax (not implemented yet)**
 - minimax algorithm
 - alpha-beta pruning
 - iterative deepening
+
+**Computer Vision (not implemented yet)**
+- supervised learning with tensorflow
+- classification on physical board (types & positions)
 
 ## Screenshots
 ![Screenshot](./assets/screenshots/10.07.png)
@@ -58,9 +58,9 @@ Project is: _in progress_
 
 
 ## Acknowledgements
-- This project was inspired by [@SebLague]
+- Research done at chessprogramming.org
 - Many thanks to all contributors
 
 
 ## Contact
-Created by [@MaSim07] simon.mama07@gmail.com - feel free to contact me!
+Created by @MaSim07 simon.mama07@gmail.com - feel free to contact me!
