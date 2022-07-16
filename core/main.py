@@ -18,9 +18,11 @@ DARK_BLUE = (0, 0, 70)
 WHITE = (255, 255, 255)
 GREY = (200, 200, 200)
 
-WIDTH = 1200
+WIDTH = 1500
 HEIGHT = 1000
 UNIT = 80
+BOARD_WIDTH = 9 * UNIT
+BOARD_HEIGHT = 10 * UNIT
 FONT_SIZE = 50
 CIRCLE_DIAMETER = 15
 
@@ -40,7 +42,7 @@ pieces_file_names = ["general.png",
                      "horse.png"]
 # _pieces_img = pygame.image.load(os.path.join("assets/imgs/Pieces", "all_pieces.png"))
 # pieces_imgs = [_pieces_img.subsurface(j * 77, i * 77, 75, 72) for i in range(2) for j in range(7)]
-pieces_style_western = True
+pieces_style_western = False
 _pieces_imgs = [pygame.image.load(os.path.join("assets/imgs/Pieces", file_name))
                  for file_name in pieces_file_names]
 size_img = _pieces_imgs[0].get_size()
@@ -75,13 +77,12 @@ def move_feedback():
         c_y = OFFSET_Y + c_rank * UNIT
         pygame.draw.rect(WIN, (220, 200, 140), (c_x, c_y, UNIT, UNIT))
 
-OFFSET_X = (WIDTH - Board.WIDTH) / 2
-OFFSET_Y = (HEIGHT - Board.HEIGHT) / 2
+OFFSET_X = (WIDTH - BOARD_WIDTH) / 2
+OFFSET_Y = (HEIGHT - BOARD_HEIGHT) / 2
 selected_piece = None
 moved_to = None
 selected_square = None
-start_squares = set()
-target_squares = set()
+previous_targets = {}
 
 def draw_moves(board, target_indices):
     for index in target_indices:
@@ -101,8 +102,8 @@ def draw(board, legal_target_squares, remainig_times):
     move_feedback()
 
     # Drawing reamining time
-    WIN.blit(remainig_times[0], (1000, HEIGHT / 2))
-    WIN.blit(remainig_times[1], (1000, HEIGHT / 2 - FONT_SIZE))
+    WIN.blit(remainig_times[0], (OFFSET_X + UNIT * 9.5, HEIGHT / 2))
+    WIN.blit(remainig_times[1], (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE))
 
     # Check if there's selected piece
     # (not cheking if selected_square as it isn't reset before new moves are generated)
@@ -124,7 +125,7 @@ def draw(board, legal_target_squares, remainig_times):
     pygame.display.update()
 
 def human_event_handler(event, board, game, m_g):
-    global selected_piece, selected_square, moved_to
+    global selected_piece, selected_square, moved_to, previous_targets
     if event.type == pygame.MOUSEBUTTONDOWN:
         mouse_pos = pygame.mouse.get_pos()
 
@@ -137,7 +138,7 @@ def human_event_handler(event, board, game, m_g):
             current_square = rank * 9 + file
             
             # If not a friendly color or no moves possible return
-            if current_square not in board.piece_square[game.color_to_move] or current_square not in m_g.target_squares:
+            if not board.is_friendly_square(current_square) or current_square not in m_g.target_squares:
                 return
             selected_square = rank * 9 + file
             selected_piece = board.squares[selected_square]
@@ -164,21 +165,30 @@ def human_event_handler(event, board, game, m_g):
 
         moved_to = target_square
 
-        board.make_move(selected_square, target_square, game.color_to_move, is_human_move=True, piece=selected_piece)
-
-        game.switch_player_to_move()
+        board.make_human_move(selected_square, target_square, selected_piece)
+        selected_piece = None
+        board.switch_player_to_move()
+        if previous_targets == m_g.target_squares:
+            return
+        previous_targets = m_g.target_squares
         # Load moves for next player
-        m_g.load_moves(game.color_to_move)
-        selected_piece, selected_square = None, None
+        m_g.load_moves()
+
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_SPACE and previous_targets:
+            board.color_to_move = 1 - board.color_to_move
+            board.reverse_move(selected_square, moved_to)
+            m_g.target_squares = previous_targets
+            print(board.color_to_move)
 
 def main():
-    board = Board(INITIAL_FEN)
-    game = Game(True, 610, "Papa", "Mama")
+    game = Game(12, "Papa", "Mama")
+    board = Board(INITIAL_FEN, 1)
     m_g = Move_generator(board)
-    m_g.load_moves(game.color_to_move)
+    m_g.load_moves()
     run = True
     while run:
-        game.run()
+        game.run(board.color_to_move)
         rendered_text = [DISPLAY_FONT.render(f"{game.r_min_tens[0]}{game.r_min_ones[0]}:{game.r_sec_tens[0]}{game.r_sec_ones[0]}", False, (130, 130, 130)),
                         DISPLAY_FONT.render(f"{game.r_min_tens[1]}{game.r_min_ones[1]}:{game.r_sec_tens[1]}{game.r_sec_ones[1]}", False, (130, 130, 130))]
         draw(board, m_g.target_squares, rendered_text)

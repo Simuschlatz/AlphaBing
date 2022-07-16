@@ -8,6 +8,6 @@ class Piece:
     pawn = 4
     rook = 5
     horse = 6
-    white = 0
+    black = 0
     red = 1
     letters = "keacprh"

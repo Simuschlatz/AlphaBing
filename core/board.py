@@ -2,14 +2,19 @@ from piece import Piece
 import numpy as np
 
 class Board:
-    WIDTH = 691
-    HEIGHT = 778
-    initial_fen = "pheakaehp/9/1c5c/p1p1p1p1p/9/9/P1P1P1P1P/1C5C/9/PHEAKAEHP"
-    def __init__(self, FEN) -> None:
+    def __init__(self, FEN: str, color_to_move: int) -> None:
+        self.color_to_move = color_to_move
+        self.opponent_color = 1 - color_to_move
+        # Square-centric board repr
         self.squares = list(np.zeros(90, dtype=np.int16))
-        # To keep track of the pieces' indices
-        self.piece_square = [[], []]
+        self.moved_piece = None
+        self.captured_piece = None
+        # To keep track of the pieces' indices (Piece-centric repr)
+        self.piece_lists = [[set() for i in range(7)] for i in range(2)]
+        # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
+        print(self.piece_lists)
+
 
     @staticmethod
     def get_board_pos(mouse_pos, unit) -> tuple:
@@ -20,12 +25,24 @@ class Board:
         rank = min(9, max(rank, 0))
         file = min(8, max(file, 0))
         return file, rank
-    def is_out_of_bounds(self, index):
-        return 0 > index > 89
-        
-    def load_board_from_fen(self, FEN) -> None:
+
+    def switch_player_to_move(self):
+        self.opponent_color = self.color_to_move
+        self.color_to_move = 1 - self.color_to_move
+        if self.color_to_move:
+            print("RED MOVES")
+            return
+        print("WHITE MOVES")
+
+    def is_friendly_square(self, square):
+        for piece_list in self.piece_lists[self.color_to_move]:
+            if square in piece_list:
+                return True
+        return False
+
+    def load_board_from_fen(self, FEN: str) -> None:
         """Loads a board from Forsyth-Edwards-Notation (FEN)
-        White: upper case
+        Black: upper case
         Red: lower case
         King:K, Advisor:A, Elephant:E, Rook:R, Cannon:C, Horse:H, Pawn:P
         """
@@ -36,9 +53,9 @@ class Board:
                 file = 0
             if char.lower() in Piece.letters:
                 red = char.isupper()
-                piece = Piece.letters.index(char.lower())
-                self.squares[rank * 9 + file] = (int(red), piece)
-                self.piece_square[red].append(rank * 9 + file)
+                piece_type = Piece.letters.index(char.lower())
+                self.piece_lists[red][piece_type].add(rank * 9 + file)
+                self.squares[rank * 9 + file] = (int(red), piece_type)
                 file += 1
             if char.isdigit():
                 file += int(char)
@@ -68,21 +85,42 @@ class Board:
                 empty_files_in_rank = 0
         return fen
 
-    def make_move(self, selected_square, target_square, color_to_move, is_human_move=False, piece=None) -> None:
-        self.piece_square[color_to_move].remove(selected_square)  
-        self.piece_square[color_to_move].append(target_square)
+    def get_piece_list(self, piece_type: int, color_idx):
+        return self.piece_lists[color_idx][piece_type]
 
-        is_capture = False
+    def make_human_move(self, current_square, target_square, piece) -> None:
+        # Updating piece lists
+        self.piece_lists[self.color_to_move][piece[1]].remove(current_square)  
+        self.piece_lists[self.color_to_move][piece[1]].add(target_square)
 
-        if target_square in self.piece_square[1 - color_to_move]:
-            self.piece_square[1 - color_to_move].remove(target_square)
-            is_capture = True
-        if is_human_move:
-            self.make_human_move(piece, target_square)
-            return is_capture
-        self.squares[target_square] = self.squares[selected_square]
-        self.squares[selected_square] = 0
-        return is_capture
+        self.captured_piece = self.squares[target_square]
+        self.moved_piece = piece
 
-    def make_human_move(self, piece, target_square):
+        for piece_list in self.piece_lists[self.opponent_color]:
+            piece_list.discard(target_square)
+        # Moving the piece
         self.squares[target_square] = piece
+        print(self.piece_lists)
+
+    def make_move(self, current_square, target_square, color_to_move, piece):
+        # Updating piece lists
+        self.piece_lists[color_to_move][piece[1]].remove(current_square)  
+        self.piece_lists[color_to_move][piece[1]].add(target_square)
+
+        for piece_list in self.piece_lists[self.opponent_color]:
+            piece_list.discard(target_square)
+
+        self.captured_piece = self.squares[target_square]
+        self.moved_piece = piece
+
+        # Updating the board
+        self.squares[target_square] = self.squares[current_square]
+        self.squares[current_square] = 0
+
+    def reverse_move(self, current_square, target_square):
+        color_to_reverse, piece_type = self.moved_piece
+        self.piece_lists[color_to_reverse][piece_type].remove(target_square)  
+        self.piece_lists[color_to_reverse][piece_type].add(current_square)
+        self.piece_lists[1 - self.friendly][self.captured_piece[1]].add(target_square)
+        self.squares[current_square] = self.moved_piece
+        self.squares[target_square] = self.captured_piece
