@@ -307,6 +307,8 @@ class Move_generator:
 
         target_squares = self.king_moves[self.friendly][current_square]
         for target_square in target_squares:
+            if target_square in self.attack_map:
+                continue
             target_piece = self.board.squares[target_square]
             # Checking if target_piece is friendly while avoiding Errors 
             # (piece is equal to 0 when target_square is empty) so piece[0] would raise TypeError
@@ -453,6 +455,11 @@ class Move_generator:
                     target_square = current_square + self.dir_offsets[dir_index] * (step + 1)
 
                     if in_attack_mode:
+                        target_piece = self.board.squares[target_square]
+                        # if target square is empty, continue
+                        if not target_piece:
+                            continue
+
                         is_friendly = target_piece[0] == self.friendly if target_piece else False
                         # If target_piece is friendly, go to next direction
                         if is_friendly:
@@ -468,42 +475,71 @@ class Move_generator:
                         break
                 
     def calculate_attack_data(self):
-        # Horse attacks
         opponent_horses = self.board.piece_lists[self.opponent][Piece.horse]
         for square in opponent_horses:
             for move in self.horse_moves[square]:
                 target_square = move[1]
-                # target square is occupied by opponent piece
+                # Target square is occupied by opponent piece, so can't move there
                 if Piece.is_color(self.board.squares[target_square], self.opponent):
                     continue
 
                 block_square = self.board.get_horse_block(square, target_square)
                 block_piece = self.board.squares[block_square]
                 is_move_check = target_square == self.friendly_king
+
                 # Horse is attacking the target square
                 if not block_piece:
                     self.horse_attack_map.add(target_square)
-                    print("CHECK") if is_move_check else print("MOVE")
                     self.double_check = self.check
                     self.check = is_move_check
-                    if self.double_check:
-                        print("DOUBLE CHECK")
                     continue
-                # Move is blocked and wouldn't threaten friendly king
-                if not is_move_check:
-                    print("NO CHECK")
-                    continue
-                # Move is blocked by opponent piece
-                if Piece.is_color(block_piece, self.opponent):
-                    print("BLOCKED BY OPPENENT")
+
+                # Move is blocked by opponent piece or wouldn't threaten friendly king anyways
+                if Piece.is_color(block_piece, self.opponent) or not is_move_check:
                     continue
                 # Check blocked by friendly piece, so it's pinned
                 if block_square in self.pinned_squares:
-                    print("DOUBLE PIN")
                     self.double_pinned.add(target_square)
                     continue
+
                 self.pinned_squares.add(target_square)
-                print("PINNED")
+
+        for dir_idx in range(4):
+            block = None
+            for step in range(self.dist_to_edge[self.friendly_king][dir_idx]):
+                attacking_square = self.friendly_king + self.dir_offsets[dir_idx] * (step + 1)
+                piece = self.board.squares[attacking_square]
+                
+                if not piece:
+                    continue
+
+                # Friendly piece
+                if Piece.is_color(piece, self.friendly):
+                    print("BLOCK")
+                    # Second friendly pieces along the ray of direction, so no pins possible
+                    if block:
+                        break
+                    block = attacking_square
+                    continue
+
+                # Opponent piece
+                if Piece.is_type(piece, Piece.rook):
+                    if block:
+                        print("PIN")
+                        if attacking_square in self.pinned_squares:
+                            self.double_pinned.add(attacking_square)
+                        else:
+                            self.pinned_squares.add(attacking_square)
+                        break
+                    # no blocks, check
+                    self.double_check = self.check
+                    self.check = True
+
+        self.attack_map |= self.horse_attack_map | self.rook_attack_map
+        print(self.attack_map) 
+
+                
             
-        
+
+            
                 
