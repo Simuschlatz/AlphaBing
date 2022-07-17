@@ -34,6 +34,7 @@
 - minimax algorithm
 - alpha-beta pruning
 - iterative deepening
+- position evaluation using CPEF (weighed sum of SHEF and SLEF
 
 **Computer Vision (not implemented yet)**
 - supervised learning with tensorflow
