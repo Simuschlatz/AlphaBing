@@ -11,3 +11,15 @@ class Piece:
     black = 0
     red = 1
     letters = "keacprh"
+
+    @staticmethod
+    def is_color(piece, color):
+        if not piece: 
+            return False
+        else: return piece[0] == color
+    
+    @staticmethod
+    def is_type(piece, piece_type):
+        if not piece: 
+            return False
+        else: return piece[1] == piece_type

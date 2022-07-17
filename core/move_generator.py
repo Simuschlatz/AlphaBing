@@ -1,4 +1,5 @@
 from operator import is_
+from re import A
 from piece import Piece
 
 class Move_generator:
@@ -12,7 +13,7 @@ class Move_generator:
         self.moves = set()
         self.illegal_moves = set()
 
-        # Precalculating attack maps
+        # Precalculating move maps
         self.king_moves = self.precompute_king_moves()
         self.rook_moves = self.precompute_rook_moves()
         self.horse_moves = self.precompute_horse_moves()
@@ -34,7 +35,7 @@ class Move_generator:
         color_to_move : int
         """
         self.init()
-        
+        self.calculate_attack_data()
         self.generate_king_moves()
         # In a double check, only the king can move
         if self.double_check: return self.moves
@@ -58,9 +59,15 @@ class Move_generator:
         self.moves = set()
         self.illegal_moves = set()
         self.target_squares = {}
-        
-        self.pinned_squares = {}
-        self.double_pinned = {}
+
+        self.attack_map = set()
+        self.horse_attack_map = set()
+        self.rook_attack_map = set()
+        self.cannon_attack_map = set()
+        self.pawn_attack_map = set()
+
+        self.pinned_squares = set()
+        self.double_pinned = set()
         self.check = False
         self.double_check = False
 
@@ -248,7 +255,6 @@ class Move_generator:
                 if foward_move:
                     offset = offset_push_move[color]
                     pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
-        print(pawn_moves)
         return pawn_moves
         
     def precompute_elephant_moves(self) -> list:
@@ -309,7 +315,6 @@ class Move_generator:
                 continue
             self.moves.add((current_square, target_square))
             self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
-
 
     def generate_pawn_moves(self) -> None:
         """
@@ -463,4 +468,42 @@ class Move_generator:
                         break
                 
     def calculate_attack_data(self):
-        pass
+        # Horse attacks
+        opponent_horses = self.board.piece_lists[self.opponent][Piece.horse]
+        for square in opponent_horses:
+            for move in self.horse_moves[square]:
+                target_square = move[1]
+                # target square is occupied by opponent piece
+                if Piece.is_color(self.board.squares[target_square], self.opponent):
+                    continue
+
+                block_square = self.board.get_horse_block(square, target_square)
+                block_piece = self.board.squares[block_square]
+                is_move_check = target_square == self.friendly_king
+                # Horse is attacking the target square
+                if not block_piece:
+                    self.horse_attack_map.add(target_square)
+                    print("CHECK") if is_move_check else print("MOVE")
+                    self.double_check = self.check
+                    self.check = is_move_check
+                    if self.double_check:
+                        print("DOUBLE CHECK")
+                    continue
+                # Move is blocked and wouldn't threaten friendly king
+                if not is_move_check:
+                    print("NO CHECK")
+                    continue
+                # Move is blocked by opponent piece
+                if Piece.is_color(block_piece, self.opponent):
+                    print("BLOCKED BY OPPENENT")
+                    continue
+                # Check blocked by friendly piece, so it's pinned
+                if block_square in self.pinned_squares:
+                    print("DOUBLE PIN")
+                    self.double_pinned.add(target_square)
+                    continue
+                self.pinned_squares.add(target_square)
+                print("PINNED")
+            
+        
+                
