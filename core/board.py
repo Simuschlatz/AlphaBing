@@ -1,3 +1,5 @@
+from os import stat
+from turtle import color
 from piece import Piece
 import numpy as np
 
@@ -9,11 +11,12 @@ class Board:
         self.squares = list(np.zeros(90, dtype=np.int16))
         self.moved_piece = None
         self.captured_piece = None
+        self.previous_square = None
+        self.moved_to = None
         # To keep track of the pieces' indices (Piece-centric repr)
         self.piece_lists = [[set() for i in range(7)] for i in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
-        print(self.piece_lists)
 
 
     @staticmethod
@@ -33,12 +36,6 @@ class Board:
             print("RED MOVES")
             return
         print("WHITE MOVES")
-
-    def is_friendly_square(self, square):
-        for piece_list in self.piece_lists[self.color_to_move]:
-            if square in piece_list:
-                return True
-        return False
 
     def load_board_from_fen(self, FEN: str) -> None:
         """Loads a board from Forsyth-Edwards-Notation (FEN)
@@ -87,40 +84,63 @@ class Board:
 
     def get_piece_list(self, piece_type: int, color_idx):
         return self.piece_lists[color_idx][piece_type]
+    
+    def is_friendly_square(self, square):
+        piece = self.squares[square]
+        return piece[0] == self.color_to_move if piece else False
+    
+    def is_square_empty(self, square):
+        return not self.squares[square]
+
+    @staticmethod
+    def get_horse_block(current_square, target_square):
+        d_rank = target_square // 9 - current_square // 9
+        d_file = target_square % 9 - current_square % 9
+
+        if abs(d_rank) > abs(d_file):
+            return current_square + d_rank // 2 * 9
+        return current_square + d_file // 2
 
     def make_human_move(self, current_square, target_square, piece) -> None:
+        color_to_move, piece_type = piece
         # Updating piece lists
-        self.piece_lists[self.color_to_move][piece[1]].remove(current_square)  
-        self.piece_lists[self.color_to_move][piece[1]].add(target_square)
+        self.piece_lists[color_to_move][piece_type].remove(current_square)  
+        self.piece_lists[color_to_move][piece_type].add(target_square)
 
         self.captured_piece = self.squares[target_square]
         self.moved_piece = piece
+        self.previous_square, self.moved_to = current_square, target_square
 
-        for piece_list in self.piece_lists[self.opponent_color]:
+        for piece_list in self.piece_lists[1 - color_to_move]:
             piece_list.discard(target_square)
         # Moving the piece
         self.squares[target_square] = piece
-        print(self.piece_lists)
 
-    def make_move(self, current_square, target_square, color_to_move, piece):
+    def make_move(self, current_square, target_square, piece):
+        color_to_move, piece_type = piece
         # Updating piece lists
-        self.piece_lists[color_to_move][piece[1]].remove(current_square)  
-        self.piece_lists[color_to_move][piece[1]].add(target_square)
+        self.piece_lists[color_to_move][piece_type].remove(current_square)  
+        self.piece_lists[color_to_move][piece_type].add(target_square)
 
-        for piece_list in self.piece_lists[self.opponent_color]:
+        for piece_list in self.piece_lists[1 - color_to_move]:
             piece_list.discard(target_square)
 
         self.captured_piece = self.squares[target_square]
         self.moved_piece = piece
+        self.previous_square, self.moved_to = current_square, target_square
 
         # Updating the board
         self.squares[target_square] = self.squares[current_square]
         self.squares[current_square] = 0
 
-    def reverse_move(self, current_square, target_square):
-        color_to_reverse, piece_type = self.moved_piece
-        self.piece_lists[color_to_reverse][piece_type].remove(target_square)  
-        self.piece_lists[color_to_reverse][piece_type].add(current_square)
-        self.piece_lists[1 - self.friendly][self.captured_piece[1]].add(target_square)
-        self.squares[current_square] = self.moved_piece
-        self.squares[target_square] = self.captured_piece
+    def reverse_move(self):
+        last_moved_color, piece_type = self.moved_piece
+
+        self.piece_lists[last_moved_color][piece_type].remove(self.moved_to)  
+        self.piece_lists[last_moved_color][piece_type].add(self.previous_square)
+
+        if self.captured_piece:
+            self.piece_lists[self.opponent_color][self.captured_piece[1]].add(self.moved_to)
+        
+        self.squares[self.previous_square] = self.moved_piece
+        self.squares[self.moved_to] = self.captured_piece

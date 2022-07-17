@@ -139,6 +139,7 @@ def human_event_handler(event, board, game, m_g):
             
             # If not a friendly color or no moves possible return
             if not board.is_friendly_square(current_square) or current_square not in m_g.target_squares:
+                print("CAN'T PICK UP")
                 return
             selected_square = rank * 9 + file
             selected_piece = board.squares[selected_square]
@@ -158,6 +159,7 @@ def human_event_handler(event, board, game, m_g):
             selected_piece = None
             return
 
+        # Sound effects
         if board.squares[target_square]:
             capture_sfx.play()
         else:
@@ -168,22 +170,20 @@ def human_event_handler(event, board, game, m_g):
         board.make_human_move(selected_square, target_square, selected_piece)
         selected_piece = None
         board.switch_player_to_move()
-        if previous_targets == m_g.target_squares:
-            return
+
         previous_targets = m_g.target_squares
         # Load moves for next player
         m_g.load_moves()
 
-    if event.type == pygame.KEYDOWN:
+    if event.type == pygame.KEYDOWN and not selected_piece:
         if event.key == pygame.K_SPACE and previous_targets:
-            board.color_to_move = 1 - board.color_to_move
-            board.reverse_move(selected_square, moved_to)
+            board.reverse_move()
+            board.switch_player_to_move()
             m_g.target_squares = previous_targets
-            print(board.color_to_move)
 
 def main():
     game = Game(12, "Papa", "Mama")
-    board = Board(INITIAL_FEN, 1)
+    board = Board("5K/4R/4h/9/R/rs/9/3H1H/4c/4k", 0)
     m_g = Move_generator(board)
     m_g.load_moves()
     run = True
