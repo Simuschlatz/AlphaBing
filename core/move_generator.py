@@ -1,8 +1,6 @@
-from operator import is_
-from re import A
 from piece import Piece
 
-class Move_generator:
+class Legal_move_generator:
     # Orthogonal and diagonal offsets of board represented in one dimension
     dir_offsets = [-9, 1, 9, -1, -8, 10, 8, -10]
 
@@ -29,6 +27,7 @@ class Move_generator:
         self.check = False
         self.double_check = False
 
+
     def load_moves(self) -> list:
         """
         :return: a list of tuples containing the start and end indices of all possible moves
@@ -48,6 +47,7 @@ class Move_generator:
 
         return self.moves
     
+
     def init(self):
         # variable "color_to_move" can be used for indexing and determining the color of piece 
         # (see "piece.py > class Piece") here e.g. allows to only loop over friendly indices
@@ -70,6 +70,7 @@ class Move_generator:
         self.double_pinned = set()
         self.check = False
         self.double_check = False
+
 
     @staticmethod
     def precompute_dists() -> list:
@@ -97,6 +98,7 @@ class Move_generator:
                 distances.append(dist)
         return distances
 
+
     @staticmethod
     def jumps_from_orthogonal_offsets() -> list:
         """
@@ -105,7 +107,7 @@ class Move_generator:
         illegal moves blocked by a piece
         """
         horse_offsets = []
-        dir_offsets = Move_generator.dir_offsets[:4] + [-9]
+        dir_offsets = Legal_move_generator.dir_offsets[:4] + [-9]
 
         for dir_index in range(4):
             second_dir_idx = dir_index + 1
@@ -117,6 +119,7 @@ class Move_generator:
                 horse_offsets.append(new_offset)
         return horse_offsets
     
+
     @staticmethod
     def precompute_king_moves() -> list:
         """
@@ -157,6 +160,7 @@ class Move_generator:
                         king_moves[color][current_square] = king_moves[color].get(current_square, []) + [target_square]
         return king_moves
 
+
     def precompute_rook_moves(self) -> list:
         """
         :return: a list of lists containing the rook move-target indices of all squares
@@ -171,6 +175,7 @@ class Move_generator:
                     target_square = square + self.dir_offsets[dir_idx] * (step + 1)
                     target_squares[square][dir_idx] = target_squares[square].get(dir_idx, []) + [target_square]
         return target_squares
+
 
     def precompute_horse_moves(self) -> list:
         """
@@ -196,6 +201,7 @@ class Move_generator:
                 horse_moves[square].append((square, target_square))
 
         return horse_moves
+
 
     def precompute_advisor_moves(self) -> list:
         """
@@ -225,6 +231,7 @@ class Move_generator:
                 advisor_moves[color][middle_square] = advisor_moves[color].get(middle_square, []) + [target_square]
                 advisor_moves[color][target_square] = advisor_moves[color].get(target_square, []) + [middle_square]
         return advisor_moves
+
 
     def precompute_pawn_moves(self) -> list:
         """
@@ -256,7 +263,8 @@ class Move_generator:
                     offset = offset_push_move[color]
                     pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
         return pawn_moves
-        
+
+
     def precompute_elephant_moves(self) -> list:
         """
         :return: a list of one dictionary for one side fo the board each, containing 
@@ -302,6 +310,7 @@ class Move_generator:
                         elephant_moves[color][square] = elephant_moves[color].get(square, []) + [target_square]
         return elephant_moves
 
+
     def generate_king_moves(self) -> None:
         current_square = self.friendly_king
 
@@ -318,9 +327,10 @@ class Move_generator:
             self.moves.add((current_square, target_square))
             self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
 
+
     def generate_pawn_moves(self) -> None:
         """
-        extends move_generator.moves with legal pawn moves
+        extends Legal_move_generator.moves with legal pawn moves
         """
         # Looping over friendly pawns
         for current_square in self.board.piece_lists[self.friendly][Piece.pawn]:
@@ -333,10 +343,11 @@ class Move_generator:
 
                 self.moves.add((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
-    
+
+
     def generate_elephant_moves(self) -> None:
         """
-        extends move_generator.moves with legal elephant moves
+        extends Legal_move_generator.moves with legal elephant moves
         """
         for elephant_square in self.board.piece_lists[self.friendly][Piece.elephant]:
             target_squares = self.elephant_moves[self.friendly][elephant_square]
@@ -363,10 +374,11 @@ class Move_generator:
                 
                 self.moves.add((elephant_square, target_square))
                 self.target_squares[elephant_square] = self.target_squares.get(elephant_square, []) + [target_square]
-    
+
+
     def generate_advisor_moves(self) -> None:
         """
-        extends move_generator.moves with legal advisor moves
+        extends Legal_move_generator.moves with legal advisor moves
         """
         for advisor_square in self.board.piece_lists[self.friendly][Piece.advisor]:
             target_squares = self.advisor_moves[self.friendly][advisor_square]
@@ -379,10 +391,11 @@ class Move_generator:
 
                 self.moves.add((advisor_square, target_square))
                 self.target_squares[advisor_square] = self.target_squares.get(advisor_square, []) + [target_square]
-        
+
+
     def generate_horse_moves(self) -> None:
         """
-        extends move_generator.moves with legal horse moves
+        extends Legal_move_generator.moves with legal horse moves
         """
         horse_offsets = self.dir_offsets[8:16]
 
@@ -416,10 +429,12 @@ class Move_generator:
 
                 self.moves.add((horse_square, target_square))
                 self.target_squares[horse_square] = self.target_squares.get(horse_square, []) + [target_square]
-                    
+
+
+
     def generate_rook_moves(self) -> None:
         """
-        extends move_generator.moves with legal rook moves
+        extends Legal_move_generator.moves with legal rook moves
         """
         for current_square in self.board.piece_lists[self.friendly][Piece.rook]:
             rook_attack_map = self.rook_moves[current_square]
@@ -441,9 +456,10 @@ class Move_generator:
                     if target_piece:
                         break
 
+
     def generate_cannon_moves(self) -> None:
         """
-        extends move_generator.moves with legal cannon moves
+        extends Legal_move_generator.moves with legal cannon moves
         """
         for current_square in self.board.piece_lists[self.friendly][Piece.cannon]:
             # Going through chosen direction indices
@@ -460,9 +476,8 @@ class Move_generator:
                         if not target_piece:
                             continue
 
-                        is_friendly = target_piece[0] == self.friendly if target_piece else False
                         # If target_piece is friendly, go to next direction
-                        if is_friendly:
+                        if Piece.is_color(target_piece, self.friendly):
                             break
 
                     elif self.board.squares[target_square]:
@@ -473,8 +488,9 @@ class Move_generator:
                     self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                     if target_piece:
                         break
-                
-    def calculate_attack_data(self):
+
+
+    def calculate_horse_attack_data(self) -> None:
         opponent_horses = self.board.piece_lists[self.opponent][Piece.horse]
         for square in opponent_horses:
             for move in self.horse_moves[square]:
@@ -497,35 +513,91 @@ class Move_generator:
                 # Move is blocked by opponent piece or wouldn't threaten friendly king anyways
                 if Piece.is_color(block_piece, self.opponent) or not is_move_check:
                     continue
-                # Check blocked by friendly piece, so it's pinned
+
+                # If blocked by friendly piece, it's pinned
                 if block_square in self.pinned_squares:
+                    # If already pinned, double pin it
                     self.double_pinned.add(target_square)
                     continue
-
                 self.pinned_squares.add(target_square)
 
+    
+    def generate_coannon_attack_map(self):
+        for square in self.board.piece_lists[self.opponent][Piece.cannon]:
+            for dir_idx in range(4):
+                block = False
+                double_block = False
+                for step in range(self.dist_to_edge[square][dir_idx]):
+                    if double_block:
+                        break
+                    attacking_square = square + self.dir_offsets[dir_idx] * (step + 1)
+                    piece = self.board.squares[attacking_square]
+                    
+                    if block and not Piece.is_type(piece, self.opponent):
+                        self.cannon_attack_map.add(attacking_square)
+                    # attacking square is occupied
+                    if piece:
+                        double_block = block
+                        block = True
+        print(self.cannon_attack_map)
+    def calculate_cannon_attack_data(self) -> None:
+        self.generate_coannon_attack_map()
+        for dir_idx in range(4):
+            friendly_blocks = set()
+            block = False
+            double_block = False
+            for step in range(self.dist_to_edge[self.friendly_king][dir_idx]):
+                attacking_square = self.friendly_king + self.dir_offsets[dir_idx] * (step + 1)
+                piece = self.board.squares[attacking_square]
+                # Skip empty squares
+                if not piece:
+                    continue
+                # Piece is opponent cannon
+                if Piece.is_color(piece, self.opponent) and Piece.is_type(piece, Piece.cannon):
+                    print("double block: ", double_block)
+                    if double_block:
+                        self.pinned_squares |= friendly_blocks
+                        print("PIN: ", self.pinned_squares)
+                    elif block:
+                        self.double_check = self.check
+                        self.check = True
+                        print("CHECK")
+
+                # This is the third piece we come across, 
+                # thus preventing any checks / pins in current direction
+                if double_block:
+                    break
+                # If piece is friendly, we add it to the friendly blocks
+                if Piece.is_color(piece, self.friendly):
+                    friendly_blocks.add(attacking_square)
+
+                # First piece: block
+                # Second piece: double block    
+                double_block = block
+                block = True
+
+    def calculate_rook_attack_data(self) -> None:
         for dir_idx in range(4):
             block = None
             for step in range(self.dist_to_edge[self.friendly_king][dir_idx]):
                 attacking_square = self.friendly_king + self.dir_offsets[dir_idx] * (step + 1)
                 piece = self.board.squares[attacking_square]
-                
+                # Skip empty squares
                 if not piece:
                     continue
-
                 # Friendly piece
                 if Piece.is_color(piece, self.friendly):
-                    print("BLOCK")
-                    # Second friendly pieces along the ray of direction, so no pins possible
+                    # Second friendly piece along current direction, so no pins possible
                     if block:
                         break
                     block = attacking_square
                     continue
 
-                # Opponent piece
+                # Opponent rook
                 if Piece.is_type(piece, Piece.rook):
+                    # Blocked by friendly piece, so pin it
                     if block:
-                        print("PIN")
+                        # If already pinned, it's a double pin
                         if attacking_square in self.pinned_squares:
                             self.double_pinned.add(attacking_square)
                         else:
@@ -535,11 +607,10 @@ class Move_generator:
                     self.double_check = self.check
                     self.check = True
 
-        self.attack_map |= self.horse_attack_map | self.rook_attack_map
+    def calculate_attack_data(self) -> None:
+        self.calculate_horse_attack_data()
+        self.calculate_cannon_attack_data()
+        self.calculate_rook_attack_data()
+
+        self.attack_map |= self.horse_attack_map | self.rook_attack_map | self.cannon_attack_map
         print(self.attack_map) 
-
-                
-            
-
-            
-                
