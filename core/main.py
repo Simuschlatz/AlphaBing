@@ -2,7 +2,7 @@ from multiprocessing.pool import INIT
 import pygame
 import os
 from board import Board
-from move_generator import Move_generator
+from move_generator import Legal_move_generator
 from game import Game
 
 RED = (255, 0, 0)
@@ -69,13 +69,13 @@ def move_feedback():
         l_rank = selected_square // 9
         l_x = OFFSET_X + l_file * UNIT
         l_y = OFFSET_Y + l_rank * UNIT
-        pygame.draw.ellipse(WIN, (220, 200, 140), (l_x + UNIT / 3, l_y + UNIT / 3, UNIT / 3, UNIT / 3))
+        pygame.draw.ellipse(WIN, (217, 255, 255), (l_x + UNIT / 3, l_y + UNIT / 3, UNIT / 3, UNIT / 3))
     if moved_to != None:
         c_file = moved_to % 9
         c_rank = moved_to // 9
         c_x = OFFSET_X + c_file * UNIT
         c_y = OFFSET_Y + c_rank * UNIT
-        pygame.draw.rect(WIN, (220, 200, 140), (c_x, c_y, UNIT, UNIT))
+        pygame.draw.rect(WIN, (217, 255, 255), (c_x, c_y, UNIT, UNIT))
 
 OFFSET_X = (WIDTH - BOARD_WIDTH) / 2
 OFFSET_Y = (HEIGHT - BOARD_HEIGHT) / 2
@@ -183,8 +183,8 @@ def human_event_handler(event, board, game, m_g):
 
 def main():
     game = Game(12, "Papa", "Mama")
-    board = Board("5K/4R/4h/9/R/rs/9/3H1H/4c/4k", 0)
-    m_g = Move_generator(board)
+    board = Board("5K/4R/4h/5R/R4c/rs/9/3H1H/4r/4k", 1)
+    m_g = Legal_move_generator(board)
     m_g.load_moves()
     run = True
     while run:
