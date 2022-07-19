@@ -70,11 +70,11 @@ class Board:
                     fen += str(empty_files_in_rank)
                     empty_files_in_rank = 0
                 is_red = piece[0]
-                letter = Piece.letters[piece[1]] if is_red else Piece.letters[piece[1]].upper()
+                letter = Piece.letters[piece[1]].upper() if is_red else Piece.letters[piece[1]]
                 fen += letter
             rank = i // 9
             file = i % 9
-            if rank != 9 and file == 8 and empty_files_in_rank != 9:
+            if rank < 9 and file == 8 and empty_files_in_rank != 9:
                 fen += "/"
                 empty_files_in_rank = 0
             elif empty_files_in_rank == 9:
@@ -116,6 +116,7 @@ class Board:
         # Moving the piece
         self.squares[target_square] = piece
 
+        print(self.load_fen_from_board())
     def make_move(self, current_square, target_square, piece):
         color_to_move, piece_type = piece
         # Updating piece lists
