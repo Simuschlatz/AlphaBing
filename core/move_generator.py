@@ -170,9 +170,10 @@ class Legal_move_generator:
             target_squares.append({})
             # Looping over orthogonal directions
             for dir_idx in range(4):
+                offset = self.dir_offsets[dir_idx]
                 # "Walking" in direction using direction offsets
                 for step in range(self.dist_to_edge[square][dir_idx]):
-                    target_square = square + self.dir_offsets[dir_idx] * (step + 1)
+                    target_square = square + offset * (step + 1)
                     target_squares[square][dir_idx] = target_squares[square].get(dir_idx, []) + [target_square]
         return target_squares
 
@@ -463,12 +464,13 @@ class Legal_move_generator:
         """
         for current_square in self.board.piece_lists[self.friendly][Piece.cannon]:
             # Going through chosen direction indices
-            for dir_index in range(4):
+            for dir_idx in range(4):
+                offset = self.dir_offsets[dir_idx]
                 in_attack_mode = False
                 target_piece = False
                 # "Walking" in direction using direction offsets
-                for step in range(self.dist_to_edge[current_square][dir_index]):
-                    target_square = current_square + self.dir_offsets[dir_index] * (step + 1)
+                for step in range(self.dist_to_edge[current_square][dir_idx]):
+                    target_square = current_square + offset * (step + 1)
 
                     if in_attack_mode:
                         target_piece = self.board.squares[target_square]
@@ -495,9 +497,13 @@ class Legal_move_generator:
         for square in opponent_horses:
             for move in self.horse_moves[square]:
                 target_square = move[1]
-                # Target square is occupied by opponent piece, so can't move there
-                if Piece.is_color(self.board.squares[target_square], self.opponent):
-                    continue
+               
+                # MISTAKE I MADE: 
+                # Not adding squares to the attack map if they're occupied by an opponent piece allows 
+                # the king to make pseudo-legal capture to squares that can be attacked by opponent pieces
+                # Bugs like these are really valuable and virtually inevitable in complex applications 
+                # if Piece.is_color(self.board.squares[target_square], self.opponent):
+                #     continue
 
                 block_square = self.board.get_horse_block(square, target_square)
                 block_piece = self.board.squares[block_square]
@@ -506,8 +512,10 @@ class Legal_move_generator:
                 # Horse is attacking the target square
                 if not block_piece:
                     self.horse_attack_map.add(target_square)
-                    self.double_check = self.check
-                    self.check = is_move_check
+                    if is_move_check:
+                        self.double_check = self.check
+                        self.check = True
+                        print("HORSE CHECK")
                     continue
 
                 # Move is blocked by opponent piece or wouldn't threaten friendly king anyways
@@ -520,34 +528,41 @@ class Legal_move_generator:
                     self.double_pinned.add(target_square)
                     continue
                 self.pinned_squares.add(target_square)
-
+        print(self.horse_attack_map)
     
-    def generate_coannon_attack_map(self):
+    def generate_cannon_attack_map(self):
         for square in self.board.piece_lists[self.opponent][Piece.cannon]:
             for dir_idx in range(4):
+                offset = self.dir_offsets[dir_idx]
                 block = False
                 double_block = False
                 for step in range(self.dist_to_edge[square][dir_idx]):
-                    if double_block:
-                        break
-                    attacking_square = square + self.dir_offsets[dir_idx] * (step + 1)
+                    attacking_square = square + offset * (step + 1)
                     piece = self.board.squares[attacking_square]
                     
-                    if block and not Piece.is_type(piece, self.opponent):
+                    # Cannon is in capture mode
+                    if block:
                         self.cannon_attack_map.add(attacking_square)
+
                     # attacking square is occupied
                     if piece:
                         double_block = block
                         block = True
+
+                    if double_block:
+                        break     
         print(self.cannon_attack_map)
+
+
     def calculate_cannon_attack_data(self) -> None:
-        self.generate_coannon_attack_map()
+        self.generate_cannon_attack_map()
         for dir_idx in range(4):
+            offset = self.dir_offsets[dir_idx]
             friendly_blocks = set()
             block = False
             double_block = False
             for step in range(self.dist_to_edge[self.friendly_king][dir_idx]):
-                attacking_square = self.friendly_king + self.dir_offsets[dir_idx] * (step + 1)
+                attacking_square = self.friendly_king + offset * (step + 1)
                 piece = self.board.squares[attacking_square]
                 # Skip empty squares
                 if not piece:
@@ -576,41 +591,64 @@ class Legal_move_generator:
                 double_block = block
                 block = True
 
+
+    def generate_rook_attack_map(self) -> None:
+        for square in self.board.piece_lists[self.opponent][Piece.rook]:
+            for dir_idx in range(4):
+                offset = self.dir_offsets[dir_idx]
+                for step in range(self.dist_to_edge[square][dir_idx]):
+                    attacking_square = square + offset * (step + 1)
+                    piece = self.board.squares[attacking_square]
+                    
+                    self.rook_attack_map.add(attacking_square)
+
+                    # Attacking square occupied, break
+                    if piece:
+                        break
+
+
     def calculate_rook_attack_data(self) -> None:
+        self.generate_rook_attack_map()
         for dir_idx in range(4):
-            block = None
+            offset = self.dir_offsets[dir_idx]
+            friendly_block = None
             for step in range(self.dist_to_edge[self.friendly_king][dir_idx]):
-                attacking_square = self.friendly_king + self.dir_offsets[dir_idx] * (step + 1)
+                attacking_square = self.friendly_king + offset * (step + 1)
                 piece = self.board.squares[attacking_square]
                 # Skip empty squares
                 if not piece:
                     continue
+                
                 # Friendly piece
                 if Piece.is_color(piece, self.friendly):
                     # Second friendly piece along current direction, so no pins possible
-                    if block:
+                    if friendly_block:
                         break
-                    block = attacking_square
+                    friendly_block = attacking_square
                     continue
+                
+                # Opponent piece isn't a rook, avoiding any checks and pins
+                if not Piece.is_type(piece, Piece.rook):
+                    break
 
                 # Opponent rook
-                if Piece.is_type(piece, Piece.rook):
-                    # Blocked by friendly piece, so pin it
-                    if block:
-                        # If already pinned, it's a double pin
-                        if attacking_square in self.pinned_squares:
-                            self.double_pinned.add(attacking_square)
-                        else:
-                            self.pinned_squares.add(attacking_square)
+                # There's one friendly piece along the current direction, so (double-) pin it 
+                if friendly_block:
+                    if attacking_square in self.pinned_squares:
+                        self.double_pinned.add(attacking_square)
                         break
-                    # no blocks, check
-                    self.double_check = self.check
-                    self.check = True
+                    self.pinned_squares.add(attacking_square)
+                    break
+                # If there're no friendly blocks, it's a check
+                self.double_check = self.check
+                self.check = True
+                break
 
     def calculate_attack_data(self) -> None:
         self.calculate_horse_attack_data()
         self.calculate_cannon_attack_data()
         self.calculate_rook_attack_data()
 
+        print("DOUBLE CHECK: ", self.double_check)
         self.attack_map |= self.horse_attack_map | self.rook_attack_map | self.cannon_attack_map
         print(self.attack_map) 
