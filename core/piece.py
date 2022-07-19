@@ -16,10 +16,10 @@ class Piece:
     def is_color(piece, color):
         if not piece: 
             return False
-        else: return piece[0] == color
+        return piece[0] == color
     
     @staticmethod
     def is_type(piece, piece_type):
         if not piece: 
             return False
-        else: return piece[1] == piece_type
+        return piece[1] == piece_type
