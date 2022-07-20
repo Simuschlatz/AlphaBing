@@ -64,6 +64,8 @@ pygame.display.set_icon(pieces_imgs[1])
 
 INITIAL_FEN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
 
+board_ui = None
+
 def move_feedback():
     if selected_square != None:
         l_file = selected_square % 9
@@ -112,7 +114,7 @@ def draw(board, legal_target_squares, remainig_times):
         draw_moves(board, legal_target_squares[selected_square])
     
     # Drawing pieces
-    for i, piece in enumerate(board.squares):
+    for i, piece in enumerate(board_ui):
         if piece:
             file = i % 9
             rank = i // 9
@@ -126,7 +128,7 @@ def draw(board, legal_target_squares, remainig_times):
     pygame.display.update()
 
 def human_event_handler(event, board, game, m_g):
-    global selected_piece, selected_square, moved_to, previous_targets
+    global board_ui, selected_piece, selected_square, moved_to, previous_targets
     if event.type == pygame.MOUSEBUTTONDOWN:
         mouse_pos = pygame.mouse.get_pos()
 
@@ -134,16 +136,16 @@ def human_event_handler(event, board, game, m_g):
         mouse_pos_on_board = (mouse_pos[0] - OFFSET_X, mouse_pos[1] - OFFSET_Y)
         file, rank = Board.get_board_pos(mouse_pos_on_board, UNIT)
 
+        current_square = rank * 9 + file
         # Check if selected square is not empty
-        if board.squares[rank * 9 + file]:
-            current_square = rank * 9 + file
+        if board.squares[current_square]:
             
             # If not a friendly color or no moves possible return
             if not board.is_friendly_square(current_square) or current_square not in m_g.target_squares:
                 return
             selected_square = rank * 9 + file
             selected_piece = board.squares[selected_square]
-            board.squares[selected_square] = 0
+            board_ui[selected_square] = 0
             # Reset previous target square
             if moved_to:
                 moved_to = None
@@ -155,7 +157,8 @@ def human_event_handler(event, board, game, m_g):
         target_square = rank * 9 + file
         # Check whether move is legal
         if target_square not in m_g.target_squares[selected_square]:
-            board.squares[selected_square] = selected_piece
+            board_ui[selected_square] = selected_piece
+            selected_square = None
             selected_piece = None
             return
 
@@ -167,7 +170,8 @@ def human_event_handler(event, board, game, m_g):
 
         moved_to = target_square
 
-        board.make_human_move(selected_square, target_square, selected_piece)
+        board.make_move(selected_square, target_square)
+        board_ui = board.squares[:]
         selected_piece = None
         board.switch_player_to_move()
 
@@ -175,15 +179,19 @@ def human_event_handler(event, board, game, m_g):
         # Load moves for next player
         m_g.load_moves()
 
-    if event.type == pygame.KEYDOWN and not selected_piece:
+    if event.type == pygame.KEYDOWN and not selected_piece and moved_to:
         if event.key == pygame.K_SPACE and previous_targets:
             board.reverse_move()
+            board_ui = board.squares[:]
             board.switch_player_to_move()
             m_g.target_squares = previous_targets
+            moved_to, selected_square = None, None
 
 def main():
-    game = Game(12, "Papa", "Mama")
-    board = Board(INITIAL_FEN, 1)
+    global board_ui
+    game = Game(600, "Papa", "Mama")
+    board = Board("RHEAKAEHR/9/7C/P5P1P/1Cp/4P/p5p1p/1ch4c/9/r1eakaehr", 1)
+    board_ui = board.squares[:]
     m_g = Legal_move_generator(board)
     m_g.load_moves()
     run = True
