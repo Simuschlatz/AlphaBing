@@ -17,6 +17,7 @@ BLACK = (0, 0, 0)
 DARK_BLUE = (0, 0, 70)
 WHITE = (255, 255, 255)
 GREY = (200, 200, 200)
+BG = (240, 210, 170)
 
 WIDTH = 1500
 HEIGHT = 1000
@@ -97,7 +98,7 @@ def draw_moves(board, target_indices):
         pygame.draw.ellipse(WIN, RED, (x + UNIT / 2 - 4, y + UNIT / 2 - 4, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
 
 def draw(board, legal_target_squares, remainig_times):
-    WIN.fill((230, 205, 160))
+    WIN.fill(BG)
     WIN.blit(board_img, (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2))
     move_feedback()
 
@@ -139,7 +140,6 @@ def human_event_handler(event, board, game, m_g):
             
             # If not a friendly color or no moves possible return
             if not board.is_friendly_square(current_square) or current_square not in m_g.target_squares:
-                print("CAN'T PICK UP")
                 return
             selected_square = rank * 9 + file
             selected_piece = board.squares[selected_square]
@@ -183,7 +183,7 @@ def human_event_handler(event, board, game, m_g):
 
 def main():
     game = Game(12, "Papa", "Mama")
-    board = Board("5K/4R/4h/5R/R4c/rs/9/3H1H/4r/4k", 1)
+    board = Board(INITIAL_FEN, 1)
     m_g = Legal_move_generator(board)
     m_g.load_moves()
     run = True
