@@ -1,6 +1,6 @@
 # Xiangqi-AI
 - Xiangqi is the chinese version of chess very popular amongst East Asian countries.
-- This project's final version will be able to process a physical board and play the best move for you :)
+- This project's final version will be a fairly sophisticated chess engine with built-in AI and the ability to process a physical board
 
 ## Table of Contents
 * [General Info](#general-information)
