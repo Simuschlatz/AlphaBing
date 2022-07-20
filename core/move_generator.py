@@ -485,6 +485,52 @@ class Legal_move_generator:
                         break
 
 
+    def flying_general(self):
+        # red: down
+        # black: up
+        dir_idx = self.opponent * 2
+        offset = self.dir_offsets[dir_idx]
+        block = None
+        for step in range(self.dist_to_edge[self.opponent_king][dir_idx]):
+            square = self.opponent_king + offset * (step + 1)
+            piece = self.board.squares[square]
+
+            if not piece:
+                continue
+            # Opponent piece blocks any pins, but can't be captured 
+            # by friendly king as opponent king's defending it
+            if Piece.is_color(piece, self.opponent):
+                if not block:
+                    self.king_attack_map.add(square)
+                return
+
+            # Friendly king
+            if Piece.is_type(piece, Piece.king):
+                if block:
+                    # Pin piece, double pin it if already pinned
+                    self.double_pinned.add(block) if block in self.pinned_squares else self.pinned_squares.add(block)
+                    print("PIN BY KING")
+                else:
+                    self.double_check = self.check
+                    self.check = True 
+                return
+
+            # Second friendly piece in direction, no pins possible
+            if block:
+                return
+            block = square
+        
+        # If there're no pieces between opponent king and opposite edge of board
+        # friendly king can't move to the opponent king's file
+        if block:
+            return
+        print("FLYING GENERAL THREAT")
+        friendly_king_rank = self.friendly_king // 9
+        opponent_king_file = self.opponent_king % 9
+        flyin_general_square = friendly_king_rank * 9 + opponent_king_file
+        self.king_attack_map.add(flyin_general_square)
+        
+
     def calculate_horse_attack_data(self) -> None:
         opponent_horses = self.board.piece_lists[self.opponent][Piece.horse]
         for square in opponent_horses:
@@ -630,64 +676,28 @@ class Legal_move_generator:
                 self.double_check = self.check
                 self.check = True
                 break
+
+    def generate_pawn_attack_map(self) -> None:
+        for square in self.board.piece_lists[self.opponent][Piece.pawn]:
+            for attacking_square in self.pawn_moves[self.opponent][square]:
+                piece = self.board.squares[attacking_square]
+
+                if Piece.is_color(piece, self.friendly):
+                    if Piece.is_type(piece, Piece.king):
+                        self.double_check = self.check
+                        self.check = True
+                    continue
                 
-    def generate_king_attack_map(self):
-        # red: down
-        # black: up
-        dir_idx = self.opponent * 2
-        offset = self.dir_offsets[dir_idx]
-        block = None
-        for step in range(self.dist_to_edge[self.opponent_king][dir_idx]):
-            square = self.opponent_king + offset * (step + 1)
-            piece = self.board.squares[square]
-
-            if not piece:
-                continue
-            # Opponent piece blocks any pins, but can't be captured 
-            # by friendly king as opponent king's defending it
-            if Piece.is_color(piece, self.opponent):
-                print("OPPONENT PIECE")
-                if not block:
-                    self.king_attack_map.add(square)
-                return
-
-            # Friendly king
-            if Piece.is_type(piece, Piece.king):
-                if block:
-                    # Pin piece, double pin it if already pinned
-                    self.double_pinned.add(block) if block in self.pinned_squares else self.pinned_squares.add(block)
-                    print("PIN BY KING")
-                else:
-                    self.double_check = self.check
-                    self.check = True 
-                return
-
-            # Second friendly piece in direction, no pins possible
-            if block:
-                print("DOUBLE FRIENDLY BLOCK")
-                return
-            block = square
-            print("FRIENDLY BLOCK")
-        
-        
-        # If there're no pieces between opponent king and opposite edge of board
-        # friendly king can't move to the opponent king's file
-        if block:
-            return
-        print("FLYING GENERAL THREAT")
-        friendly_king_rank = self.friendly_king // 9
-        opponent_king_file = self.opponent_king % 9
-        flyin_general_square = friendly_king_rank * 9 + opponent_king_file
-        self.king_attack_map.add(flyin_general_square)
-        
-
+                # Empty square or opponent piece
+                self.pawn_attack_map.add(attacking_square)
+                    
 
     def calculate_attack_data(self) -> None:
-        self.generate_king_attack_map()
+        self.flying_general()
         self.calculate_horse_attack_data()
         self.calculate_cannon_attack_data()
         self.calculate_rook_attack_data()
-
+        self.generate_pawn_attack_map()
         print("DOUBLE CHECK: ", self.double_check)
-        self.attack_map |= self.horse_attack_map | self.rook_attack_map | self.cannon_attack_map | self.king_attack_map
+        self.attack_map |= self.horse_attack_map | self.rook_attack_map | self.cannon_attack_map | self.pawn_attack_map | self.king_attack_map
         print(self.attack_map) 
