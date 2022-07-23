@@ -1,4 +1,3 @@
-from multiprocessing.pool import INIT
 import pygame
 import os
 from board import Board
@@ -28,39 +27,47 @@ FONT_SIZE = 50
 CIRCLE_DIAMETER = 15
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Xiangqi")
+pygame.display.set_caption("MOIN")
 pygame.font.init()
 pygame.mixer.init()
 
 DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", FONT_SIZE)
 
-pieces_file_names = ["general.png",
-                     "elephant.png",
-                     "advisor.png",
-                     "cannon.png",
-                     "soldier.png",
-                     "rook.png",
-                     "horse.png"]
-# _pieces_img = pygame.image.load(os.path.join("assets/imgs/Pieces", "all_pieces.png"))
-# pieces_imgs = [_pieces_img.subsurface(j * 77, i * 77, 75, 72) for i in range(2) for j in range(7)]
-pieces_style_western = False
-_pieces_imgs = [pygame.image.load(os.path.join("assets/imgs/Pieces", file_name))
-                 for file_name in pieces_file_names]
-size_img = _pieces_imgs[0].get_size()
-piece_width, piece_height = size_img[0] / 4, size_img[1]
+def init_imgs(is_western_style: bool) -> list:
 
-pieces_imgs = [img.subsurface((color * piece_width * 2 + pieces_style_western * piece_width, 0,
-                                piece_width, piece_height)) 
-                for color in [1, 0] for img in _pieces_imgs]
+    pieces_file_names = ["general.png",
+                        "elephant.png",
+                        "advisor.png",
+                        "cannon.png",
+                        "soldier.png",
+                        "rook.png",
+                        "horse.png"]
 
-pieces_imgs = [pygame.transform.scale(img, (UNIT, UNIT)) for img in pieces_imgs]
-board_img = pygame.image.load(os.path.join("assets/imgs", "board.png"))
-board_img = pygame.transform.scale(board_img, (UNIT * 8, UNIT * 9))
+    # Loads all pieces' sprite sheets in a 4:1 aspect ratio, containing four sprites,
+    # one of traditional and western style for the two colors each
+    _pieces_imgs = [pygame.image.load(os.path.join("assets/imgs/Pieces", file_name))
+                    for file_name in pieces_file_names]
+    size_img = _pieces_imgs[0].get_size()
+    piece_width, piece_height = size_img[0] / 4, size_img[1]
 
-move_sfx = pygame.mixer.Sound("assets/sfx/move.wav")
-capture_sfx = pygame.mixer.Sound("assets/sfx/capture.wav")
+    # This gets us the individual images of every piece-color and -type of the chosen style
+    pieces_imgs = [img.subsurface((color * piece_width * 2 + is_western_style * piece_width, 0,
+                                    piece_width, piece_height)) 
+                    for color in [1, 0] for img in _pieces_imgs]
 
-pygame.display.set_icon(pieces_imgs[1])
+    pieces_imgs = [pygame.transform.scale(img, (UNIT, UNIT)) for img in pieces_imgs]
+    board_img = pygame.image.load(os.path.join("assets/imgs", "board.png"))
+    board_img = pygame.transform.scale(board_img, (UNIT * 8, UNIT * 9))
+
+    return pieces_imgs, board_img
+
+PIECES_IMGS, BOARD_IMG = init_imgs(True)
+
+
+MOVE_SFX = pygame.mixer.Sound("assets/sfx/move.wav")
+CAPTURE_SFX = pygame.mixer.Sound("assets/sfx/capture.wav")
+
+pygame.display.set_icon(PIECES_IMGS[1])
 
 INITIAL_FEN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
 
@@ -101,7 +108,7 @@ def draw_moves(board, target_indices):
 
 def draw(board, legal_target_squares, remainig_times):
     WIN.fill(BG)
-    WIN.blit(board_img, (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2))
+    WIN.blit(BOARD_IMG, (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2))
     move_feedback()
 
     # Drawing reamining time
@@ -118,14 +125,17 @@ def draw(board, legal_target_squares, remainig_times):
         if piece:
             file = i % 9
             rank = i // 9
-            WIN.blit(pieces_imgs[piece[0] * 7 + piece[1]], (OFFSET_X + file * UNIT, OFFSET_Y + rank * UNIT))
+            WIN.blit(PIECES_IMGS[piece[0] * 7 + piece[1]], (OFFSET_X + file * UNIT, OFFSET_Y + rank * UNIT))
     
     #Dragging the selected piece
     if selected_piece:
         mouse_pos = pygame.mouse.get_pos()
-        WIN.blit(pieces_imgs[selected_piece[0] * 7 + selected_piece[1]], (mouse_pos[0] - (UNIT // 2), (mouse_pos[1] - UNIT // 2)))
+        WIN.blit(PIECES_IMGS[selected_piece[0] * 7 + selected_piece[1]], (mouse_pos[0] - (UNIT // 2), (mouse_pos[1] - UNIT // 2)))
     
     pygame.display.update()
+
+def play_sfx(audiofile):
+    audiofile.play()
 
 def human_event_handler(event, board, game, m_g):
     global board_ui, selected_piece, selected_square, moved_to, previous_targets
@@ -164,9 +174,9 @@ def human_event_handler(event, board, game, m_g):
 
         # Sound effects
         if board.squares[target_square]:
-            capture_sfx.play()
+            play_sfx(CAPTURE_SFX)
         else:
-            move_sfx.play()
+            play_sfx(MOVE_SFX)
 
         moved_to = target_square
 
