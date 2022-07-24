@@ -1,19 +1,19 @@
 from piece import Piece
 from precomputed_move_maps import Precomputing_moves
 class Legal_move_generator:
-    
+
     def __init__(self, board) -> None:
         Precomputing_moves.init_constants()
         self.dir_offsets = Precomputing_moves.dir_offsets
         self.dist_to_edge = Precomputing_moves.dist_to_edge
 
         # Precalculating move maps
-        self.king_moves = Precomputing_moves.precompute_king_moves()
-        self.rook_moves = Precomputing_moves.precompute_rook_moves()
-        self.horse_moves = Precomputing_moves.precompute_horse_moves()
-        self.advisor_moves = Precomputing_moves.precompute_advisor_moves()
-        self.elephant_moves = Precomputing_moves.precompute_elephant_moves()
-        self.pawn_moves = Precomputing_moves.precompute_pawn_moves()
+        self.king_move_map = Precomputing_moves.precompute_king_moves()
+        self.rook_move_map = Precomputing_moves.precompute_rook_moves()
+        self.horse_move_map = Precomputing_moves.precompute_horse_moves()
+        self.advisor_move_map = Precomputing_moves.precompute_advisor_moves()
+        self.elephant_move_map = Precomputing_moves.precompute_elephant_moves()
+        self.pawn_move_map = Precomputing_moves.precompute_pawn_moves()
 
         self.board = board
 
@@ -66,7 +66,7 @@ class Legal_move_generator:
     def generate_king_moves(self) -> None:
         current_square = self.friendly_king
 
-        target_squares = self.king_moves[self.friendly][current_square]
+        target_squares = self.king_move_map[self.friendly][current_square]
         for target_square in target_squares:
             if target_square in self.attack_map:
                 continue
@@ -83,7 +83,7 @@ class Legal_move_generator:
         """
         # Looping over friendly pawns
         for current_square in self.board.piece_lists[self.friendly][Piece.pawn]:
-            target_squares = self.pawn_moves[self.friendly][current_square]
+            target_squares = self.pawn_move_map[self.friendly][current_square]
             for target_square in target_squares:
                 target_piece = self.board.squares[target_square]
                 if Piece.is_color(target_piece, self.friendly):
@@ -98,7 +98,7 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal elephant moves
         """
         for elephant_square in self.board.piece_lists[self.friendly][Piece.elephant]:
-            target_squares = self.elephant_moves[self.friendly][elephant_square]
+            target_squares = self.elephant_move_map[self.friendly][elephant_square]
             illegal_squares = set()
             for dir_idx in range(4, 8):
                 # Checking for blocks
@@ -128,7 +128,7 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal advisor moves
         """
         for advisor_square in self.board.piece_lists[self.friendly][Piece.advisor]:
-            target_squares = self.advisor_moves[self.friendly][advisor_square]
+            target_squares = self.advisor_move_map[self.friendly][advisor_square]
             
             for target_square in target_squares:
                 target_piece = self.board.squares[target_square]
@@ -146,7 +146,7 @@ class Legal_move_generator:
         horse_offsets = self.dir_offsets[8:16]
 
         for horse_square in self.board.piece_lists[self.friendly][Piece.horse]:
-            legal_moves = self.horse_moves[horse_square]
+            legal_moves = self.horse_move_map[horse_square]
             illegal_moves = set()
 
             # removing moves blocked by other pieces
@@ -181,7 +181,7 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal rook moves
         """
         for current_square in self.board.piece_lists[self.friendly][Piece.rook]:
-            rook_attack_map = self.rook_moves[current_square]
+            rook_attack_map = self.rook_move_map[current_square]
             # Going through chosen direction indices
             for target_in_dir in rook_attack_map.values():
                 target_piece = False
@@ -233,6 +233,9 @@ class Legal_move_generator:
                     if target_piece:
                         break
 
+#-------------------------------------------------------------------------------
+#-------The part below is for calculating pins, checks, double cheks etc.-------
+#-------------------------------------------------------------------------------
 
     def flying_general(self):
         # red: down
@@ -283,7 +286,7 @@ class Legal_move_generator:
     def calculate_horse_attack_data(self) -> None:
         opponent_horses = self.board.piece_lists[self.opponent][Piece.horse]
         for square in opponent_horses:
-            for move in self.horse_moves[square]:
+            for move in self.horse_move_map[square]:
                 target_square = move[1]
                
                 # MISTAKE I MADE: 
@@ -340,9 +343,7 @@ class Legal_move_generator:
                     if double_block:
                         break
 
-
-    def calculate_cannon_attack_data(self) -> None:
-        self.generate_cannon_attack_map()
+    def generate_cannon_pins(self):
         for dir_idx in range(4):
             offset = self.dir_offsets[dir_idx]
             friendly_blocks = set()
@@ -375,6 +376,9 @@ class Legal_move_generator:
                 double_block = block
                 block = True
 
+    def calculate_cannon_attack_data(self) -> None:
+        self.generate_cannon_attack_map()
+        self.generate_cannon_pins()
 
     def generate_rook_attack_map(self) -> None:
         for square in self.board.piece_lists[self.opponent][Piece.rook]:
@@ -389,9 +393,7 @@ class Legal_move_generator:
                     if piece:
                         break
 
-
-    def calculate_rook_attack_data(self) -> None:
-        self.generate_rook_attack_map()
+    def generate_rook_pins(self):
         for dir_idx in range(4):
             offset = self.dir_offsets[dir_idx]
             friendly_block = None
@@ -424,11 +426,15 @@ class Legal_move_generator:
                 # If there're no friendly blocks, it's a check
                 self.double_check = self.check
                 self.check = True
-                break
+                break  
 
-    def generate_pawn_attack_map(self) -> None:
+    def calculate_rook_attack_data(self) -> None:
+        self.generate_rook_attack_map()
+        self.generate_rook_pins()
+
+    def calculate_pawn_attack_data(self) -> None:
         for square in self.board.piece_lists[self.opponent][Piece.pawn]:
-            for attacking_square in self.pawn_moves[self.opponent][square]:
+            for attacking_square in self.pawn_move_map[self.opponent][square]:
                 piece = self.board.squares[attacking_square]
 
                 if Piece.is_color(piece, self.friendly):
@@ -445,7 +451,7 @@ class Legal_move_generator:
         self.calculate_horse_attack_data()
         self.calculate_cannon_attack_data()
         self.calculate_rook_attack_data()
-        self.generate_pawn_attack_map()
+        self.calculate_pawn_attack_data()
         print("DOUBLE CHECK: ", self.double_check)
         self.attack_map |= self.horse_attack_map | self.rook_attack_map | self.cannon_attack_map | self.pawn_attack_map | self.king_attack_map
-        print(self.attack_map) 
+        print("ATTACK MAP: ", self.attack_map) 
