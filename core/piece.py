@@ -14,6 +14,7 @@ class Piece:
 
     @staticmethod
     def is_color(piece, color):
+        # piece is equal to 0 when target_square is empty so piece[0] would raise TypeError
         if not piece: 
             return False
         return piece[0] == color
