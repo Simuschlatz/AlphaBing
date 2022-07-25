@@ -1,8 +1,8 @@
 import pygame
-import os
 from board import Board
 from move_generator import Legal_move_generator
-from game import Game
+from data_initialzation import init_imgs
+from timer import Timer
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -10,67 +10,36 @@ BLUE = (0, 200, 255)
 YELLOW = (255, 255, 0)
 ORANGE = (255, 165, 0)
 TURQUOISE = (64, 224, 208)
-PURPLE = (128, 0, 128)
-PINK = (250, 0, 250)
 BLACK = (0, 0, 0)
-DARK_BLUE = (0, 0, 70)
 WHITE = (255, 255, 255)
 GREY = (200, 200, 200)
 BG = (240, 210, 170)
 
+UNIT = 80
 WIDTH = 1500
 HEIGHT = 1000
-UNIT = 80
 BOARD_WIDTH = 9 * UNIT
 BOARD_HEIGHT = 10 * UNIT
 FONT_SIZE = 50
 CIRCLE_DIAMETER = 15
 
+PIECES_IMGS, BOARD_IMG = init_imgs(UNIT, True)
+
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("MOIN")
+pygame.display.set_icon(PIECES_IMGS[1])
 pygame.font.init()
 pygame.mixer.init()
-
-DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", FONT_SIZE)
-
-def init_imgs(is_western_style: bool) -> list:
-
-    pieces_file_names = ["general.png",
-                        "elephant.png",
-                        "advisor.png",
-                        "cannon.png",
-                        "soldier.png",
-                        "rook.png",
-                        "horse.png"]
-
-    # Loads all pieces' sprite sheets in a 4:1 aspect ratio, containing four sprites,
-    # one of traditional and western style for the two colors each
-    _pieces_imgs = [pygame.image.load(os.path.join("assets/imgs/Pieces", file_name))
-                    for file_name in pieces_file_names]
-    size_img = _pieces_imgs[0].get_size()
-    piece_width, piece_height = size_img[0] / 4, size_img[1]
-
-    # This gets us the individual images of every piece-color and -type of the chosen style
-    pieces_imgs = [img.subsurface((color * piece_width * 2 + is_western_style * piece_width, 0,
-                                    piece_width, piece_height)) 
-                    for color in [1, 0] for img in _pieces_imgs]
-
-    pieces_imgs = [pygame.transform.scale(img, (UNIT, UNIT)) for img in pieces_imgs]
-    board_img = pygame.image.load(os.path.join("assets/imgs", "board.png"))
-    board_img = pygame.transform.scale(board_img, (UNIT * 8, UNIT * 9))
-
-    return pieces_imgs, board_img
-
-PIECES_IMGS, BOARD_IMG = init_imgs(True)
-
 
 MOVE_SFX = pygame.mixer.Sound("assets/sfx/move.wav")
 CAPTURE_SFX = pygame.mixer.Sound("assets/sfx/capture.wav")
 
-pygame.display.set_icon(PIECES_IMGS[1])
+DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", FONT_SIZE)
 
 INITIAL_FEN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
 
+# This board is created solely for UI purposes, so that the visual board can be modified
+# without crating interdependencies with the inner board representation
 board_ui = None
 
 def move_feedback():
@@ -199,8 +168,8 @@ def human_event_handler(event, board, game, m_g):
 
 def main():
     global board_ui
-    game = Game(600, "Papa", "Mama")
-    board = Board("RHEAKAEHR/9/7C/P5P1P/1Cp/4P/p5p1p/1ch4c/9/r1eakaehr", 1)
+    game = Timer(600, "Papa", "Mama")
+    board = Board("RHE1KAEH/4A/1C3R/P1P5P/4p1P/9/p1p3p1p/1c2C/9/rheakaeh", 1)
     board_ui = board.squares[:]
     m_g = Legal_move_generator(board)
     m_g.load_moves()
@@ -215,7 +184,6 @@ def main():
                 run = False
             human_event_handler(event, board, game, m_g)
         # r stands for remaining
-
 
 if __name__ == "__main__":
     main()
