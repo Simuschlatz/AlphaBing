@@ -91,6 +91,10 @@ class Legal_move_generator:
                 if target_square in self.illegal_squares:
                     continue
 
+                move_blocks_check = target_square in self.block_check_squares
+                if not move_blocks_check and self.check:
+                    continue
+
                 target_piece = self.board.squares[target_square]
                 if Piece.is_color(target_piece, self.friendly):
                     continue
@@ -108,6 +112,7 @@ class Legal_move_generator:
                 continue
             target_squares = self.elephant_move_map[self.friendly][elephant_square]
             illegal_squares = set()
+
             for dir_idx in range(4, 8):
                 # Checking for blocks
                 if self.dist_to_edge[elephant_square][dir_idx] < 1:
@@ -125,12 +130,19 @@ class Legal_move_generator:
             for target_square in target_squares:
                 if target_square in self.illegal_squares:
                     continue
+
                 target_piece = self.board.squares[target_square]
                 if Piece.is_color(target_piece, self.friendly):
                     continue
-                
+
+                move_blocks_check = target_square in self.block_check_squares
+                if not move_blocks_check and self.check:
+                    continue
                 self.moves.add((elephant_square, target_square))
                 self.target_squares[elephant_square] = self.target_squares.get(elephant_square, []) + [target_square]
+                # If this move blocks check, other moves can't
+                if move_blocks_check:
+                    break
 
 
     def generate_advisor_moves(self) -> None:
@@ -145,59 +157,45 @@ class Legal_move_generator:
             for target_square in target_squares:
                 if target_square in self.illegal_squares:
                     continue
+
+                move_blocks_check = target_square in self.block_check_squares
+                if not move_blocks_check and self.check:
+                    continue
+
                 target_piece = self.board.squares[target_square]
                 if Piece.is_color(target_piece, self.friendly):
                     continue
-
                 self.moves.add((advisor_square, target_square))
                 self.target_squares[advisor_square] = self.target_squares.get(advisor_square, []) + [target_square]
+                # If this move blocks check, other moves can't
+                if move_blocks_check:
+                    break
 
 
     def generate_horse_moves(self) -> None:
         """
         extends Legal_move_generator.moves with legal horse moves
         """
-        horse_offsets = self.dir_offsets[8:16]
-
         for horse_square in self.board.piece_lists[self.friendly][Piece.horse]:
             if self.is_pinned(horse_square):
                 continue
-            legal_moves = self.horse_move_map[horse_square]
-            illegal_moves = set()
+            horse_moves = self.horse_move_map[horse_square]
 
-            for move in legal_moves:
-                target_square = move[1]
-                blocking_square = self.board.get_horse_block(horse_square, target_square)
-                is_move_blocked = self.board.squares[blocking_square]
-                blocks_check = target_square in self.block_check_squares
-                if (self.check and not blocks_check) or is_move_blocked:
-                    illegal_moves.add((horse_square, target_square))
-
-            # # removing moves blocked by other pieces
-            # for dir_idx in range(4):
-
-            #     if self.dist_to_edge[horse_square][dir_idx] < 1:
-            #         continue
-
-            #     blocking_square = horse_square + self.dir_offsets[dir_idx]
-            #     is_blocking_move = self.board.squares[blocking_square]
-            #     if is_blocking_move:
-            #         # make use of the order of horse_jumps
-            #         # use the dir_idx for calculating the blocking square to also get the moves blocked by it
-            #         blocked_squares = [horse_square + horse_offsets[dir_idx * 2 - i] for i in range(2)]
-            #         illegal_moves.add((horse_square, blocked_squares[0]))
-            #         illegal_moves.add((horse_square, blocked_squares[1]))
-
-            legal_moves = list(set(legal_moves) - illegal_moves)
             # legal_moves = list(filter(lambda move: move in illegal_moves, legal_moves))
-            for move in legal_moves:
+            for move in horse_moves:
                 target_square = move[1]
                 if target_square in self.illegal_squares:
+                    continue
+                move_blocks_check = target_square in self.block_check_squares
+                if not move_blocks_check and self.check:
                     continue
                 target_piece = self.board.squares[target_square]
                 if Piece.is_color(target_piece, self.friendly):
                     continue
-
+                blocking_square = self.board.get_horse_block(horse_square, target_square)
+                is_move_blocked = self.board.squares[blocking_square]
+                if is_move_blocked:
+                    continue
                 self.moves.add((horse_square, target_square))
                 self.target_squares[horse_square] = self.target_squares.get(horse_square, []) + [target_square]
 
@@ -214,19 +212,22 @@ class Legal_move_generator:
             for targets_in_dir in rook_attack_map.values():
                 target_piece = False
                 # "Walking" in direction using direction offsets
-                for rook_square in targets_in_dir:
-                    if rook_square in self.illegal_squares:
+                for target_square in targets_in_dir:
+                    if target_square in self.illegal_squares:
+                        continue
+                    # The move doesn't block check
+                    move_blocks_check = target_square in self.block_check_squares
+                    if not move_blocks_check and self.check:
                         continue
 
-                    target_piece = self.board.squares[rook_square]
+                    target_piece = self.board.squares[target_square]
                     # If target_piece is friendly, go to next direction
                     if Piece.is_color(target_piece, self.friendly):
                         break
-
-                    self.moves.add((current_square, rook_square))
-                    self.target_squares[current_square] = self.target_squares.get(current_square, []) + [rook_square]
+                    self.moves.add((current_square, target_square))
+                    self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                     # If piece on target square and not friendly, go to next direction
-                    if target_piece:
+                    if target_piece or move_blocks_check:
                         break
 
 
@@ -247,7 +248,13 @@ class Legal_move_generator:
                     if self.board.squares[target_square] and not in_attack_mode:
                         in_attack_mode = True
                         continue
+                    # Can't move to or capture pieces on squares that would result in check
                     if target_square in self.illegal_squares:
+                        continue
+
+                    # The move doesn't block check
+                    move_blocks_check = target_square in self.block_check_squares
+                    if not move_blocks_check and self.check:
                         continue
                     
                     if in_attack_mode:
@@ -262,7 +269,7 @@ class Legal_move_generator:
 
                     self.moves.add((current_square, target_square))
                     self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
-                    if target_piece:
+                    if target_piece or move_blocks_check:
                         break
 
     def is_pinned(self, square):
@@ -340,6 +347,7 @@ class Legal_move_generator:
                     self.horse_attack_map.add(target_square)
                     if is_move_check:
                         self.check = True
+                        self.block_check_squares.add(block_square)
                         print("HORSE CHECK")
                     continue
 
@@ -384,10 +392,14 @@ class Legal_move_generator:
             friendly_screens = set()
             screens = set()
             doube_block = set()
-            illegal_squares = set()
+            visited_squares = set()
             for step in range(self.dist_to_edge[self.friendly_king][dir_idx]):
                 attacking_square = self.friendly_king + offset * (step + 1)
                 piece = self.board.squares[attacking_square]
+                visited_squares.add(attacking_square)
+                # Skip empty squares
+                if not piece:
+                    continue
 
                 if Piece.is_color(piece, self.opponent) and Piece.is_type(piece, Piece.cannon):
                     if doube_block:
@@ -397,15 +409,12 @@ class Legal_move_generator:
                     if screens:
                         self.check = True
                         self.illegal_squares |= screens - friendly_screens
+                        self.block_check_squares |= visited_squares - screens
                     # All squares between king and opponent cannon empty, so mark them as illegal
                     # as moving to any of them would result in a check
                     else:
-                        self.illegal_squares |= illegal_squares
+                        self.illegal_squares |= visited_squares - {attacking_square}
 
-                illegal_squares.add(attacking_square)
-                # Skip empty squares
-                if not piece:
-                    continue
                 # This is the third piece we come across, 
                 # thus preventing any checks / pins in current direction
                 if doube_block:
@@ -464,9 +473,9 @@ class Legal_move_generator:
                     break
 
                 # Opponent rook
-                # There's one friendly piece along the current direction, so (double-) pin it 
+                # There's one friendly piece along the current direction, so pin it 
                 if friendly_block:
-                    self.pinned_squares.add(attacking_square)
+                    self.pinned_squares.add(friendly_block)
                     break
                 # If there're no friendly blocks, it's a check
                 self.check = True
