@@ -9,7 +9,7 @@ class Legal_move_generator:
 
         # Precalculating move maps
         self.king_move_map = Precomputing_moves.precompute_king_moves()
-        self.rook_move_map = Precomputing_moves.precompute_rook_moves()
+        self.orthogonal_move_map = Precomputing_moves.precompute_rook_moves()
         self.horse_move_map = Precomputing_moves.precompute_horse_moves()
         self.advisor_move_map = Precomputing_moves.precompute_advisor_moves()
         self.elephant_move_map = Precomputing_moves.precompute_elephant_moves()
@@ -59,7 +59,6 @@ class Legal_move_generator:
 
         self.illegal_squares = set()
         self.pinned_squares = set()
-        self.double_pinned = set()
         self.check = False
         self.double_check = False
 
@@ -84,11 +83,13 @@ class Legal_move_generator:
         """
         # Looping over friendly pawns
         for current_square in self.board.piece_lists[self.friendly][Piece.pawn]:
+            if self.check and self.is_pinned(current_square):
+                break
             target_squares = self.pawn_move_map[self.friendly][current_square]
             for target_square in target_squares:
                 if target_square in self.illegal_squares:
                     continue
-                
+
                 target_piece = self.board.squares[target_square]
                 if Piece.is_color(target_piece, self.friendly):
                     continue
@@ -102,6 +103,8 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal elephant moves
         """
         for elephant_square in self.board.piece_lists[self.friendly][Piece.elephant]:
+            if self.is_pinned(elephant_square):
+                continue
             target_squares = self.elephant_move_map[self.friendly][elephant_square]
             illegal_squares = set()
             for dir_idx in range(4, 8):
@@ -134,8 +137,10 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal advisor moves
         """
         for advisor_square in self.board.piece_lists[self.friendly][Piece.advisor]:
+            if self.is_pinned(advisor_square):
+                continue
             target_squares = self.advisor_move_map[self.friendly][advisor_square]
-            
+
             for target_square in target_squares:
                 if target_square in self.illegal_squares:
                     continue
@@ -154,6 +159,8 @@ class Legal_move_generator:
         horse_offsets = self.dir_offsets[8:16]
 
         for horse_square in self.board.piece_lists[self.friendly][Piece.horse]:
+            if self.is_pinned(horse_square):
+                continue
             legal_moves = self.horse_move_map[horse_square]
             illegal_moves = set()
 
@@ -191,13 +198,14 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal rook moves
         """
         for current_square in self.board.piece_lists[self.friendly][Piece.rook]:
-            rook_attack_map = self.rook_move_map[current_square]
+            if self.check and self.is_pinned(current_square):
+                continue
+            rook_attack_map = self.orthogonal_move_map[current_square]
             # Going through chosen direction indices
-            for target_in_dir in rook_attack_map.values():
+            for targets_in_dir in rook_attack_map.values():
                 target_piece = False
                 # "Walking" in direction using direction offsets
-                for rook_square in target_in_dir:
-
+                for rook_square in targets_in_dir:
                     if rook_square in self.illegal_squares:
                         continue
 
@@ -208,7 +216,6 @@ class Legal_move_generator:
 
                     self.moves.add((current_square, rook_square))
                     self.target_squares[current_square] = self.target_squares.get(current_square, []) + [rook_square]
-
                     # If piece on target square and not friendly, go to next direction
                     if target_piece:
                         break
@@ -219,18 +226,21 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal cannon moves
         """
         for current_square in self.board.piece_lists[self.friendly][Piece.cannon]:
-            # Going through chosen direction indices
-            for dir_idx in range(4):
-                offset = self.dir_offsets[dir_idx]
+            if self.check and self.is_pinned(current_square):
+                continue
+            cannon_attack_map = self.orthogonal_move_map[current_square]
+            for targets_in_dir in cannon_attack_map.values():
                 in_attack_mode = False
                 target_piece = False
                 # "Walking" in direction using direction offsets
-                for step in range(self.dist_to_edge[current_square][dir_idx]):
-                    target_square = current_square + offset * (step + 1)
+                for target_square in targets_in_dir:
 
+                    if self.board.squares[target_square] and not in_attack_mode:
+                        in_attack_mode = True
+                        continue
                     if target_square in self.illegal_squares:
                         continue
-
+                    
                     if in_attack_mode:
                         target_piece = self.board.squares[target_square]
                         # if target square is empty, continue
@@ -241,14 +251,14 @@ class Legal_move_generator:
                         if Piece.is_color(target_piece, self.friendly):
                             break
 
-                    elif self.board.squares[target_square]:
-                        in_attack_mode = True
-                        continue
-
                     self.moves.add((current_square, target_square))
                     self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                     if target_piece:
                         break
+
+    def is_pinned(self, square):
+        return square in self.pinned_squares
+    
 
 #-------------------------------------------------------------------------------
 #-------The part below is for calculating pins, checks, double cheks etc.-------
@@ -276,8 +286,8 @@ class Legal_move_generator:
             # Friendly king
             if Piece.is_type(piece, Piece.king):
                 if block:
-                    # Pin piece, double pin it if already pinned
-                    self.double_pinned.add(block) if block in self.pinned_squares else self.pinned_squares.add(block)
+                    # Pin piece
+                    self.pinned_squares.add(block)
                     print("PIN BY KING")
                 else:
                     self.double_check = self.check
@@ -330,11 +340,7 @@ class Legal_move_generator:
                 if Piece.is_color(block_piece, self.opponent) or not is_move_check:
                     continue
 
-                # If blocked by friendly piece, it's pinned
-                if block_square in self.pinned_squares:
-                    # If already pinned, double pin it
-                    self.double_pinned.add(target_square)
-                    continue
+                # If blocked by friendly piece and move would result in check, it's pinned
                 self.pinned_squares.add(target_square)
 
     
@@ -369,32 +375,36 @@ class Legal_move_generator:
             offset = self.dir_offsets[dir_idx]
             # A screen is the piece between opponent cannon and the captured piece
             friendly_screens = set()
-            screen = False
-            doube_screen = False
+            screens = set()
+            doube_block = set()
             illegal_squares = set()
             for step in range(self.dist_to_edge[self.friendly_king][dir_idx]):
                 attacking_square = self.friendly_king + offset * (step + 1)
-                illegal_squares.add(attacking_square)
                 piece = self.board.squares[attacking_square]
-                # Skip empty squares
-                if not piece:
-                    continue
+
                 # Piece is opponent cannon
                 if Piece.is_color(piece, self.opponent) and Piece.is_type(piece, Piece.cannon):
-                    if doube_screen:
+                    if doube_block:
                         self.pinned_squares |= friendly_screens
-                        return
-                    if screen:
+                        self.illegal_squares |= screens - friendly_screens
+                        break
+                    if screens:
                         self.double_check = self.check
                         self.check = True
+                        self.illegal_squares |= screens - friendly_screens
                     # All squares between king and opponent cannon empty, so mark them as illegal
                     # as moving to any of them would result in a check
                     else:
                         self.illegal_squares |= illegal_squares
 
+                illegal_squares.add(attacking_square)
+                
+                # Skip empty squares
+                if not piece:
+                    continue
                 # This is the third piece we come across, 
                 # thus preventing any checks / pins in current direction
-                if doube_screen:
+                if doube_block:
                     break
                 # If piece is friendly, we add it to the friendly blocks
                 if Piece.is_color(piece, self.friendly):
@@ -402,9 +412,9 @@ class Legal_move_generator:
 
                 # First piece: block
                 # Second piece: double block    
-                doube_screen = screen
-                screen = True
-
+                doube_block = bool(screens)
+                screens.add(attacking_square)
+        print(self.illegal_squares)
 
     def calculate_cannon_attack_data(self) -> None:
         self.generate_cannon_attack_map()
@@ -450,9 +460,6 @@ class Legal_move_generator:
                 # Opponent rook
                 # There's one friendly piece along the current direction, so (double-) pin it 
                 if friendly_block:
-                    if attacking_square in self.pinned_squares:
-                        self.double_pinned.add(attacking_square)
-                        break
                     self.pinned_squares.add(attacking_square)
                     break
                 # If there're no friendly blocks, it's a check
@@ -486,6 +493,7 @@ class Legal_move_generator:
         self.calculate_cannon_attack_data()
         self.calculate_rook_attack_data()
         self.calculate_pawn_attack_data()
+        print("CHECK: ", self.check)
         print("DOUBLE CHECK: ", self.double_check)
         self.attack_map |= self.horse_attack_map | self.rook_attack_map | self.cannon_attack_map | self.pawn_attack_map | self.king_attack_map
         print("ATTACK MAP: ", self.attack_map) 
