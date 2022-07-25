@@ -27,7 +27,7 @@ class Legal_move_generator:
         self.calculate_attack_data()
         self.generate_king_moves()
         # In a double check, only the king can move
-        if self.double_check: return self.moves
+        if self.unresolvable_double_check: return self.moves
         self.generate_rook_moves()
         self.generate_cannon_moves()
         self.generate_horse_moves()
@@ -60,7 +60,8 @@ class Legal_move_generator:
         self.illegal_squares = set()
         self.pinned_squares = set()
         self.check = False
-        self.double_check = False
+        self.unresolvable_double_check = False
+        self.block_check_squares = set()
 
 
     def generate_king_moves(self) -> None:
@@ -164,20 +165,28 @@ class Legal_move_generator:
             legal_moves = self.horse_move_map[horse_square]
             illegal_moves = set()
 
-            # removing moves blocked by other pieces
-            for dir_idx in range(4):
-                if self.dist_to_edge[horse_square][dir_idx] < 1:
-                    continue
+            for move in legal_moves:
+                target_square = move[1]
+                blocking_square = self.board.get_horse_block(horse_square, target_square)
+                is_move_blocked = self.board.squares[blocking_square]
+                blocks_check = target_square in self.block_check_squares
+                if (self.check and not blocks_check) or is_move_blocked:
+                    illegal_moves.add((horse_square, target_square))
 
-                blocking_square = horse_square + self.dir_offsets[dir_idx]
-                is_blocking_move = self.board.squares[blocking_square]
-                if is_blocking_move:
+            # # removing moves blocked by other pieces
+            # for dir_idx in range(4):
 
-                    # make use of the order of horse_jumps
-                    # use the dir_idx for calculating the blocking square to also get the moves blocked by it
-                    blocked_squares = [horse_square + horse_offsets[dir_idx * 2 - i] for i in range(2)]
-                    illegal_moves.add((horse_square, blocked_squares[0]))
-                    illegal_moves.add((horse_square, blocked_squares[1]))
+            #     if self.dist_to_edge[horse_square][dir_idx] < 1:
+            #         continue
+
+            #     blocking_square = horse_square + self.dir_offsets[dir_idx]
+            #     is_blocking_move = self.board.squares[blocking_square]
+            #     if is_blocking_move:
+            #         # make use of the order of horse_jumps
+            #         # use the dir_idx for calculating the blocking square to also get the moves blocked by it
+            #         blocked_squares = [horse_square + horse_offsets[dir_idx * 2 - i] for i in range(2)]
+            #         illegal_moves.add((horse_square, blocked_squares[0]))
+            #         illegal_moves.add((horse_square, blocked_squares[1]))
 
             legal_moves = list(set(legal_moves) - illegal_moves)
             # legal_moves = list(filter(lambda move: move in illegal_moves, legal_moves))
@@ -290,7 +299,6 @@ class Legal_move_generator:
                     self.pinned_squares.add(block)
                     print("PIN BY KING")
                 else:
-                    self.double_check = self.check
                     self.check = True 
                 return
 
@@ -331,7 +339,6 @@ class Legal_move_generator:
                 if not block_piece:
                     self.horse_attack_map.add(target_square)
                     if is_move_check:
-                        self.double_check = self.check
                         self.check = True
                         print("HORSE CHECK")
                     continue
@@ -382,14 +389,12 @@ class Legal_move_generator:
                 attacking_square = self.friendly_king + offset * (step + 1)
                 piece = self.board.squares[attacking_square]
 
-                # Piece is opponent cannon
                 if Piece.is_color(piece, self.opponent) and Piece.is_type(piece, Piece.cannon):
                     if doube_block:
                         self.pinned_squares |= friendly_screens
                         self.illegal_squares |= screens - friendly_screens
                         break
                     if screens:
-                        self.double_check = self.check
                         self.check = True
                         self.illegal_squares |= screens - friendly_screens
                     # All squares between king and opponent cannon empty, so mark them as illegal
@@ -398,7 +403,6 @@ class Legal_move_generator:
                         self.illegal_squares |= illegal_squares
 
                 illegal_squares.add(attacking_square)
-                
                 # Skip empty squares
                 if not piece:
                     continue
@@ -439,9 +443,11 @@ class Legal_move_generator:
         for dir_idx in range(4):
             offset = self.dir_offsets[dir_idx]
             friendly_block = None
+            visited_squares = set()
             for step in range(self.dist_to_edge[self.friendly_king][dir_idx]):
                 attacking_square = self.friendly_king + offset * (step + 1)
                 piece = self.board.squares[attacking_square]
+                visited_squares.add(attacking_square)
                 # Skip empty squares
                 if not piece:
                     continue  
@@ -463,8 +469,8 @@ class Legal_move_generator:
                     self.pinned_squares.add(attacking_square)
                     break
                 # If there're no friendly blocks, it's a check
-                self.double_check = self.check
                 self.check = True
+                self.block_check_squares |= visited_squares
                 break  
 
 
@@ -480,7 +486,6 @@ class Legal_move_generator:
 
                 if Piece.is_color(piece, self.friendly):
                     if Piece.is_type(piece, Piece.king):
-                        self.double_check = self.check
                         self.check = True
                     continue
                 # Empty square or opponent piece
@@ -494,6 +499,5 @@ class Legal_move_generator:
         self.calculate_rook_attack_data()
         self.calculate_pawn_attack_data()
         print("CHECK: ", self.check)
-        print("DOUBLE CHECK: ", self.double_check)
         self.attack_map |= self.horse_attack_map | self.rook_attack_map | self.cannon_attack_map | self.pawn_attack_map | self.king_attack_map
         print("ATTACK MAP: ", self.attack_map) 
