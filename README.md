@@ -16,7 +16,7 @@
 
 ## General Information
 > **What problem does it intend to solve?**
-- The initial goal of this project was to compensate for my own very poor skills in Xiangqi with a computer's ability to crunch millions of numbers in no time and help me beat my grandfather.
+- The initial goal of this project was to compensate for my own very poor skills in Xiangqi with a computer's ability to crunch millions of numbers while getting introduced to simple AI software and Machine Learning.
 > **What's the purpose of creating the Project?**
 - Artificial Intelligence and especially Machine Learning is very often perceived as this intangibly complicated domain of Computer Science, which is partly true, but not true enough to intimidate people into not even trying to get a fundamental grasp of it.
 - With undertaking this project, I want to show that consistently achieving minor goals, making slow but steady progress, can accumulate to exceeding and superceding human brain capacity.
@@ -25,16 +25,26 @@
 
 ## Features
 
-**Move Generation**
-- precomputed data + procedual generation
-- finished: rook, cannon, horse, advisor, pawn, elephant
-- unfinished: king moves, check, checkmate, classifying pinned pieces
+**Game**
+<br/><br/>
+_Move Generation_
+  * precomputed data + procedual generation
+  * finished: 
+    * move- and attack-maps
+    * legal move generation considering pins and blocks
+* unfinished: irresolvable checks<br/>
+
+_UI & UX_<br/>
+* basic drag & drop
+* rudimentary SFX
+* marks possible captures & moves
 
 **Optimized Minimax (not implemented yet)**
 - minimax algorithm
 - alpha-beta pruning
 - iterative deepening
 - position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and SLEF)
+- handling transposition with zobrist hashing
 
 **Computer Vision (not implemented yet)**
 - supervised learning with tensorflow
