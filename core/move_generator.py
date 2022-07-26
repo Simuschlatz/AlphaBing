@@ -88,7 +88,9 @@ class Legal_move_generator:
         for current_square in self.board.piece_lists[self.friendly][Piece.pawn]:
             if self.checks and self.is_pinned(current_square):
                 break
+            avoids_cannon_check = current_square in self.prevents_cannon_check
             target_squares = self.pawn_move_map[self.friendly][current_square]
+
             for target_square in target_squares:
                 dir_idx = self.dir_offsets.index(target_square - current_square)
                 if self.is_pinned(current_square) and not self.moves_along_ray(self.friendly_king, current_square, dir_idx):
@@ -105,7 +107,6 @@ class Legal_move_generator:
                 self.moves.add((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                 # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
-                avoids_cannon_check = target_square in self.prevents_cannon_check
                 if blocks_all_checks and self.checks and not avoids_cannon_check:
                     break
 
@@ -116,9 +117,10 @@ class Legal_move_generator:
         for current_square in self.board.piece_lists[self.friendly][Piece.elephant]:
             if self.is_pinned(current_square):
                 continue
-            target_squares = self.elephant_move_map[self.friendly][current_square]
             illegal_squares = set()
-
+            avoids_cannon_check = current_square in self.prevents_cannon_check
+            target_squares = self.elephant_move_map[self.friendly][current_square]
+            
             for dir_idx in range(4, 8):
                 # Checking for blocks
                 if self.dist_to_edge[current_square][dir_idx] < 1:
@@ -147,7 +149,6 @@ class Legal_move_generator:
                 self.moves.add((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                 # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
-                avoids_cannon_check = target_square in self.prevents_cannon_check
                 if blocks_all_checks and self.checks and not avoids_cannon_check:
                     break
 
@@ -159,6 +160,7 @@ class Legal_move_generator:
         for current_square in self.board.piece_lists[self.friendly][Piece.advisor]:
             if self.is_pinned(current_square):
                 continue
+            avoids_cannon_check = current_square in self.prevents_cannon_check
             target_squares = self.advisor_move_map[self.friendly][current_square]
 
             for target_square in target_squares:
@@ -175,7 +177,6 @@ class Legal_move_generator:
                 self.moves.add((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                  # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
-                avoids_cannon_check = target_square in self.prevents_cannon_check
                 if blocks_all_checks and self.checks and not avoids_cannon_check:
                     break
 
@@ -217,6 +218,7 @@ class Legal_move_generator:
         for current_square in self.board.piece_lists[self.friendly][Piece.rook]:
             if self.checks and self.is_pinned(current_square):
                 continue
+            avoids_cannon_check = current_square in self.prevents_cannon_check
             rook_attack_map = self.orthogonal_move_map[current_square]
             # Going through chosen direction indices
             for dir_idx, squares_in_dir in rook_attack_map.items():
@@ -244,7 +246,6 @@ class Legal_move_generator:
                     if target_piece:
                         break
                     # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
-                    avoids_cannon_check = target_square in self.prevents_cannon_check
                     if blocks_all_checks and self.checks and not avoids_cannon_check:
                         break
 
@@ -255,6 +256,7 @@ class Legal_move_generator:
         for current_square in self.board.piece_lists[self.friendly][Piece.cannon]:
             if self.checks and self.is_pinned(current_square):
                 continue
+            avoids_cannon_check = current_square in self.prevents_cannon_check
             cannon_attack_map = self.orthogonal_move_map[current_square]
             for dir_idx, targets_in_dir in cannon_attack_map.items():
                 if self.is_pinned(current_square) and not self.moves_along_ray(self.friendly_king, current_square, dir_idx):
@@ -289,7 +291,6 @@ class Legal_move_generator:
                     self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                     if target_piece:
                         break
-                    avoids_cannon_check = target_square in self.prevents_cannon_check
                     if blocks_all_checks and self.checks and not avoids_cannon_check:
                         break
 
