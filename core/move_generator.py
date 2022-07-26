@@ -88,6 +88,9 @@ class Legal_move_generator:
                 break
             target_squares = self.pawn_move_map[self.friendly][current_square]
             for target_square in target_squares:
+                dir_idx = self.dir_offsets.index(target_square - current_square)
+                if self.is_pinned(current_square) and not self.moves_along_ray(self.friendly_king, current_square, dir_idx):
+                    continue
                 if target_square in self.illegal_squares:
                     continue
 
@@ -209,7 +212,7 @@ class Legal_move_generator:
                 continue
             rook_attack_map = self.orthogonal_move_map[current_square]
             # Going through chosen direction indices
-            for dir_idx, squares_in_dir in enumerate(rook_attack_map.values()):
+            for dir_idx, squares_in_dir in rook_attack_map.items():
                 if self.is_pinned(current_square) and not self.moves_along_ray(self.friendly_king, current_square, dir_idx):
                     continue
                 target_piece = False
@@ -241,7 +244,9 @@ class Legal_move_generator:
             if self.check and self.is_pinned(current_square):
                 continue
             cannon_attack_map = self.orthogonal_move_map[current_square]
-            for targets_in_dir in cannon_attack_map.values():
+            for dir_idx, targets_in_dir in cannon_attack_map.items():
+                if self.is_pinned(current_square) and not self.moves_along_ray(self.friendly_king, current_square, dir_idx):
+                    continue
                 in_attack_mode = False
                 target_piece = False
                 # "Walking" in direction using direction offsets
