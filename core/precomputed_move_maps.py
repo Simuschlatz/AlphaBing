@@ -57,7 +57,7 @@ class Precomputing_moves:
     @staticmethod
     def precompute_king_moves() -> list:
         """
-        :return: a list of one dictionary for one side fo the board each, containing 
+        :return: a list of one hash map for one side fo the board each, containing 
         all start indices as keys and the possible targets of those positions as value\n
         output form : [{int : [int, int...], int: [int]...}, {...}]
         """
@@ -140,7 +140,7 @@ class Precomputing_moves:
     @classmethod
     def precompute_advisor_moves(cls) -> list:
         """
-        :return: a list of one dictionary for one side fo the board each, containing 
+        :return: a list of one hash map for one side fo the board each, containing 
         all start indices as keys and the possible targets of those positions as value\n
         output form : [{int : [int, int...], int: [int]...}, {...}]
         """
@@ -170,7 +170,7 @@ class Precomputing_moves:
     @classmethod
     def precompute_pawn_moves(cls) -> list:
         """
-        :return: a list of one dictionary for one side fo the board each, containing 
+        :return: a list of one hash map for one side fo the board each, containing 
         all start indices as keys and the possible targets of those positions as value\n
         output form : [{int : [int, int...], int: [int]...}, {...}]
         """
@@ -202,7 +202,7 @@ class Precomputing_moves:
     @classmethod
     def precompute_elephant_moves(cls) -> list:
         """
-        :return: a list of one dictionary for one side fo the board each, containing 
+        :return: a list of one hash map for one side fo the board each, containing 
         all start indices as keys and the possible targets of those positions as value\n
         output form : [{int : [int, int...], int: [int]...}, {...}]
         """
