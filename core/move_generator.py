@@ -49,7 +49,7 @@ class Legal_move_generator:
         self.opponent_king = list(self.board.piece_lists[self.opponent][Piece.king]).pop()
         self.flying_general_possibility = self.friendly_king % 9 == self.opponent_king % 9
 
-        self.moves = set()
+        self.moves = []
         self.target_squares = {}
 
         self.attack_map = set()
@@ -76,7 +76,7 @@ class Legal_move_generator:
             target_piece = self.board.squares[target_square]
             if Piece.is_color(target_piece, self.friendly):
                 continue
-            self.moves.add((current_square, target_square))
+            self.moves.append((current_square, target_square))
             self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
 
 
@@ -104,7 +104,7 @@ class Legal_move_generator:
                 if Piece.is_color(target_piece, self.friendly):
                     continue
 
-                self.moves.add((current_square, target_square))
+                self.moves.append((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                 # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
                 if blocks_all_checks and self.checks and not avoids_cannon_check:
@@ -146,7 +146,7 @@ class Legal_move_generator:
                 blocks_all_checks = self.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
                     continue
-                self.moves.add((current_square, target_square))
+                self.moves.append((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                 # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
                 if blocks_all_checks and self.checks and not avoids_cannon_check:
@@ -174,7 +174,7 @@ class Legal_move_generator:
                 target_piece = self.board.squares[target_square]
                 if Piece.is_color(target_piece, self.friendly):
                     continue
-                self.moves.add((current_square, target_square))
+                self.moves.append((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                  # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
                 if blocks_all_checks and self.checks and not avoids_cannon_check:
@@ -207,7 +207,7 @@ class Legal_move_generator:
                 is_move_blocked = self.board.squares[blocking_square]
                 if is_move_blocked:
                     continue
-                self.moves.add((current_square, target_square))
+                self.moves.append((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
 
 
@@ -240,7 +240,7 @@ class Legal_move_generator:
                     # If target_piece is friendly, go to next direction
                     if Piece.is_color(target_piece, self.friendly):
                         break
-                    self.moves.add((current_square, target_square))
+                    self.moves.append((current_square, target_square))
                     self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                     # If piece on target square and not friendly, go to next direction
                     if target_piece:
@@ -248,6 +248,7 @@ class Legal_move_generator:
                     # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
                     if blocks_all_checks and self.checks and not avoids_cannon_check:
                         break
+
 
     def generate_cannon_moves(self) -> None:
         """
@@ -287,7 +288,7 @@ class Legal_move_generator:
                         if Piece.is_color(target_piece, self.friendly):
                             break
 
-                    self.moves.add((current_square, target_square))
+                    self.moves.append((current_square, target_square))
                     self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                     if target_piece:
                         break

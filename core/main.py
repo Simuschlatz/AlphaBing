@@ -1,8 +1,12 @@
+import math
+import random
+import time
 import pygame
 from board import Board
 from move_generator import Legal_move_generator
-from data_initialzation import init_imgs
+from data_init import init_imgs
 from timer import Timer
+
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -106,7 +110,7 @@ def draw(board, legal_target_squares, remainig_times):
 def play_sfx(audiofile):
     audiofile.play()
 
-def human_event_handler(event, board, game, m_g):
+def human_event_handler(event, board, m_g):
     global board_ui, selected_piece, selected_square, moved_to, previous_targets
     if event.type == pygame.MOUSEBUTTONDOWN:
         mouse_pos = pygame.mouse.get_pos()
@@ -157,6 +161,13 @@ def human_event_handler(event, board, game, m_g):
         previous_targets = m_g.target_squares
         # Load moves for next player
         m_g.load_moves()
+        if not len(m_g.moves):
+            print("CHECKMATE!")
+            return
+        board.make_move(*m_g.moves[math.floor(random.random() * len(m_g.moves))])
+        board_ui = board.squares[:]
+        board.switch_player_to_move()
+        m_g.load_moves()
 
     if event.type == pygame.KEYDOWN and not selected_piece and moved_to:
         if event.key == pygame.K_SPACE and previous_targets:
@@ -169,20 +180,22 @@ def human_event_handler(event, board, game, m_g):
 def main():
     global board_ui
     game = Timer(600, "Papa", "Mama")
-    board = Board("RHE1KAEH/4A/1C3R/P1P5P/4p1P/9/p1p3p1p/1c2C/9/rheakaeh", 1)
+    board = Board(INITIAL_FEN, 1)
     board_ui = board.squares[:]
     m_g = Legal_move_generator(board)
     m_g.load_moves()
+    clock = pygame.time.Clock()
     run = True
     while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            human_event_handler(event, board, m_g)
         game.run(board.color_to_move)
         rendered_text = [DISPLAY_FONT.render(f"{game.r_min_tens[0]}{game.r_min_ones[0]}:{game.r_sec_tens[0]}{game.r_sec_ones[0]}", False, (130, 130, 130)),
                         DISPLAY_FONT.render(f"{game.r_min_tens[1]}{game.r_min_ones[1]}:{game.r_sec_tens[1]}{game.r_sec_ones[1]}", False, (130, 130, 130))]
         draw(board, m_g.target_squares, rendered_text)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            human_event_handler(event, board, game, m_g)
+        clock.tick(60)
         # r stands for remaining
 
 if __name__ == "__main__":
