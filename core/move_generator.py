@@ -1,7 +1,10 @@
 from piece import Piece
 from precomputed_move_maps import Precomputing_moves
 class Legal_move_generator:
-
+    """
+    Generates legal moves from pseudo-legal-move-maps \n
+    call load_moves() to receive a list of all legal moves for the current state of the game.
+    """
     def __init__(self, board) -> None:
         Precomputing_moves.init_constants()
         self.dir_offsets = Precomputing_moves.dir_offsets
@@ -32,7 +35,7 @@ class Legal_move_generator:
         self.generate_advisor_moves()
         self.generate_pawn_moves()
         self.generate_elephant_moves()
-        print(len(self.moves))
+
         return self.moves
     
 
