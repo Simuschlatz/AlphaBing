@@ -209,10 +209,12 @@ class Legal_move_generator:
                 continue
             rook_attack_map = self.orthogonal_move_map[current_square]
             # Going through chosen direction indices
-            for targets_in_dir in rook_attack_map.values():
+            for dir_idx, squares_in_dir in enumerate(rook_attack_map.values()):
+                if self.is_pinned(current_square) and not self.moves_along_ray(self.friendly_king, current_square, dir_idx):
+                    continue
                 target_piece = False
                 # "Walking" in direction using direction offsets
-                for target_square in targets_in_dir:
+                for target_square in squares_in_dir:
                     if target_square in self.illegal_squares:
                         continue
                     # The move doesn't block check
@@ -275,6 +277,17 @@ class Legal_move_generator:
     def is_pinned(self, square):
         return square in self.pinned_squares
     
+
+    def moves_along_ray(self, king_square: int, current_square: int, dir_idx: int):
+        """
+        :return: bool if move keeps a piece along the ray between two squares \n
+        only to be used for orthogonally moving pieces.
+        """
+        target_square = current_square + self.dir_offsets[dir_idx]
+        pin_ray_delta_dist = abs(current_square - king_square) % 9
+        move_ray_delta_dist = abs(target_square - king_square) % 9
+
+        return pin_ray_delta_dist == move_ray_delta_dist
 
 #-------------------------------------------------------------------------------
 #-------The part below is for calculating pins, checks, double cheks etc.-------
@@ -356,7 +369,7 @@ class Legal_move_generator:
                     continue
 
                 # If blocked by friendly piece and move would result in check, it's pinned
-                self.pinned_squares.add(target_square)
+                self.pinned_squares.add(block_square)
 
     
     def generate_cannon_attack_map(self):
@@ -427,7 +440,6 @@ class Legal_move_generator:
                 # Second piece: double block    
                 doube_block = bool(screens)
                 screens.add(attacking_square)
-        print(self.illegal_squares)
 
     def calculate_cannon_attack_data(self) -> None:
         self.generate_cannon_attack_map()
