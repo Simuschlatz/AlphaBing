@@ -34,7 +34,8 @@ _Move Generation_
   * finished: 
     * move- and attack-maps
     * legal move generation considering pins and blocks
-* unfinished: irresolvable checks<br/>
+    * handling (multiple) checks, checkmate, stalemate
+    <br/>
 
 _UI & UX_<br/>
 * basic drag & drop
