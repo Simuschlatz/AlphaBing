@@ -1,5 +1,3 @@
-from os import stat
-from turtle import color
 from piece import Piece
 import numpy as np
 
@@ -94,28 +92,6 @@ class Board:
 
     # def is_blocking_check(check_piece):
 
-
-
-    @staticmethod
-    def is_moving_between_squares(square_1: int, square_2: int, dir_idx: int):
-        """
-        :return: bool if current direction moves a piece along the line between two squares
-        """
-        dir_idx_y = {0, 2}
-        dir_idx_x = {1, 3}
-
-        dist = abs(square_1 - square_2)
-        delta_dist = dist % 9
-
-        if not delta_dist:
-            return dir_idx in dir_idx_y
-
-        abs_offset_x = 1
-        if delta_dist == abs_offset_x:
-            return dir_idx in dir_idx_x
-
-        return False
-
     @staticmethod
     def get_horse_block(current_square, target_square):
         d_rank = target_square // 9 - current_square // 9
@@ -142,6 +118,8 @@ class Board:
         self.squares[target_square] = self.moved_piece
         self.squares[current_square] = 0
 
+        print(self.load_fen_from_board())
+        
     def reverse_move(self):
         color, piece_type = self.moved_piece
         self.piece_lists[color][piece_type].remove(self.moved_to)  
