@@ -1,5 +1,6 @@
 from piece import Piece
 from precomputed_move_maps import Precomputing_moves
+
 class Legal_move_generator:
     """
     Generates legal moves from pseudo-legal-move-maps \n
@@ -103,7 +104,9 @@ class Legal_move_generator:
 
                 self.moves.add((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
-                if blocks_all_checks and self.checks:
+                # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
+                avoids_cannon_check = target_square in self.prevents_cannon_check
+                if blocks_all_checks and self.checks and not avoids_cannon_check:
                     break
 
     def generate_elephant_moves(self) -> None:
@@ -143,8 +146,9 @@ class Legal_move_generator:
                     continue
                 self.moves.add((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
-                # If this move blocks check, other moves can't
-                if blocks_all_checks and self.checks:
+                # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
+                avoids_cannon_check = target_square in self.prevents_cannon_check
+                if blocks_all_checks and self.checks and not avoids_cannon_check:
                     break
 
 
@@ -170,8 +174,9 @@ class Legal_move_generator:
                     continue
                 self.moves.add((current_square, target_square))
                 self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
-                # If this move blocks check(s), other moves can't
-                if blocks_all_checks and self.checks:
+                 # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
+                avoids_cannon_check = target_square in self.prevents_cannon_check
+                if blocks_all_checks and self.checks and not avoids_cannon_check:
                     break
 
 
@@ -236,9 +241,12 @@ class Legal_move_generator:
                     self.moves.add((current_square, target_square))
                     self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
                     # If piece on target square and not friendly, go to next direction
-                    if target_piece or blocks_all_checks and self.checks:
+                    if target_piece:
                         break
-
+                    # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
+                    avoids_cannon_check = target_square in self.prevents_cannon_check
+                    if blocks_all_checks and self.checks and not avoids_cannon_check:
+                        break
 
     def generate_cannon_moves(self) -> None:
         """
@@ -279,8 +287,13 @@ class Legal_move_generator:
 
                     self.moves.add((current_square, target_square))
                     self.target_squares[current_square] = self.target_squares.get(current_square, []) + [target_square]
-                    if target_piece or blocks_all_checks and self.checks:
+                    if target_piece:
                         break
+                    avoids_cannon_check = target_square in self.prevents_cannon_check
+                    if blocks_all_checks and self.checks and not avoids_cannon_check:
+                        break
+
+
 
     def blocks_all_checks(self, current_square, target_square):
         # If the piece is a screen for opponent cannon and moves out of the way,
@@ -288,6 +301,7 @@ class Legal_move_generator:
         disables_cannon = current_square in self.prevents_cannon_check
         num_checks_blocked = self.block_check_hash.get(target_square, 0) + disables_cannon
         return num_checks_blocked == self.checks
+
 
     def is_pinned(self, square):
         return square in self.pinned_squares
@@ -426,6 +440,7 @@ class Legal_move_generator:
 
                 if Piece.is_color(piece, self.opponent) and Piece.is_type(piece, Piece.cannon):
                     if double_block:
+                        self.illegal_squares |= screens - friendly_screens
                         self.pinned_squares |= friendly_screens
                         break
                     if screens:
