@@ -12,7 +12,7 @@ class Board:
         self.previous_square = None
         self.moved_to = None
         # To keep track of the pieces' indices (Piece-centric repr)
-        self.piece_lists = [[set() for i in range(7)] for i in range(2)]
+        self.piece_lists = [[set() for _ in range(7)] for _ in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
 
@@ -121,6 +121,9 @@ class Board:
         print(self.load_fen_from_board())
         
     def reverse_move(self):
+        if self.moved_piece is None:
+            return
+
         color, piece_type = self.moved_piece
         self.piece_lists[color][piece_type].remove(self.moved_to)  
         self.piece_lists[color][piece_type].add(self.previous_square)
