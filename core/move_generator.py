@@ -25,11 +25,9 @@ class Legal_move_generator:
     def load_moves(self) -> list:
         """
         :return: a list of tuples containing the start and end indices of all possible moves
-        color_to_move : int
         """
         self.init()
         self.calculate_attack_data()
-        print("attack daata generated")
         self.generate_king_moves()
         self.generate_rook_moves()
         self.generate_cannon_moves()
@@ -42,9 +40,9 @@ class Legal_move_generator:
     
 
     def init(self):
-        # variable "color_to_move" can be used for indexing and determining the color of piece 
+        # variable "moving" can be used for indexing and determining the color of piece 
         # (see "piece.py > class Piece") here e.g. allows to only loop over friendly indices
-        self.friendly = self.board.color_to_move
+        self.friendly = self.board.moving_color
         self.opponent = 1 - self.friendly
         self.friendly_king = list(self.board.piece_lists[self.friendly][Piece.king]).pop()
         self.opponent_king = list(self.board.piece_lists[self.opponent][Piece.king]).pop()
@@ -349,7 +347,6 @@ class Legal_move_generator:
                 if block:
                     # Pin piece
                     self.pinned_squares.add(block)
-                    print("PIN BY KING")
                 else:
                     self.checks += 1
                 return
@@ -363,7 +360,7 @@ class Legal_move_generator:
         # friendly king can't move to the opponent king's file
         if block:
             return
-        print("FLYING GENERAL THREAT")
+        # print("FLYING GENERAL THREAT")
         friendly_king_rank = self.friendly_king // 9
         opponent_king_file = self.opponent_king % 9
         flyin_general_square = friendly_king_rank * 9 + opponent_king_file
@@ -556,6 +553,6 @@ class Legal_move_generator:
         self.calculate_cannon_attack_data()
         self.calculate_rook_attack_data()
         self.calculate_pawn_attack_data()
-        print("CHECK: ", self.checks)
+        # print("CHECK: ", self.checks)
         self.attack_map |= self.horse_attack_map | self.rook_attack_map | self.cannon_attack_map | self.pawn_attack_map | self.king_attack_map
-        print("SQUARES BLOCKING CHECK: ", self.block_check_hash) 
+        # print("SQUARES BLOCKING CHECK: ", self.block_check_hash) 
