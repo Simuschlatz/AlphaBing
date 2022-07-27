@@ -3,7 +3,7 @@ import random
 import pygame
 from board import Board
 from move_generator import Legal_move_generator
-from data_initialzation import init_imgs
+from data_init import init_imgs
 from timer import Timer
 
 FPS = 60
@@ -161,14 +161,7 @@ def human_event_handler(event, board, m_g):
         previous_targets = m_g.target_squares
         # Load moves for next player
         m_g.load_moves()
-        if not len(m_g.moves):
-            print("CHECKMATE!")
-            return
-        board.make_move(*m_g.moves[math.floor(random.random() * len(m_g.moves))])
-        board_ui = board.squares[:]
-        board.switch_player_to_move()
-        m_g.load_moves()
-
+        
     if event.type == pygame.KEYDOWN and not selected_piece and moved_to:
         if event.key == pygame.K_SPACE and previous_targets:
             board.reverse_move()
