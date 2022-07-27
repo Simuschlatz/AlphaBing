@@ -29,6 +29,7 @@ class Legal_move_generator:
         """
         self.init()
         self.calculate_attack_data()
+        print("attack daata generated")
         self.generate_king_moves()
         self.generate_rook_moves()
         self.generate_cannon_moves()
@@ -416,6 +417,8 @@ class Legal_move_generator:
                     if piece:
                         double_block = block
                         block = True
+                    if Piece.is_color(piece, self.friendly) and Piece.is_type(piece, Piece.king):
+                        continue
                     if double_block:
                         break
 
@@ -471,6 +474,7 @@ class Legal_move_generator:
                 # Second piece: double block    
                 double_block = bool(screens)
                 screens.add(attacking_square)
+
 
     def calculate_cannon_attack_data(self) -> None:
         self.generate_cannon_attack_map()
