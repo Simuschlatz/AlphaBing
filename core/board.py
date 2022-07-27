@@ -1,16 +1,18 @@
 from piece import Piece
 import numpy as np
+# from collections import deque
 
 class Board:
-    def __init__(self, FEN: str, color_to_move: int) -> None:
-        self.color_to_move = color_to_move
-        self.opponent_color = 1 - color_to_move
+    def __init__(self, FEN: str, moving_color: int) -> None:
+        self.moving_color = moving_color
+        self.opponent_color = 1 - moving_color
         # Square-centric board repr
         self.squares = list(np.zeros(90, dtype=np.int16))
-        self.moved_piece = None
-        self.captured_piece = None
-        self.previous_square = None
-        self.moved_to = None
+        # This keeps track of all game states in history, 
+        # so multiple moves can be reversed consecutively, coming in really handy in dfs
+        self.game_states = [] # Stack(:prev square, :target square :captured piece)
+        # self.game_states = deque()
+
         # To keep track of the pieces' indices (Piece-centric repr)
         self.piece_lists = [[set() for _ in range(7)] for _ in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX self.piece_list = [[set()] * 7] * 2 
@@ -27,10 +29,10 @@ class Board:
         file = min(8, max(file, 0))
         return file, rank
 
-    def switch_player_to_move(self):
-        self.opponent_color = self.color_to_move
-        self.color_to_move = 1 - self.color_to_move
-        if self.color_to_move:
+    def switch_moving_color(self):
+        self.opponent_color = self.moving_color
+        self.moving_color = 1 - self.moving_color
+        if self.moving_color:
             print("RED MOVES")
             return
         print("WHITE MOVES")
@@ -83,12 +85,8 @@ class Board:
     def get_piece_list(self, piece_type: int, color_idx):
         return self.piece_lists[color_idx][piece_type]
     
-    def is_friendly_square(self, square):
-        piece = self.squares[square]
-        return piece[0] == self.color_to_move if piece else False
-    
-    def is_square_empty(self, square):
-        return not self.squares[square]
+    def is_capture(self, square):
+        return self.squares[square]
 
     # def is_blocking_check(check_piece):
 
@@ -101,35 +99,52 @@ class Board:
             return current_square + d_rank // 2 * 9
         return current_square + d_file // 2
 
-    def make_move(self, current_square, target_square):
-        self.moved_piece = self.squares[current_square]
-        color, piece_type = self.moved_piece
+    def make_move(self, move):
+        previous_square, moved_to = move
+        moved_piece = self.squares[previous_square]
+        _, piece_type = moved_piece
         # Updating piece lists
-        self.piece_lists[color][piece_type].remove(current_square)
-        self.piece_lists[color][piece_type].add(target_square)
+        self.piece_lists[self.moving_color][piece_type].remove(previous_square)
+        self.piece_lists[self.moving_color][piece_type].add(moved_to)
+        
+        captured_piece = self.squares[moved_to]
+        is_capture = bool(captured_piece)
+        if is_capture:
+            captured_type = captured_piece[1]
+            self.piece_lists[self.opponent_color][captured_type].remove(moved_to)
 
-        for piece_list in self.piece_lists[1 - color]:
-            piece_list.discard(target_square)
-
-        self.captured_piece = self.squares[target_square]
-        self.previous_square, self.moved_to = current_square, target_square
-
+        # Adding current game state to history
+        current_game_state = (previous_square, moved_to, captured_piece)
+        self.game_states.append(current_game_state)
         # Updating the board
-        self.squares[target_square] = self.moved_piece
-        self.squares[current_square] = 0
-
+        self.squares[moved_to] = moved_piece
+        self.squares[previous_square] = 0
+        self.switch_moving_color()
         print(self.load_fen_from_board())
+
+        # Used for quiescene search
+        return is_capture
         
     def reverse_move(self):
-        if self.moved_piece is None:
+        if not len(self.game_states):
             return
+        # Accessing the previous game state data
+        previous_square, moved_to, captured_piece = self.game_states.pop()
+        print(len(self.game_states))
+        moved_piece = self.squares[moved_to]
+        color, piece_type = moved_piece
+        # Reversing the move
+        print(self.piece_lists[color][piece_type], end=" // ")
+        self.piece_lists[color][piece_type].remove(moved_to)  
+        self.piece_lists[color][piece_type].add(previous_square)
+        print(self.piece_lists[color][piece_type])
 
-        color, piece_type = self.moved_piece
-        self.piece_lists[color][piece_type].remove(self.moved_to)  
-        self.piece_lists[color][piece_type].add(self.previous_square)
+        if captured_piece:
+            captured_type = captured_piece[1]
+            self.piece_lists[1 - color][captured_type].add(moved_to)
 
-        if self.captured_piece:
-            self.piece_lists[1 - color][self.captured_piece[1]].add(self.moved_to)
-        
-        self.squares[self.previous_square] = self.moved_piece
-        self.squares[self.moved_to] = self.captured_piece
+        self.squares[previous_square] = moved_piece
+        self.squares[moved_to] = captured_piece
+
+        # Switch back to previous moving color
+        self.switch_moving_color()

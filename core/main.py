@@ -124,7 +124,7 @@ def human_event_handler(event, board, m_g):
         if board.squares[current_square]:
             
             # If not a friendly color or no moves possible return
-            if not board.is_friendly_square(current_square) or current_square not in m_g.target_squares:
+            if current_square not in m_g.target_squares:
                 return
             selected_square = rank * 9 + file
             selected_piece = board.squares[selected_square]
@@ -152,23 +152,20 @@ def human_event_handler(event, board, m_g):
             play_sfx(MOVE_SFX)
 
         moved_to = target_square
-
-        board.make_move(selected_square, target_square)
+        move = (selected_square, target_square)
+        board.make_move(move)
         board_ui = board.squares[:]
         selected_piece = None
-        board.switch_player_to_move()
-
-        previous_targets = m_g.target_squares
         # Load moves for next player
         m_g.load_moves()
         
-    if event.type == pygame.KEYDOWN and not selected_piece and moved_to:
+    if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE and previous_targets:
             board.reverse_move()
             board_ui = board.squares[:]
-            board.switch_player_to_move()
-            m_g.target_squares = previous_targets
             moved_to, selected_square = None, None
+            # This is just rudimentary, will make more efficient later
+            m_g.load_moves()
 
 def main():
     global board_ui
@@ -184,7 +181,7 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
             human_event_handler(event, board, m_g)
-        game.run(board.color_to_move)
+        game.run(board.moving_color)
         rendered_text = [DISPLAY_FONT.render(f"{game.r_min_tens[0]}{game.r_min_ones[0]}:{game.r_sec_tens[0]}{game.r_sec_ones[0]}", False, (130, 130, 130)),
                         DISPLAY_FONT.render(f"{game.r_min_tens[1]}{game.r_min_ones[1]}:{game.r_sec_tens[1]}{game.r_sec_ones[1]}", False, (130, 130, 130))]
         draw(board, m_g.target_squares, rendered_text)
