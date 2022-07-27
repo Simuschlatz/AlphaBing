@@ -1,12 +1,12 @@
 import math
 import random
-import time
 import pygame
 from board import Board
 from move_generator import Legal_move_generator
-from data_init import init_imgs
+from data_initialzation import init_imgs
 from timer import Timer
 
+FPS = 60
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -195,7 +195,7 @@ def main():
         rendered_text = [DISPLAY_FONT.render(f"{game.r_min_tens[0]}{game.r_min_ones[0]}:{game.r_sec_tens[0]}{game.r_sec_ones[0]}", False, (130, 130, 130)),
                         DISPLAY_FONT.render(f"{game.r_min_tens[1]}{game.r_min_ones[1]}:{game.r_sec_tens[1]}{game.r_sec_ones[1]}", False, (130, 130, 130))]
         draw(board, m_g.target_squares, rendered_text)
-        clock.tick(60)
+        clock.tick(FPS)
         # r stands for remaining
 
 if __name__ == "__main__":
