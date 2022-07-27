@@ -160,7 +160,7 @@ def human_event_handler(event, board, m_g):
         m_g.load_moves()
         
     if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_SPACE and previous_targets:
+        if event.key == pygame.K_SPACE:
             board.reverse_move()
             board_ui = board.squares[:]
             moved_to, selected_square = None, None
