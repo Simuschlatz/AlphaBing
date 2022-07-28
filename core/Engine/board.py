@@ -78,8 +78,8 @@ class Board:
                 if empty_files_in_rank:
                     fen += str(empty_files_in_rank)
                     empty_files_in_rank = 0
-                is_red = piece[0]
-                letter = Piece.letters[piece[1]].upper() if is_red else Piece.letters[piece[1]]
+                is_red, piece_type = piece
+                letter = Piece.letters[is_red * 7 + piece_type]
                 fen += letter
             rank = i // 9
             file = i % 9
@@ -156,6 +156,16 @@ class Board:
 
         # Switch back to previous moving color
         self.switch_moving_color()
+
+
+    def get_move_notation(self, move):
+        former_square, new_square = move
+        former_rank, former_file = former_square // 9, former_square % 9
+        new_rank, new_file = new_square // 9, new_square % 9
+        color, piece_type = self.squares[former_square]
+        letter = Piece.letters[color * 7 + piece_type]
+        print(f"{letter}({former_rank}{former_file})-{new_rank}{new_file}")
+
 
     def shef(self):
         """
