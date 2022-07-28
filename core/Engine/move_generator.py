@@ -1,5 +1,6 @@
-from piece import Piece
-from precomputed_move_maps import Precomputing_moves
+from operator import is_
+from Engine.piece import Piece
+from Engine.precomputed_move_maps import Precomputing_moves
 
 class Legal_move_generator:
     """
@@ -83,14 +84,15 @@ class Legal_move_generator:
         """
         # Looping over friendly pawns
         for current_square in cls.board.piece_lists[cls.friendly][Piece.pawn]:
-            if cls.checks and cls.is_pinned(current_square):
+            is_pinned = cls.is_pinned(current_square)
+            if cls.checks and is_pinned:
                 break
             avoids_cannon_check = current_square in cls.prevents_cannon_check
             target_squares = cls.pawn_move_map[cls.friendly][current_square]
 
             for target_square in target_squares:
                 dir_idx = cls.dir_offsets.index(target_square - current_square)
-                if cls.is_pinned(current_square) and not cls.moves_along_ray(cls.friendly_king, current_square, dir_idx):
+                if is_pinned and not cls.moves_along_ray(cls.friendly_king, current_square, dir_idx):
                     continue
                 if target_square in cls.illegal_squares:
                     continue
@@ -214,13 +216,14 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal rook moves
         """
         for current_square in cls.board.piece_lists[cls.friendly][Piece.rook]:
-            if cls.checks and cls.is_pinned(current_square):
+            is_pinned = cls.is_pinned(current_square)
+            if cls.checks and is_pinned:
                 continue
             avoids_cannon_check = current_square in cls.prevents_cannon_check
             rook_attack_map = cls.orthogonal_move_map[current_square]
             # Going through chosen direction indices
             for dir_idx, squares_in_dir in rook_attack_map.items():
-                if cls.is_pinned(current_square) and not cls.moves_along_ray(cls.friendly_king, current_square, dir_idx):
+                if is_pinned and not cls.moves_along_ray(cls.friendly_king, current_square, dir_idx):
                     continue
                 target_piece = False
                 # "Walking" in direction using direction offsets
@@ -253,12 +256,13 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal cannon moves
         """
         for current_square in cls.board.piece_lists[cls.friendly][Piece.cannon]:
-            if cls.checks and cls.is_pinned(current_square):
+            is_pinned = cls.is_pinned(current_square)
+            if cls.checks and is_pinned:
                 continue
             avoids_cannon_check = current_square in cls.prevents_cannon_check
             cannon_attack_map = cls.orthogonal_move_map[current_square]
             for dir_idx, targets_in_dir in cannon_attack_map.items():
-                if cls.is_pinned(current_square) and not cls.moves_along_ray(cls.friendly_king, current_square, dir_idx):
+                if is_pinned and not cls.moves_along_ray(cls.friendly_king, current_square, dir_idx):
                     continue
                 in_attack_mode = False
                 target_piece = False
@@ -292,7 +296,6 @@ class Legal_move_generator:
                         break
                     if blocks_all_checks and cls.checks and not avoids_cannon_check:
                         break
-
 
     @classmethod
     def blocks_all_checks(cls, current_square, target_square):

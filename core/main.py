@@ -1,9 +1,3 @@
-import sys
-sys.path.append(
-    "c:\\Users\\Simon Ma\\OneDrive\\Desktop\\programming\\PythonFile\\Xiangqi-AI\\core\\Engine"
-    )
-
-
 import pygame
 from Engine.board import Board
 from Engine.move_generator import Legal_move_generator
@@ -114,7 +108,7 @@ def draw(board, legal_target_squares, remainig_times):
 def play_sfx(audiofile):
     audiofile.play()
 
-def human_event_handler(event, board, m_g):
+def human_event_handler(event, board):
     global board_ui, selected_piece, selected_square, moved_to, previous_targets
     if event.type == pygame.MOUSEBUTTONDOWN:
         mouse_pos = pygame.mouse.get_pos()
@@ -128,7 +122,7 @@ def human_event_handler(event, board, m_g):
         if board.squares[current_square]:
             
             # If not a friendly color or no moves possible return
-            if current_square not in m_g.target_squares:
+            if current_square not in Legal_move_generator.target_squares:
                 return
             selected_square = rank * 9 + file
             selected_piece = board.squares[selected_square]
@@ -143,7 +137,7 @@ def human_event_handler(event, board, m_g):
         file, rank = Board.get_board_pos(mouse_pos_on_board, UNIT)
         target_square = rank * 9 + file
         # Check whether move is legal
-        if target_square not in m_g.target_squares[selected_square]:
+        if target_square not in Legal_move_generator.target_squares[selected_square]:
             board_ui[selected_square] = selected_piece
             selected_square = None
             selected_piece = None
@@ -162,7 +156,7 @@ def human_event_handler(event, board, m_g):
         board_ui = board.squares[:]
         selected_piece = None
         # Load moves for next player
-        m_g.load_moves()
+        Legal_move_generator.load_moves(board)
         
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
@@ -170,26 +164,25 @@ def human_event_handler(event, board, m_g):
             board_ui = board.squares[:]
             moved_to, selected_square = None, None
             # This is just rudimentary, will make more efficient later
-            m_g.load_moves()
+            Legal_move_generator.load_moves()
 
 def main():
     global board_ui
     game = Timer(600, "Papa", "Mama")
     board = Board(INITIAL_FEN, 1)
     board_ui = board.squares[:]
-    m_g = Legal_move_generator(board)
-    m_g.load_moves()
+    Legal_move_generator.load_moves(board)
     clock = pygame.time.Clock()
     run = True
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            human_event_handler(event, board, m_g)
+            human_event_handler(event, board)
         game.run(board.moving_color)
         rendered_text = [DISPLAY_FONT.render(f"{game.r_min_tens[0]}{game.r_min_ones[0]}:{game.r_sec_tens[0]}{game.r_sec_ones[0]}", False, (130, 130, 130)),
                         DISPLAY_FONT.render(f"{game.r_min_tens[1]}{game.r_min_ones[1]}:{game.r_sec_tens[1]}{game.r_sec_ones[1]}", False, (130, 130, 130))]
-        draw(board, m_g.target_squares, rendered_text)
+        draw(board, Legal_move_generator.target_squares, rendered_text)
         clock.tick(FPS)
         # r stands for remaining
 

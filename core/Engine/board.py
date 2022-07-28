@@ -1,6 +1,4 @@
-from asyncio import SelectorEventLoop
-from collections import deque
-from piece import Piece
+from Engine.piece import Piece
 import numpy as np
 # from collections import deque
 
@@ -21,7 +19,7 @@ class Board:
         self.squares = list(np.zeros(90, dtype=np.int8))
         # This keeps track of all game states in history, 
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
-        self.game_history = deque() # Stack(: sqprevuare, :target square :captured piece)
+        self.game_history = [] # Stack(: sqprevuare, :target square :captured piece)
         # self.game_history = deque()
 
         # To keep track of the pieces' indices (Piece-centric repr)
@@ -60,10 +58,10 @@ class Board:
                 rank += 1
                 file = 0
             if char.lower() in Piece.letters:
-                red = char.isupper()
+                color = char.isupper()
                 piece_type = Piece.letters.index(char.lower())
-                self.piece_lists[red][piece_type].add(rank * 9 + file)
-                self.squares[rank * 9 + file] = (int(red), piece_type)
+                self.piece_lists[color][piece_type].add(rank * 9 + file)
+                self.squares[rank * 9 + file] = (int(color), piece_type)
                 file += 1
             if char.isdigit():
                 file += int(char)
