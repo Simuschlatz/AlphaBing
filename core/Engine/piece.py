@@ -10,7 +10,7 @@ class Piece:
     horse = 6
     black = 0
     red = 1
-    letters = "keacprh"
+    letters = "keacprhKEACPRH"
 
     @staticmethod
     def is_color(piece, color):
