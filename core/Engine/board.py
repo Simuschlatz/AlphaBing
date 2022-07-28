@@ -164,22 +164,22 @@ class Board:
         new_rank, new_file = new_square // 9, new_square % 9
         color, piece_type = self.squares[former_square]
         letter = Piece.letters[color * 7 + piece_type]
-        print(f"{letter}({former_rank}{former_file})-{new_rank}{new_file}")
+        return (f"{letter}({former_rank}{former_file})-{new_rank}{new_file}")
 
 
     def shef(self):
         """
         Standard Heuristic Evaluation Function: \n
-        adds all friendly pieces according to their heuristic value together (counts friendly material)
-        moving_color: int
+        :return: a heuristic evaluation of current material on board relative to moving color.
+        positive: good
+        negative: bad
         """
-        score = 0
-        # score += len(self.piece_lists[self.friendly][Piece.rook]) * self.chariot
-        # score += len(self.piece_lists[self.friendly][Piece.cannon]) * self.cannon
-        # score += len(self.piece_lists[self.friendly][Piece.horse]) * self.horse
-        # score += len(self.piece_lists[self.friendly][Piece.advisor]) * self.advisor
-        # score += len(self.piece_lists[self.friendly][Piece.elephant]) * self.elephant
-        # score += len(self.piece_lists[self.friendly][Piece.pawn]) * self.soldier
+        friendly_eval = self.static_material_eval(self.moving_color)
+        opponent_eval = self.static_material_eval(self.opponent_color)
+        return friendly_eval - opponent_eval
+    
+    def static_material_eval(self, color):
+        material = 0
         for piece_id in range(1, 7):
-            score += len(self.piece_lists[self.moving_color][piece_id]) * self.values[piece_id]
-        return score
+            material += len(self.piece_lists[color][piece_id]) * self.values[piece_id]
+        return material
