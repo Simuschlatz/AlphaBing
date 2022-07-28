@@ -1,5 +1,10 @@
-from move_generator import Legal_move_generator
-from board import Board
+import time
+import sys
+sys.path.append(
+    "c:\\Users\\Simon Ma\\OneDrive\\Desktop\\programming\\PythonFile\\Xiangqi-AI\\core\\Engine"
+    )
+from Engine.move_generator import Legal_move_generator
+from Engine.board import Board
 board = Board("RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr", 1)
 m_g = Legal_move_generator(board)
 
@@ -18,5 +23,6 @@ def dfs(depth):
 
 # for depth in range(1, 4):
 depth = 4
+p_t = time.perf_counter()
 num_positions = dfs(depth)
-print(f"depth: {depth} positions: {num_positions}")
+print(f"depth: {depth} positions: {num_positions} time: {time.perf_counter() - p_t}")

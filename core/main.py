@@ -1,10 +1,14 @@
-import math
-import random
+import sys
+sys.path.append(
+    "c:\\Users\\Simon Ma\\OneDrive\\Desktop\\programming\\PythonFile\\Xiangqi-AI\\core\\Engine"
+    )
+
+
 import pygame
-from board import Board
-from move_generator import Legal_move_generator
+from Engine.board import Board
+from Engine.move_generator import Legal_move_generator
 from data_init import init_imgs
-from timer import Timer
+from Engine.timer import Timer
 
 FPS = 60
 
@@ -154,6 +158,7 @@ def human_event_handler(event, board, m_g):
         moved_to = target_square
         move = (selected_square, target_square)
         board.make_move(move)
+        print(board.shef())
         board_ui = board.squares[:]
         selected_piece = None
         # Load moves for next player
