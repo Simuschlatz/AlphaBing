@@ -1,16 +1,27 @@
+from asyncio import SelectorEventLoop
+from collections import deque
 from piece import Piece
 import numpy as np
 # from collections import deque
 
 class Board:
+    king = float("inf")
+    pawn = 1
+    advisor = 2
+    elephant = 2
+    horse = 4
+    cannon = 4.5
+    rook = 10
+    values = (king, elephant, advisor, cannon, pawn, rook, horse)
+
     def __init__(self, FEN: str, moving_color: int) -> None:
         self.moving_color = moving_color
         self.opponent_color = 1 - moving_color
         # Square-centric board repr
-        self.squares = list(np.zeros(90, dtype=np.int16))
+        self.squares = list(np.zeros(90, dtype=np.int8))
         # This keeps track of all game states in history, 
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
-        self.game_history = [] # Stack(:prev square, :target square :captured piece)
+        self.game_history = deque() # Stack(: sqprevuare, :target square :captured piece)
         # self.game_history = deque()
 
         # To keep track of the pieces' indices (Piece-centric repr)
@@ -147,3 +158,20 @@ class Board:
 
         # Switch back to previous moving color
         self.switch_moving_color()
+
+    def shef(self):
+        """
+        Standard Heuristic Evaluation Function: \n
+        adds all friendly pieces according to their heuristic value together (counts friendly material)
+        moving_color: int
+        """
+        score = 0
+        # score += len(self.piece_lists[self.friendly][Piece.rook]) * self.chariot
+        # score += len(self.piece_lists[self.friendly][Piece.cannon]) * self.cannon
+        # score += len(self.piece_lists[self.friendly][Piece.horse]) * self.horse
+        # score += len(self.piece_lists[self.friendly][Piece.advisor]) * self.advisor
+        # score += len(self.piece_lists[self.friendly][Piece.elephant]) * self.elephant
+        # score += len(self.piece_lists[self.friendly][Piece.pawn]) * self.soldier
+        for piece_id in range(1, 7):
+            score += len(self.piece_lists[self.moving_color][piece_id]) * self.values[piece_id]
+        return score
