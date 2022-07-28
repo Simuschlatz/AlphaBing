@@ -3,6 +3,8 @@ from Engine.board import Board
 from Engine.move_generator import Legal_move_generator
 from data_init import init_imgs
 from Engine.timer import Timer
+from Engine.AI.minimax import Dfs
+
 
 FPS = 60
 
@@ -43,6 +45,7 @@ INITIAL_FEN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
 # This board is created solely for UI purposes, so that the visual board can be modified
 # without crating interdependencies with the inner board representation
 board_ui = None
+search = None
 
 def move_feedback():
     if selected_square != None:
@@ -105,9 +108,12 @@ def draw(board, legal_target_squares, remainig_times):
     
     pygame.display.update()
 
-def play_sfx(audiofile):
-    audiofile.play()
-
+def play_sfx(is_capture):
+    if is_capture:
+        CAPTURE_SFX.play()
+    else:
+        MOVE_SFX.play()
+        
 def human_event_handler(event, board):
     global board_ui, selected_piece, selected_square, moved_to, previous_targets
     if event.type == pygame.MOUSEBUTTONDOWN:
@@ -143,21 +149,27 @@ def human_event_handler(event, board):
             selected_piece = None
             return
 
-        # Sound effects
-        if board.squares[target_square]:
-            play_sfx(CAPTURE_SFX)
-        else:
-            play_sfx(MOVE_SFX)
 
         moved_to = target_square
         move = (selected_square, target_square)
-        board.make_move(move)
+
+        print("move: ", board.get_move_notation(move))
+        is_capture = board.make_move(move)
+        # Sound effects
+        play_sfx(is_capture)
         print(board.shef())
         board_ui = board.squares[:]
+
         selected_piece = None
+        
+        move = search.traverse_tree(3)
+        is_capture = board.make_move(move)
+        board_ui = board.squares[:]
+        play_sfx(is_capture)
+
         # Load moves for next player
         Legal_move_generator.load_moves(board)
-        
+
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
             board.reverse_move()
@@ -167,13 +179,14 @@ def human_event_handler(event, board):
             Legal_move_generator.load_moves()
 
 def main():
-    global board_ui
+    global board_ui, search
     game = Timer(600, "Papa", "Mama")
     board = Board(INITIAL_FEN, 1)
-    board_ui = board.squares[:]
     Legal_move_generator.load_moves(board)
     clock = pygame.time.Clock()
+    search = Dfs(board)
     run = True
+    board_ui = board.squares[:]
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
