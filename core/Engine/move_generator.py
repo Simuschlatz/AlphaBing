@@ -262,9 +262,11 @@ class Legal_move_generator:
                 continue
             avoids_cannon_check = current_square in cls.prevents_cannon_check
             cannon_attack_map = cls.orthogonal_move_map[current_square]
+
             for dir_idx, targets_in_dir in cannon_attack_map.items():
                 if is_pinned and not cls.moves_along_ray(cls.friendly_king, current_square, dir_idx):
                     continue
+
                 in_attack_mode = False
                 target_piece = False
                 # "Walking" in direction using direction offsets
@@ -273,6 +275,16 @@ class Legal_move_generator:
                     if cls.board.squares[target_square] and not in_attack_mode:
                         in_attack_mode = True
                         continue
+
+                    if in_attack_mode:
+                        target_piece = cls.board.squares[target_square]
+                        # if target square is empty, continue
+                        if not target_piece:
+                            continue
+                        
+                        # If target_piece is friendly, go to next direction
+                        if Piece.is_color(target_piece, cls.friendly):
+                            break
                     # Can't move to or capture pieces on squares that would result in check
                     if target_square in cls.illegal_squares:
                         continue
@@ -281,18 +293,9 @@ class Legal_move_generator:
                     if not blocks_all_checks:
                         continue
                     
-                    if in_attack_mode:
-                        target_piece = cls.board.squares[target_square]
-                        # if target square is empty, continue
-                        if not target_piece:
-                            continue
-
-                        # If target_piece is friendly, go to next direction
-                        if Piece.is_color(target_piece, cls.friendly):
-                            break
-
                     cls.moves.append((current_square, target_square))
                     cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
+                    # Move was a capture, can't move further in this direction 
                     if target_piece:
                         break
                     if blocks_all_checks and cls.checks and not avoids_cannon_check:
@@ -507,7 +510,6 @@ class Legal_move_generator:
 
                 if Piece.is_color(piece, cls.opponent) and Piece.is_type(piece, Piece.cannon):
                     if double_block:
-                        cls.illegal_squares |= screens - friendly_screens
                         cls.pinned_squares |= friendly_screens
                         break
                     # Single screen
