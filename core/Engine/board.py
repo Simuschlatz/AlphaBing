@@ -91,7 +91,11 @@ class Board:
                 empty_files_in_rank = 0
         return fen
 
-    def get_piece_list(self, piece_type: int, color_idx):
+    @staticmethod
+    def get_file_and_rank(square):
+        return square % 9, square // 9
+
+    def get_piece_list(self, color_idx, piece_type: int):
         return self.piece_lists[color_idx][piece_type]
     
     def is_capture(self, square):
@@ -160,8 +164,8 @@ class Board:
 
     def get_move_notation(self, move):
         former_square, new_square = move
-        former_rank, former_file = former_square // 9, former_square % 9
-        new_rank, new_file = new_square // 9, new_square % 9
+        former_rank, former_file = self.get_file_and_rank(former_square)
+        new_rank, new_file = self.get_file_and_rank(new_square)
         color, piece_type = self.squares[former_square]
         letter = Piece.letters[color * 7 + piece_type]
         return (f"{letter}({former_rank}{former_file})-{new_rank}{new_file}")
