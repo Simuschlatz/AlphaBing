@@ -467,27 +467,14 @@ class Legal_move_generator:
 
     @classmethod
     def illegal_king_targets(cls):
-        cannon_files, cannon_ranks = [], []
-        for cannon_square in cls.board.get_piece_list(cls.opponent, Piece.cannon):
-            cls.iterations += 1
-            file, rank = cls.board.get_file_and_rank(cannon_square)
-            cannon_files.append(file)
-            cannon_ranks.append(rank)
-
         for target_square in cls.king_move_map[cls.friendly][cls.friendly_king]:
             cls.iterations += 1
             target_file, target_rank = cls.board.get_file_and_rank(target_square)
+            for cannon in cls.board.get_piece_list(cls.opponent, Piece.cannon):
+                dir_idx = cls.get_orth_dir_idx(cannon, target_square)
+                if dir_idx:
+                    cls.generate_cannon_attack_ray(cannon, dir_idx)
 
-            if target_file in cannon_files and not target_rank in cannon_ranks:
-                rank = cannon_ranks[cannon_files.index(target_file)]
-                dir_idx = cls.dir_idx_same_file(rank, target_rank)
-                cls.generate_cannon_attack_ray(rank * 9 + target_file, dir_idx)
-
-            elif target_rank in cannon_ranks and not target_file in cannon_files:
-                file = cannon_files[cannon_ranks.index(target_rank)]
-                dir_idx = cls.dir_idx_same_rank(file, target_file)
-                cls.generate_cannon_attack_ray(target_rank * 9 + file, dir_idx)
-            
 
     @classmethod
     def get_cannon_imposed_limits(cls):
