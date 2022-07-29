@@ -61,8 +61,7 @@ class Legal_move_generator:
         cls.checks = 0
         cls.block_check_hash = {}
         cls.prevents_cannon_check = set()
-
-        cls.iterations = 0
+        
 
     @classmethod
     def generate_king_moves(cls) -> None:
@@ -432,59 +431,36 @@ class Legal_move_generator:
                     continue
                 # If blocked by friendly piece and move would result in check, it's pinned
                 cls.pinned_squares.add(block_square)
-
     
     @classmethod
-    def generate_cannon_attack_ray(cls, square, dir_idx):
+    def generate_cannon_attack_map(cls):
         """
-        generates attack map along ray of given direction from given square
+        generates complete attack map of opponent's cannons
+        attack map: set()
         """
-        offset = cls.dir_offsets[dir_idx]
-        block = False
-        double_block = False
-        for step in range(cls.dist_to_edge[square][dir_idx]):
-            cls.iterations += 1
-            attacking_square = square + offset * (step + 1)
-            piece = cls.board.squares[attacking_square]
-            # attacking square is occupied
-            # Cannon is in capture mode
-            if block:
-                cls.cannon_attack_map.add(attacking_square)
+        for square in cls.board.piece_lists[cls.opponent][Piece.cannon]:
+            for dir_idx in range(4):
+                offset = cls.dir_offsets[dir_idx]
+                block = False
+                double_block = False
+                for step in range(cls.dist_to_edge[square][dir_idx]):
+                    attacking_square = square + offset * (step + 1)
+                    piece = cls.board.squares[attacking_square]
+                    # attacking square is occupied
+                    # Cannon is in capture mode
+                    if block:
+                        cls.cannon_attack_map.add(attacking_square)
 
-            if Piece.is_color(piece, cls.friendly) and Piece.is_type(piece, Piece.king):
-                if block: 
-                    continue
-                break
-            if piece:
-                double_block = block
-                block = True
-            if double_block:
-                break
+                    if Piece.is_color(piece, cls.friendly) and Piece.is_type(piece, Piece.king):
+                        if block: 
+                            continue
+                        break
+                    if piece:
+                        double_block = block
+                        block = True
+                    if double_block:
+                        break
 
-
-    @classmethod
-    def illegal_king_targets(cls):
-        cannon_files, cannon_ranks = [], []
-        for cannon_square in cls.board.get_piece_list(cls.opponent, Piece.cannon):
-            cls.iterations += 1
-            file, rank = cls.board.get_file_and_rank(cannon_square)
-            cannon_files.append(file)
-            cannon_ranks.append(rank)
-
-        for target_square in cls.king_move_map[cls.friendly][cls.friendly_king]:
-            cls.iterations += 1
-            target_file, target_rank = cls.board.get_file_and_rank(target_square)
-
-            if target_file in cannon_files and not target_rank in cannon_ranks:
-                rank = cannon_ranks[cannon_files.index(target_file)]
-                dir_idx = cls.dir_idx_same_file(rank, target_rank)
-                cls.generate_cannon_attack_ray(rank * 9 + target_file, dir_idx)
-
-            elif target_rank in cannon_ranks and not target_file in cannon_files:
-                file = cannon_files[cannon_ranks.index(target_rank)]
-                dir_idx = cls.dir_idx_same_rank(file, target_file)
-                cls.generate_cannon_attack_ray(target_rank * 9 + file, dir_idx)
-            
 
     @classmethod
     def get_cannon_imposed_limits(cls):
@@ -538,7 +514,7 @@ class Legal_move_generator:
 
     @classmethod
     def calculate_cannon_attack_data(cls) -> None:
-        cls.illegal_king_targets()
+        cls.generate_cannon_attack_map()
         cls.get_cannon_imposed_limits()
 
     @classmethod
