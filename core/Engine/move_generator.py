@@ -1,3 +1,4 @@
+import enum
 from operator import is_
 from Engine.piece import Piece
 from Engine.precomputed_move_maps import Precomputing_moves
@@ -13,7 +14,7 @@ class Legal_move_generator:
 
     # Precalculating move maps
     king_move_map = Precomputing_moves.precompute_king_moves()
-    orthogonal_move_map = Precomputing_moves.precompute_rook_moves()
+    orthogonal_move_map = Precomputing_moves.precompute_orthogonal_moves()
     horse_move_map = Precomputing_moves.precompute_horse_moves()
     advisor_move_map = Precomputing_moves.precompute_advisor_moves()
     elephant_move_map = Precomputing_moves.precompute_elephant_moves()
@@ -329,9 +330,11 @@ class Legal_move_generator:
         # red: down
         # black: up
         dir_idx = cls.opponent * 2
+        friendly_king_rank = cls.friendly_king // 9 
+        dist_kings = abs(friendly_king_rank - cls.opponent_king // 9)
         offset = cls.dir_offsets[dir_idx]
         block = None
-        for step in range(cls.dist_to_edge[cls.opponent_king][dir_idx]):
+        for step in range(dist_kings):
             square = cls.opponent_king + offset * (step + 1)
             piece = cls.board.squares[square]
 
@@ -345,7 +348,7 @@ class Legal_move_generator:
                 return
 
             # Friendly king
-            if Piece.is_type(piece, Piece.king):
+            if Piece.is_type(piece ,Piece.king):
                 if block:
                     # Pin piece
                     cls.pinned_squares.add(block)
@@ -356,14 +359,12 @@ class Legal_move_generator:
             # Second friendly piece in direction, no pins possible
             if block:
                 return
-            block = square
-        
+            block = square    
         # If there're no pieces between opponent king and opposite edge of board
         # friendly king can't move to the opponent king's file
         if block:
             return
         # print("FLYING GENERAL THREAT")
-        friendly_king_rank = cls.friendly_king // 9
         opponent_king_file = cls.opponent_king % 9
         flyin_general_square = friendly_king_rank * 9 + opponent_king_file
         cls.king_attack_map.add(flyin_general_square)
@@ -401,6 +402,10 @@ class Legal_move_generator:
 
     @classmethod
     def generate_cannon_attack_map(cls):
+        """
+        generates complete attack map of opponent's cannons
+        attack map: set()
+        """
         for square in cls.board.piece_lists[cls.opponent][Piece.cannon]:
             for dir_idx in range(4):
                 offset = cls.dir_offsets[dir_idx]
@@ -409,15 +414,18 @@ class Legal_move_generator:
                 for step in range(cls.dist_to_edge[square][dir_idx]):
                     attacking_square = square + offset * (step + 1)
                     piece = cls.board.squares[attacking_square]
+                    # attacking square is occupied
                     # Cannon is in capture mode
                     if block:
                         cls.cannon_attack_map.add(attacking_square)
-                    # attacking square is occupied
+
+                    if Piece.is_color(piece, cls.friendly) and Piece.is_type(piece, Piece.king):
+                        if block: 
+                            continue
+                        break
                     if piece:
                         double_block = block
                         block = True
-                    if Piece.is_color(piece, cls.friendly) and Piece.is_type(piece, Piece.king):
-                        continue
                     if double_block:
                         break
 
@@ -426,16 +434,14 @@ class Legal_move_generator:
         """
         Adds pins and illegal squares to instance variables "pinned_squares" and "illegal_squares" 
         """
-        for dir_idx in range(4):
-            offset = cls.dir_offsets[dir_idx]
+        target_squares = cls.orthogonal_move_map[cls.friendly_king] # {square: [...], [...], ...}
+        for targets_in_dir in target_squares.values():
             # A screen is the piece between opponent cannon and the captured piece
             friendly_screens = set()
             screens = set()
             double_block = False
             visited_squares = set()
-
-            for step in range(cls.dist_to_edge[cls.friendly_king][dir_idx]):
-                attacking_square = cls.friendly_king + offset * (step + 1)
+            for attacking_square in targets_in_dir:
                 piece = cls.board.squares[attacking_square]
                 visited_squares.add(attacking_square)
                 # Skip empty squares
@@ -447,9 +453,10 @@ class Legal_move_generator:
                         cls.illegal_squares |= screens - friendly_screens
                         cls.pinned_squares |= friendly_screens
                         break
+                    # Single screen
                     if screens:
                         cls.checks += 1
-                        # Can't capture enemy screens, as it would still be check
+                        # Can't capture enemy screen, as it would still be check
                         cls.illegal_squares |= screens - friendly_screens
                         # Fiendly screen / block piece can prevent check by moving away
                         cls.prevents_cannon_check |= friendly_screens
@@ -461,16 +468,14 @@ class Legal_move_generator:
                     else:
                         cls.illegal_squares |= visited_squares - {attacking_square}
 
-                # This is the third piece we come across, 
-                # thus preventing any checks / pins in current direction
+                # This is the third piece we come across, thus preventing any checks / pins
                 if double_block:
                     break
                 # If piece is friendly, we add it to the friendly blocks
                 if Piece.is_color(piece, cls.friendly):
                     friendly_screens.add(attacking_square)
 
-                # First piece: block
-                # Second piece: double block    
+                # First piece: block - second piece: double block    
                 double_block = bool(screens)
                 screens.add(attacking_square)
 
