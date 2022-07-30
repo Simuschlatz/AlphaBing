@@ -41,10 +41,11 @@ class Legal_move_generator:
         # variable "moving" can be used for indexing and determining the color of piece 
         # (see "piece.py > class Piece") here e.g. allows to only loop over friendly indices
         cls.friendly = cls.board.moving_color
-        cls.opponent = 1 - cls.friendly
+        cls.opponent = 1 - cls.friendly 
+
+        cls.friendly_king = next(iter(cls.board.piece_lists[cls.friendly][Piece.king]))
+        cls.opponent_king = next(iter(cls.board.piece_lists[cls.opponent][Piece.king]))
         
-        cls.friendly_king = list(cls.board.piece_lists[cls.friendly][Piece.king]).pop()
-        cls.opponent_king = list(cls.board.piece_lists[cls.opponent][Piece.king]).pop()
         cls.flying_general_possibility = cls.friendly_king % 9 == cls.opponent_king % 9
 
         cls.moves = []
@@ -543,7 +544,8 @@ class Legal_move_generator:
                 for step in range(cls.dist_to_edge[square][dir_idx]):
                     attacking_square = square + offset * (step + 1)
                     piece = cls.board.squares[attacking_square]
-
+                    if Piece.is_color(piece, cls.friendly) and Piece.is_type(piece, Piece.king):
+                        continue
                     cls.rook_attack_map.add(attacking_square)
                     # Attacking square occupied, break
                     if piece:
