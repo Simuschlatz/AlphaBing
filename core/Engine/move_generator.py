@@ -42,6 +42,7 @@ class Legal_move_generator:
         # (see "piece.py > class Piece") here e.g. allows to only loop over friendly indices
         cls.friendly = cls.board.moving_color
         cls.opponent = 1 - cls.friendly
+        
         cls.friendly_king = list(cls.board.piece_lists[cls.friendly][Piece.king]).pop()
         cls.opponent_king = list(cls.board.piece_lists[cls.opponent][Piece.king]).pop()
         cls.flying_general_possibility = cls.friendly_king % 9 == cls.opponent_king % 9
@@ -346,14 +347,12 @@ class Legal_move_generator:
         d_file = file_2 - file_1
         d_rank = rank_2 - rank_1
         # On same file
-        if not d_file:
+        if not d_file and d_rank:
             d_rank_norm = d_rank // abs(d_rank)
-            print(d_rank_norm * 9)
             return cls.dir_offsets.index(d_rank_norm * 9)
         # On same rank
-        if not d_rank:
+        if not d_rank and d_file:
             d_file_norm = d_file // abs(d_file)
-            print(d_file_norm)
             return cls.dir_offsets.index(d_file_norm)
         return None
 
@@ -467,14 +466,20 @@ class Legal_move_generator:
 
     @classmethod
     def illegal_king_targets(cls):
-        for target_square in cls.king_move_map[cls.friendly][cls.friendly_king]:
+        cannon_files, cannon_ranks = [], []
+        for cannon_square in cls.board.get_piece_list(cls.opponent, Piece.cannon):
             cls.iterations += 1
-            target_file, target_rank = cls.board.get_file_and_rank(target_square)
+            file, rank = cls.board.get_file_and_rank(cannon_square)
+            cannon_files.append(file)
+            cannon_ranks.append(rank)
+
+        for target_square in cls.king_move_map[cls.friendly][cls.friendly_king]:
             for cannon in cls.board.get_piece_list(cls.opponent, Piece.cannon):
+                cls.iterations += 1
                 dir_idx = cls.get_orth_dir_idx(cannon, target_square)
                 if dir_idx:
                     cls.generate_cannon_attack_ray(cannon, dir_idx)
-
+                
 
     @classmethod
     def get_cannon_imposed_limits(cls):
@@ -538,7 +543,7 @@ class Legal_move_generator:
                 for step in range(cls.dist_to_edge[square][dir_idx]):
                     attacking_square = square + offset * (step + 1)
                     piece = cls.board.squares[attacking_square]
-                    
+
                     cls.rook_attack_map.add(attacking_square)
                     # Attacking square occupied, break
                     if piece:
