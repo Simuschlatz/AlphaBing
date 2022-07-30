@@ -1,6 +1,7 @@
 import pygame
 from Engine.board import Board
 from Engine.move_generator import Legal_move_generator
+from Engine.game_manager import Game_manager
 from data_init import init_imgs
 from Engine.timer import Timer
 from Engine.AI.minimax import Dfs
@@ -24,7 +25,7 @@ WIDTH = 1500
 HEIGHT = 1000
 BOARD_WIDTH = 9 * UNIT
 BOARD_HEIGHT = 10 * UNIT
-FONT_SIZE = 50
+FONT_SIZE = 40
 CIRCLE_DIAMETER = 15
 
 PIECES_IMGS, BOARD_IMG = init_imgs(UNIT, True)
@@ -80,20 +81,25 @@ def draw_moves(board, target_indices):
         # Here, the -4 is just to correct for the unperfect aspect ratio of the board image
         pygame.draw.ellipse(WIN, RED, (x + UNIT / 2 - 4, y + UNIT / 2 - 4, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
 
-def draw(board, legal_target_squares, remainig_times):
+def render_text(text: str, pos: tuple):
+    surface = DISPLAY_FONT.render(text, False, (130, 130, 130))
+    WIN.blit(surface, pos)
+
+def draw(board, remainig_times):
+
     WIN.fill(BG)
     WIN.blit(BOARD_IMG, (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2))
     move_feedback()
 
-    # Drawing reamining time
-    WIN.blit(remainig_times[0], (OFFSET_X + UNIT * 9.5, HEIGHT / 2))
-    WIN.blit(remainig_times[1], (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE))
+    if Game_manager.checkmate:
+        render_text("CHECKMATE!", (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
+    elif Game_manager.stalemate:
+        render_text("STALEMATE!", (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
+    else:
+        # Drawing reamining time
+        render_text(remainig_times[0], (OFFSET_X + UNIT * 9.5, HEIGHT / 2))
+        render_text(remainig_times[1], (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE))
 
-    # Check if there's selected piece
-    # (not cheking if selected_square as it isn't reset before new moves are generated)
-    if selected_piece:
-        draw_moves(board, legal_target_squares[selected_square])
-    
     # Drawing pieces
     for i, piece in enumerate(board_ui):
         if piece:
@@ -101,8 +107,10 @@ def draw(board, legal_target_squares, remainig_times):
             rank = i // 9
             WIN.blit(PIECES_IMGS[piece[0] * 7 + piece[1]], (OFFSET_X + file * UNIT, OFFSET_Y + rank * UNIT))
     
-    #Dragging the selected piece
+    # Human selected a piece
     if selected_piece:
+        draw_moves(board, Legal_move_generator.target_squares[selected_square])
+        # Dragging the selected piece
         mouse_pos = pygame.mouse.get_pos()
         WIN.blit(PIECES_IMGS[selected_piece[0] * 7 + selected_piece[1]], (mouse_pos[0] - (UNIT // 2), (mouse_pos[1] - UNIT // 2)))
     
@@ -157,9 +165,8 @@ def human_event_handler(event, board):
         is_capture = board.make_move(move)
         # Sound effects
         play_sfx(is_capture)
-        print(board.shef())
+        print(board.load_fen_from_board())
         board_ui = board.squares[:]
-
         selected_piece = None
         
         move = search.traverse_tree(3)
@@ -168,7 +175,12 @@ def human_event_handler(event, board):
         play_sfx(is_capture)
 
         # Load moves for next player
-        Legal_move_generator.load_moves(board)
+        moves = Legal_move_generator.load_moves(board)
+        if not len(moves):
+            if Legal_move_generator.checks:
+                Game_manager.checkmate = True
+                return
+            Game_manager.stalemate = True
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
@@ -176,7 +188,7 @@ def human_event_handler(event, board):
             board_ui = board.squares[:]
             moved_to, selected_square = None, None
             # This is just rudimentary, will make more efficient later
-            Legal_move_generator.load_moves()
+            Legal_move_generator.load_moves(board)
 
 def main():
     global board_ui, search
@@ -193,9 +205,9 @@ def main():
                 run = False
             human_event_handler(event, board)
         game.run(board.moving_color)
-        rendered_text = [DISPLAY_FONT.render(f"{game.r_min_tens[0]}{game.r_min_ones[0]}:{game.r_sec_tens[0]}{game.r_sec_ones[0]}", False, (130, 130, 130)),
-                        DISPLAY_FONT.render(f"{game.r_min_tens[1]}{game.r_min_ones[1]}:{game.r_sec_tens[1]}{game.r_sec_ones[1]}", False, (130, 130, 130))]
-        draw(board, Legal_move_generator.target_squares, rendered_text)
+        rendered_text = [f"{game.r_min_tens[0]}{game.r_min_ones[0]}:{game.r_sec_tens[0]}{game.r_sec_ones[0]}",
+                        f"{game.r_min_tens[1]}{game.r_min_ones[1]}:{game.r_sec_tens[1]}{game.r_sec_ones[1]}"]            
+        draw(board, rendered_text)
         clock.tick(FPS)
         # r stands for remaining
 
