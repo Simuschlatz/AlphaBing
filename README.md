@@ -1,6 +1,6 @@
-# Xiangqi*AI
-![license](https://img.shields.io/github/license/SiiiMiii/Chess*AI)
-![activity](https://img.shields.io/github/commit*activity/m/SiiiMiii/Chess*AI)
+# Xiangqi-AI
+![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
+![activity](https://img.shields.io/github/commit*activity/m/SiiiMiii/Chess-AI)
 * Xiangqi is the chinese version of chess very popular amongst East Asian countries.
 * This project's final version will be a fairly sophisticated chess engine with built*in AI and the ability to process a physical board
 
