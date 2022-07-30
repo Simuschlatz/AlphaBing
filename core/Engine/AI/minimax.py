@@ -67,6 +67,8 @@ class Dfs:
             self.board.make_move(move)
             evaluation = -self.minimax_alpha_beta(depth - 1, -beta, -alpha)
             self.board.reverse_move()
+            # Move is even better than best eval before,
+            # opponent won't choose move anyway so PRUNE YESSIR
             if evaluation >= beta:
                 return beta
             alpha = max(evaluation, alpha)
