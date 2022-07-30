@@ -1,22 +1,21 @@
 # Xiangqi-AI
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
-![activity](https://img.shields.io/github/commit*activity/m/SiiiMiii/Chess-AI)
+![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 * Xiangqi is the chinese version of chess very popular amongst East Asian countries.
 * This project's final version will be a fairly sophisticated chess engine with built*in AI and the ability to process a physical board
 
 ## Table of Contents
-* [General Info](#general*information)
+* [General Info](#general-information)
 * [Features](#features)
 * [Screenshots](#screenshots)
 * [Dependencies](#dependencies)
-* [Project Status](#project*status)
-* [To*Dos](#to*dos)
+* [Project Status](#project-status)
+* [To-Dos](#to-dos)
 * [Acknowledgements](#acknowledgements)
 * [Contact](#contact)
-<!** * [License](#license) **>
 
 
-## General Information
+## General-Information
 > **What problem does it intend to solve?**
 * The initial goal of this project was to compensate for my own very poor skills in Xiangqi with a computer's ability to crunch millions of numbers while getting introduced to simple AI software and Machine Learning.
 > **What's the purpose of creating the Project?**
@@ -64,10 +63,10 @@ _UI & UX_<br/>
 * tensorflow
 * pygame
 
-## Project Status
+## Project-Status
 Project is: _in progress_
 
-## To*dos
+## To-dos
 * minimax
 * computer vision
 
