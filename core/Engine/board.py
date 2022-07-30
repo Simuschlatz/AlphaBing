@@ -47,7 +47,8 @@ class Board:
         # print("WHITE MOVES")
 
     def load_board_from_fen(self, FEN: str) -> None:
-        """Loads a board from Forsyth-Edwards-Notation (FEN)
+        """
+        Loads a board from Forsyth-Edwards-Notation (FEN)
         Black: upper case
         Red: lower case
         King:K, Advisor:A, Elephant:E, Rook:R, Cannon:C, Horse:H, Pawn:P
@@ -67,7 +68,8 @@ class Board:
                 file += int(char)
 
     def load_fen_from_board(self) -> str:
-        """:return: a Forsyth-Edwards-Notation (FEN) string from the current board
+        """
+        :return: a Forsyth-Edwards-Notation (FEN) string from the current board
         """
         fen = ""
         empty_files_in_rank = 0
@@ -111,6 +113,7 @@ class Board:
         if abs(d_rank) > abs(d_file):
             return current_square + d_rank // 2 * 9
         return current_square + d_file // 2
+        
 
     def make_move(self, move):
         previous_square, moved_to = move
@@ -121,8 +124,7 @@ class Board:
         self.piece_lists[self.moving_color][piece_type].add(moved_to)
         
         captured_piece = self.squares[moved_to]
-        is_capture = bool(captured_piece)
-        if is_capture:
+        if captured_piece:
             captured_type = captured_piece[1]
             self.piece_lists[self.opponent_color][captured_type].remove(moved_to)
 
@@ -136,7 +138,7 @@ class Board:
         # print(self.load_fen_from_board())
 
         # Used for quiescene search
-        return is_capture
+        return bool(captured_piece)
         
     def reverse_move(self):
         if not len(self.game_history):
