@@ -22,5 +22,5 @@ class Timer:
         self.r_min_tens = [(round(self.duration[i]) // 60) // 10 for i in range(2)]
         self.r_min_ones = [(round(self.duration[i]) // 60) % 10 for i in range(2)]
         self.r_sec_tens = [(round(self.duration[i]) % 60) // 10 for i in range(2)]
-        self.r_sec_ones = [(round(self.duration[i]) % 60) % 10 for i in range(2)]
+        self.r_sec_ones = [round(self.duration[i] % 60 % 10, 2) for i in range(2)]
         # print(*self.duration)
