@@ -1,3 +1,4 @@
+from multiprocessing.pool import INIT
 import pygame
 from Engine.board import Board
 from Engine.move_generator import Legal_move_generator
@@ -7,7 +8,7 @@ from Engine.timer import Timer
 from Engine.AI.minimax import Dfs
 
 
-FPS = 60
+FPS = 45
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -18,7 +19,7 @@ TURQUOISE = (64, 224, 208)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREY = (200, 200, 200)
-BG = (240, 210, 170)
+BG_COLOR = (240, 210, 170)
 
 UNIT = 80
 WIDTH = 1500
@@ -28,11 +29,12 @@ BOARD_HEIGHT = 10 * UNIT
 FONT_SIZE = 40
 CIRCLE_DIAMETER = 15
 
-PIECES_IMGS, BOARD_IMG = init_imgs(UNIT, True)
+piece_style_western = False
+PIECES_IMGS, BOARD_IMG, BG_IMG = init_imgs(UNIT, WIDTH, HEIGHT, piece_style_western)
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("MOIN")
-pygame.display.set_icon(PIECES_IMGS[1])
+pygame.display.set_caption("JOE")
+pygame.display.set_icon(PIECES_IMGS[7])
 pygame.font.init()
 pygame.mixer.init()
 
@@ -46,6 +48,7 @@ INITIAL_FEN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
 # This board is created solely for UI purposes, so that the visual board can be modified
 # without crating interdependencies with the inner board representation
 board_ui = None
+
 search = None
 
 def move_feedback():
@@ -87,7 +90,8 @@ def render_text(text: str, pos: tuple):
 
 def draw(board, remainig_times):
 
-    WIN.fill(BG)
+    # WIN.fill(BG_COLOR)
+    WIN.blit(BG_IMG, (0, 0))
     WIN.blit(BOARD_IMG, (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2))
     move_feedback()
 
@@ -100,6 +104,11 @@ def draw(board, remainig_times):
         render_text(remainig_times[0], (OFFSET_X + UNIT * 9.5, HEIGHT / 2))
         render_text(remainig_times[1], (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE))
 
+    # Drawing the moves before displaying the pieces so that a big circle (indicating capture)
+    # won't cover but outline the pieces
+    if selected_piece:
+        draw_moves(board, Legal_move_generator.target_squares[selected_square])
+
     # Drawing pieces
     for i, piece in enumerate(board_ui):
         if piece:
@@ -109,7 +118,6 @@ def draw(board, remainig_times):
     
     # Human selected a piece
     if selected_piece:
-        draw_moves(board, Legal_move_generator.target_squares[selected_square])
         # Dragging the selected piece
         mouse_pos = pygame.mouse.get_pos()
         WIN.blit(PIECES_IMGS[selected_piece[0] * 7 + selected_piece[1]], (mouse_pos[0] - (UNIT // 2), (mouse_pos[1] - UNIT // 2)))
@@ -169,10 +177,10 @@ def human_event_handler(event, board):
         board_ui = board.squares[:]
         selected_piece = None
         
-        move = search.traverse_tree(3)
-        is_capture = board.make_move(move)
-        board_ui = board.squares[:]
-        play_sfx(is_capture)
+        # move = search.traverse_tree(3)
+        # is_capture = board.make_move(move)
+        # board_ui = board.squares[:]
+        # play_sfx(is_capture)
 
         # Load moves for next player
         moves = Legal_move_generator.load_moves(board)
@@ -193,7 +201,7 @@ def human_event_handler(event, board):
 def main():
     global board_ui, search
     game = Timer(600, "Papa", "Mama")
-    board = Board(INITIAL_FEN, 1)
+    board = Board("RHEAK1E1R/4A/4C1H/P1P1c1P1P/9/9/p1p1c1p1p/9/9/rheakaehr", 1)
     Legal_move_generator.load_moves(board)
     clock = pygame.time.Clock()
     search = Dfs(board)
