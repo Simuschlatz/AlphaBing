@@ -66,8 +66,7 @@ class Legal_move_generator:
         cls.pinned_squares = set()
         cls.checks = 0
         cls.block_check_hash = {}
-        cls.screens = set()
-        cls.prevents_cannon_check = set()
+        cls.cause_cannon_defect = {}
 
         cls.iterations = 0
 
@@ -95,7 +94,7 @@ class Legal_move_generator:
             is_pinned = cls.is_pinned(current_square)
             if cls.checks and is_pinned:
                 break
-            avoids_cannon_check = current_square in cls.prevents_cannon_check
+            avoids_cannon_check = current_square in cls.cause_cannon_defect
             target_squares = cls.pawn_move_map[cls.friendly][current_square]
 
             for target_square in target_squares:
@@ -126,7 +125,7 @@ class Legal_move_generator:
             if cls.is_pinned(current_square):
                 continue
             illegal_squares = set()
-            avoids_cannon_check = current_square in cls.prevents_cannon_check
+            avoids_cannon_check = current_square in cls.cause_cannon_defect
             target_squares = cls.elephant_move_map[cls.friendly][current_square]
             
             for dir_idx in range(4, 8):
@@ -150,7 +149,7 @@ class Legal_move_generator:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.friendly):
                     continue
-
+                
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
                     continue
@@ -168,7 +167,7 @@ class Legal_move_generator:
         for current_square in cls.board.piece_lists[cls.friendly][Piece.advisor]:
             if cls.is_pinned(current_square):
                 continue
-            avoids_cannon_check = current_square in cls.prevents_cannon_check
+            avoids_cannon_check = current_square in cls.cause_cannon_defect
             target_squares = cls.advisor_move_map[cls.friendly][current_square]
 
             for target_square in target_squares:
@@ -227,7 +226,7 @@ class Legal_move_generator:
             is_pinned = cls.is_pinned(current_square)
             if cls.checks and is_pinned:
                 continue
-            avoids_cannon_check = current_square in cls.prevents_cannon_check
+            avoids_cannon_check = current_square in cls.cause_cannon_defect
             rook_move_map = cls.orthogonal_move_map[current_square]
             # Going through chosen direction indices
             for dir_idx, squares_in_dir in rook_move_map.items():
@@ -243,7 +242,9 @@ class Legal_move_generator:
                     # If target_piece is friendly, go to next direction
                     if Piece.is_color(target_piece, cls.friendly):
                         break
-                    blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
+
+                    captures_checking_cannon = cls.cause_cannon_defect.get(current_square, None) == target_square
+                    blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                     if blocks_all_checks or not cls.checks:
                         cls.moves.append((current_square, target_square))
                         cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
@@ -263,7 +264,7 @@ class Legal_move_generator:
             is_pinned = cls.is_pinned(current_square)
             if cls.checks and is_pinned:
                 continue
-            avoids_cannon_check = current_square in cls.prevents_cannon_check
+            avoids_cannon_check = current_square in cls.cause_cannon_defect
             cannon_attack_map = cls.orthogonal_move_map[current_square]
 
             for dir_idx, targets_in_dir in cannon_attack_map.items():
@@ -284,7 +285,7 @@ class Legal_move_generator:
                         # if target square is empty, continue
                         if not target_piece:
                             continue
-                        
+                            
                         # If target_piece is friendly, go to next direction
                         if Piece.is_color(target_piece, cls.friendly):
                             break
@@ -305,13 +306,21 @@ class Legal_move_generator:
                         break
 
     @classmethod
-    def blocks_all_checks(cls, current_square, target_square, is_orthogonal=False):
+    def blocks_all_checks(cls, current_square, target_square, confusion_value=0):
         # If the piece is a screen for opponent cannon and moves out of the way,
         # it prevents the cannon check, thus counting as a blocked check
-        disables_cannon = current_square in cls.prevents_cannon_check
-        num_checks_blocked = cls.block_check_hash.get(target_square, 0) and not target_square in cls.board.get_piece_list(cls.opponent, Piece.cannon)
-        num_checks_blocked += disables_cannon
-        return num_checks_blocked == cls.checks
+        disables_cannon = current_square in cls.cause_cannon_defect
+        num_checks_blocked = cls.block_check_hash.get(target_square, 0) + disables_cannon
+        return num_checks_blocked == cls.checks + confusion_value
+
+
+    @classmethod
+    def blocks_all_checks_orth(cls, current_square, target_square):
+        """
+        Checking if an orthogonally moving piece is blocking all existing checks in current state of game
+        """
+        num_checks_blocked = cls.block_check_hash.get(target_square, 0) 
+        # - target_square in cls.checking_cannons
 
     @classmethod
     def is_pinned(cls, square):
@@ -515,8 +524,8 @@ class Legal_move_generator:
                         # Can't capture enemy screen, as it would still be check
                         cls.illegal_squares |= screens - friendly_screens
                         # Fiendly screen / block piece can prevent check by moving away
-                        # cls.prevents_cannon_check[friendly_screens] = cls.prevents_cannon_check.get(friendly_screens, set()) | {attacking_square}
-                        cls.prevents_cannon_check |= friendly_screens
+                        cls.cause_cannon_defect[next(iter(friendly_screens))] = attacking_square
+                        # cls.cause_cannon_defect |= friendly_screens
                         # Can move to any visited square except the screen to prevent check
                         for block_square in visited_squares | {attacking_square} - screens:
                             cls.block_check_hash[block_square] = cls.block_check_hash.get(block_square, 0) + 1
