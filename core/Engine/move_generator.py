@@ -43,9 +43,13 @@ class Legal_move_generator:
         cls.friendly = cls.board.moving_color
         cls.opponent = 1 - cls.friendly 
 
-        cls.friendly_king = next(iter(cls.board.piece_lists[cls.friendly][Piece.king]))
-        cls.opponent_king = next(iter(cls.board.piece_lists[cls.opponent][Piece.king]))
-        
+        try:
+            cls.friendly_king = next(iter(cls.board.piece_lists[cls.friendly][Piece.king]))
+            cls.opponent_king = next(iter(cls.board.piece_lists[cls.opponent][Piece.king]))
+        except:
+            print(cls.board.load_fen_from_board())
+            quit()
+
         cls.flying_general_possibility = cls.friendly_king % 9 == cls.opponent_king % 9
 
         cls.moves = []
@@ -62,6 +66,7 @@ class Legal_move_generator:
         cls.pinned_squares = set()
         cls.checks = 0
         cls.block_check_hash = {}
+        cls.screens = set()
         cls.prevents_cannon_check = set()
 
         cls.iterations = 0
@@ -223,9 +228,9 @@ class Legal_move_generator:
             if cls.checks and is_pinned:
                 continue
             avoids_cannon_check = current_square in cls.prevents_cannon_check
-            rook_attack_map = cls.orthogonal_move_map[current_square]
+            rook_move_map = cls.orthogonal_move_map[current_square]
             # Going through chosen direction indices
-            for dir_idx, squares_in_dir in rook_attack_map.items():
+            for dir_idx, squares_in_dir in rook_move_map.items():
                 if is_pinned and not cls.moves_along_ray(cls.friendly_king, current_square, dir_idx):
                     continue
                 target_piece = False
@@ -233,19 +238,15 @@ class Legal_move_generator:
                 for target_square in squares_in_dir:
                     if target_square in cls.illegal_squares:
                         continue
-
                     target_piece = cls.board.squares[target_square]
-                    blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
-                    if not blocks_all_checks:
-                        if target_piece:
-                            break
-                        continue
 
                     # If target_piece is friendly, go to next direction
                     if Piece.is_color(target_piece, cls.friendly):
                         break
-                    cls.moves.append((current_square, target_square))
-                    cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
+                    blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
+                    if blocks_all_checks or not cls.checks:
+                        cls.moves.append((current_square, target_square))
+                        cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
                     # If piece on target square and not friendly, go to next direction
                     if target_piece:
                         break
@@ -304,11 +305,12 @@ class Legal_move_generator:
                         break
 
     @classmethod
-    def blocks_all_checks(cls, current_square, target_square):
+    def blocks_all_checks(cls, current_square, target_square, is_orthogonal=False):
         # If the piece is a screen for opponent cannon and moves out of the way,
         # it prevents the cannon check, thus counting as a blocked check
         disables_cannon = current_square in cls.prevents_cannon_check
-        num_checks_blocked = cls.block_check_hash.get(target_square, 0) + disables_cannon
+        num_checks_blocked = cls.block_check_hash.get(target_square, 0) and not target_square in cls.board.get_piece_list(cls.opponent, Piece.cannon)
+        num_checks_blocked += disables_cannon
         return num_checks_blocked == cls.checks
 
     @classmethod
@@ -443,7 +445,7 @@ class Legal_move_generator:
         generates attack map along ray of given direction from given square
         """
         offset = cls.dir_offsets[dir_idx]
-        block = False
+        screen = False
         double_block = False
         for step in range(cls.dist_to_edge[square][dir_idx]):
             cls.iterations += 1
@@ -451,34 +453,36 @@ class Legal_move_generator:
             piece = cls.board.squares[attacking_square]
             # attacking square is occupied
             # Cannon is in capture mode
-            if block:
+            if screen:
                 cls.cannon_attack_map.add(attacking_square)
 
             if Piece.is_color(piece, cls.friendly) and Piece.is_type(piece, Piece.king):
-                if block: 
+                if screen: 
                     continue
-                break
+                return
+
             if piece:
-                double_block = block
-                block = True
+                double_block = screen
+                screen = True
+                
             if double_block:
-                break
+                return
 
 
     @classmethod
     def illegal_king_targets(cls):
-        cannon_files, cannon_ranks = [], []
-        for cannon_square in cls.board.get_piece_list(cls.opponent, Piece.cannon):
-            cls.iterations += 1
-            file, rank = cls.board.get_file_and_rank(cannon_square)
-            cannon_files.append(file)
-            cannon_ranks.append(rank)
-
+        # Looping over possible king moves
         for target_square in cls.king_move_map[cls.friendly][cls.friendly_king]:
-            for cannon in cls.board.get_piece_list(cls.opponent, Piece.cannon):
+            # Excluding squares occupied by friendly pieces
+            piece_on_target =  cls.board.squares[target_square]
+            if Piece.is_color(piece_on_target, cls.friendly):
+                continue
+            # Looping over opponent cannons
+            for cannon in cls.board.piece_lists[cls.opponent][Piece.cannon]:
                 cls.iterations += 1
                 dir_idx = cls.get_orth_dir_idx(cannon, target_square)
-                if dir_idx:
+                # If cannon could threaten king's move, generate attack ray
+                if dir_idx != None:
                     cls.generate_cannon_attack_ray(cannon, dir_idx)
                 
 
@@ -511,9 +515,10 @@ class Legal_move_generator:
                         # Can't capture enemy screen, as it would still be check
                         cls.illegal_squares |= screens - friendly_screens
                         # Fiendly screen / block piece can prevent check by moving away
+                        # cls.prevents_cannon_check[friendly_screens] = cls.prevents_cannon_check.get(friendly_screens, set()) | {attacking_square}
                         cls.prevents_cannon_check |= friendly_screens
                         # Can move to any visited square except the screen to prevent check
-                        for block_square in visited_squares - screens:
+                        for block_square in visited_squares | {attacking_square} - screens:
                             cls.block_check_hash[block_square] = cls.block_check_hash.get(block_square, 0) + 1
                     # All squares between king and opponent cannon empty, so mark them as illegal
                     # as moving to any of them would result in a check
