@@ -1,6 +1,6 @@
-from multiprocessing.pool import INIT
 import pygame
 from Engine.board import Board
+from Engine.piece import Piece
 from Engine.move_generator import Legal_move_generator
 from Engine.game_manager import Game_manager
 from data_init import init_imgs
@@ -13,6 +13,7 @@ FPS = 45
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 200, 255)
+BLUE_DARK = (0, 0, 255)
 YELLOW = (255, 255, 0)
 ORANGE = (255, 165, 0)
 TURQUOISE = (64, 224, 208)
@@ -29,7 +30,7 @@ BOARD_HEIGHT = 10 * UNIT
 FONT_SIZE = 40
 CIRCLE_DIAMETER = 15
 
-piece_style_western = False
+piece_style_western = True
 PIECES_IMGS, BOARD_IMG, BG_IMG = init_imgs(UNIT, WIDTH, HEIGHT, piece_style_western)
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -43,7 +44,10 @@ CAPTURE_SFX = pygame.mixer.Sound("assets/sfx/capture.wav")
 
 DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", FONT_SIZE)
 
-INITIAL_FEN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
+INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
+INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
+
+play_as_red = True
 
 # This board is created solely for UI purposes, so that the visual board can be modified
 # without crating interdependencies with the inner board representation
@@ -78,11 +82,11 @@ def draw_moves(board, target_indices):
         rank = index // 9
         x = OFFSET_X + file * UNIT
         y = OFFSET_Y + rank * UNIT
-        # If piece on target, it must be opponent's, otherwise it would've been removed
+        # If piece on target, it must be opponent's,  otherwise it would've been removed
         if board.squares[index]:
-            pygame.draw.ellipse(WIN, RED, (x - 4, y - 4, UNIT + 8, UNIT + 8))
+            pygame.draw.ellipse(WIN, BLUE_DARK, (x - 4, y - 4, UNIT + 8, UNIT + 8))
         # Here, the -4 is just to correct for the unperfect aspect ratio of the board image
-        pygame.draw.ellipse(WIN, RED, (x + UNIT / 2 - 4, y + UNIT / 2 - 4, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
+        pygame.draw.ellipse(WIN, BLUE_DARK, (x + UNIT / 2 - 4, y + UNIT / 2 - 4, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
 
 def render_text(text: str, pos: tuple):
     surface = DISPLAY_FONT.render(text, False, (130, 130, 130))
@@ -114,13 +118,17 @@ def draw(board, remainig_times):
         if piece:
             file = i % 9
             rank = i // 9
-            WIN.blit(PIECES_IMGS[piece[0] * 7 + piece[1]], (OFFSET_X + file * UNIT, OFFSET_Y + rank * UNIT))
+            is_red = Piece.is_color(piece, Piece.red)
+            piece_type = Piece.get_type(piece)
+            WIN.blit(PIECES_IMGS[is_red * 7 + Piece.get_type(piece)], (OFFSET_X + file * UNIT, OFFSET_Y + rank * UNIT))
     
     # Human selected a piece
     if selected_piece:
         # Dragging the selected piece
         mouse_pos = pygame.mouse.get_pos()
-        WIN.blit(PIECES_IMGS[selected_piece[0] * 7 + selected_piece[1]], (mouse_pos[0] - (UNIT // 2), (mouse_pos[1] - UNIT // 2)))
+        is_red = Piece.is_color(selected_piece, Piece.red)
+        piece_type = Piece.get_type(selected_piece)
+        WIN.blit(PIECES_IMGS[is_red * 7 + piece_type], (mouse_pos[0] - (UNIT // 2), (mouse_pos[1] - UNIT // 2)))
     
     pygame.display.update()
 
@@ -184,6 +192,7 @@ def human_event_handler(event, board):
 
         # Load moves for next player
         moves = Legal_move_generator.load_moves(board)
+        print(f"length of moves: {len(moves)}")
         if not len(moves):
             if Legal_move_generator.checks:
                 Game_manager.checkmate = True
@@ -200,19 +209,21 @@ def human_event_handler(event, board):
 
 def main():
     global board_ui, search
+    fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN
     game = Timer(600, "Papa", "Mama")
-    board = Board("RHEAK1E1R/4A/4C1H/P1P1c1P1P/9/9/p1p1c1p1p/9/9/rheakaehr", 1)
-    Legal_move_generator.load_moves(board)
+    board = Board(fen, 1)
+    # Legal_move_generator.load_moves(board)
     clock = pygame.time.Clock()
     search = Dfs(board)
     run = True
     board_ui = board.squares[:]
+
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             human_event_handler(event, board)
-        game.run(board.moving_color)
+        game.run(board.moving_side)
         rendered_text = [f"{game.r_min_tens[0]}{game.r_min_ones[0]}:{game.r_sec_tens[0]}{game.r_sec_ones[0]}",
                         f"{game.r_min_tens[1]}{game.r_min_ones[1]}:{game.r_sec_tens[1]}{game.r_sec_ones[1]}"]            
         draw(board, rendered_text)
