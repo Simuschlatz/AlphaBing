@@ -3,6 +3,7 @@ import numpy as np
 # from collections import deque
 
 class Board:
+    # Piece's values
     king = float("inf")
     pawn = 1
     advisor = 2
@@ -49,7 +50,7 @@ class Board:
         self.opponent_side = self.moving_side
         self.moving_side = 1 - self.moving_side
         _ = self.moving_color
-        self.moving_color= self.opponent_color
+        self.moving_color = self.opponent_color
         self.opponent_color = _
         # if self.moving_side:
         #     print("RED MOVES")
@@ -157,16 +158,15 @@ class Board:
         previous_square, moved_to, captured_piece = self.game_history.pop()
 
         moved_piece = self.squares[moved_to]
-        is_red = Piece.is_color(moved_piece, Piece.red)
         piece_type = Piece.get_type(moved_piece)
 
         # Reversing the move
-        self.piece_lists[is_red][piece_type].remove(moved_to)  
-        self.piece_lists[is_red][piece_type].add(previous_square)
+        self.piece_lists[self.opponent_side][piece_type].remove(moved_to)  
+        self.piece_lists[self.opponent_side][piece_type].add(previous_square)
 
         if captured_piece:
-            captured_type = captured_piece[1]
-            self.piece_lists[1 - is_red][captured_type].add(moved_to)
+            captured_type = Piece.get_type(captured_piece)
+            self.piece_lists[self.moving_side][captured_type].add(moved_to)
 
         self.squares[previous_square] = moved_piece
         self.squares[moved_to] = captured_piece
@@ -194,11 +194,11 @@ class Board:
         negative: bad
         """
         friendly_eval = self.static_material_eval(self.moving_side)
-        opponent_eval = self.static_material_eval(self.opponent_color)
+        opponent_eval = self.static_material_eval(self.opponent_side)
         return friendly_eval - opponent_eval
     
-    def static_material_eval(self, color):
+    def static_material_eval(self, side):
         material = 0
         for piece_id in range(1, 7):
-            material += len(self.piece_lists[color][piece_id]) * self.values[piece_id]
+            material += len(self.piece_lists[side][piece_id]) * self.values[piece_id]
         return material

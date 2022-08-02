@@ -183,13 +183,13 @@ def human_event_handler(event, board):
         board_ui = board.squares[:]
         selected_piece = None
         
-        # move = search.traverse_tree(3)
+        # move = search.traverse_tree(2)
         # is_capture = board.make_move(move)
         # board_ui = board.squares[:]
         # play_sfx(is_capture)
 
         # Load moves for next player
-        moves = Legal_move_generator.load_moves(board)
+        moves = Legal_move_generator.load_moves()
         print(f"length of moves: {len(moves)}")
         if not len(moves):
             if Legal_move_generator.checks:
@@ -203,19 +203,19 @@ def human_event_handler(event, board):
             board_ui = board.squares[:]
             moved_to, selected_square = None, None
             # This is just rudimentary, will make more efficient later
-            Legal_move_generator.load_moves(board)
+            Legal_move_generator.load_moves()
 
 def main():
     global board_ui, search
     play_as_red = True
     fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN
-    
+
     clock = Timer(600, "Papa", "Mama")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     board = Board(fen, play_as_red)
-    print(f"moving color: {board.moving_color} moving side: {int(board.moving_side)}")
-    Legal_move_generator.load_moves(board)
-    ticker = pygame.time.Clock()
+    Legal_move_generator.init_board(board)
+    Legal_move_generator.load_moves()
+    py_clock = pygame.time.Clock()
     search = Dfs(board)
     run = True
     board_ui = board.squares[:]
@@ -229,7 +229,7 @@ def main():
         rendered_text = [f"{clock.r_min_tens[0]}{clock.r_min_ones[0]}:{clock.r_sec_tens[0]}{clock.r_sec_ones[0]}",
                         f"{clock.r_min_tens[1]}{clock.r_min_ones[1]}:{clock.r_sec_tens[1]}{clock.r_sec_ones[1]}"]            
         draw(board, rendered_text)
-        ticker.tick(FPS)
+        py_clock.tick(FPS)
         # r stands for remaining
 
 if __name__ == "__main__":
