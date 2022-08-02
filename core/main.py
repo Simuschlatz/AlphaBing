@@ -47,8 +47,6 @@ DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", FONT_SIZE)
 INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
 INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
 
-play_as_red = True
-
 # This board is created solely for UI purposes, so that the visual board can be modified
 # without crating interdependencies with the inner board representation
 board_ui = None
@@ -105,8 +103,8 @@ def draw(board, remainig_times):
         render_text("STALEMATE!", (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
     else:
         # Drawing reamining time
-        render_text(remainig_times[0], (OFFSET_X + UNIT * 9.5, HEIGHT / 2))
-        render_text(remainig_times[1], (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE))
+        render_text(remainig_times[0], (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE))
+        render_text(remainig_times[1], (OFFSET_X + UNIT * 9.5, HEIGHT / 2))
 
     # Drawing the moves before displaying the pieces so that a big circle (indicating capture)
     # won't cover but outline the pieces
@@ -209,11 +207,15 @@ def human_event_handler(event, board):
 
 def main():
     global board_ui, search
+    play_as_red = True
     fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN
-    game = Timer(600, "Papa", "Mama")
-    board = Board(fen, 1)
-    # Legal_move_generator.load_moves(board)
-    clock = pygame.time.Clock()
+    
+    clock = Timer(600, "Papa", "Mama")
+    # If you play as red, red pieces are gonna be at the bottom, else they're at the top
+    board = Board(fen, play_as_red)
+    print(f"moving color: {board.moving_color} moving side: {int(board.moving_side)}")
+    Legal_move_generator.load_moves(board)
+    ticker = pygame.time.Clock()
     search = Dfs(board)
     run = True
     board_ui = board.squares[:]
@@ -223,11 +225,11 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
             human_event_handler(event, board)
-        game.run(board.moving_side)
-        rendered_text = [f"{game.r_min_tens[0]}{game.r_min_ones[0]}:{game.r_sec_tens[0]}{game.r_sec_ones[0]}",
-                        f"{game.r_min_tens[1]}{game.r_min_ones[1]}:{game.r_sec_tens[1]}{game.r_sec_ones[1]}"]            
+        clock.run(board.moving_side)
+        rendered_text = [f"{clock.r_min_tens[0]}{clock.r_min_ones[0]}:{clock.r_sec_tens[0]}{clock.r_sec_ones[0]}",
+                        f"{clock.r_min_tens[1]}{clock.r_min_ones[1]}:{clock.r_sec_tens[1]}{clock.r_sec_ones[1]}"]            
         draw(board, rendered_text)
-        clock.tick(FPS)
+        ticker.tick(FPS)
         # r stands for remaining
 
 if __name__ == "__main__":
