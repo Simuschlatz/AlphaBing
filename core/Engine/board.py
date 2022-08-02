@@ -12,17 +12,24 @@ class Board:
     rook = 10
     values = (king, elephant, advisor, cannon, pawn, rook, horse)
 
-    def __init__(self, FEN: str, moving_side: int, red_moves_first=True) -> None:
-        self.moving_side = moving_side
-        self.opponent_side = 1 - moving_side
+    def __init__(self, FEN: str, play_as_red: int, red_moves_first=True) -> None:
+        self.moving_side = play_as_red and red_moves_first
+        self.opponent_side = 1 - self.moving_side
+
+        # If we don't play as red, the pieces are at the top, 
+        self.is_red_up = not play_as_red
+        # moving color is 16 if red moves first or 8 when white moves first
+        self.moving_color = (1 + red_moves_first) * 8
+        self.opponent_color = (2 - red_moves_first) * 8
+
         # Square-centric board repr
         self.squares = list(np.zeros(90, dtype=np.int8))
         # This keeps track of all game states in history, 
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
-        self.game_history = [] # Stack(: sqprevuare, :target square :captured piece)
-        # self.game_history = deque()
+        self.game_history = [] # Stack(: previous square, :target square :captured piece)
 
         # To keep track of the pieces' indices (Piece-centric repr)
+        # Piece list at index 0 keeps track of pieces at the top, index 1 for bottom
         self.piece_lists = [[set() for _ in range(7)] for _ in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
@@ -41,6 +48,9 @@ class Board:
     def switch_moving_side(self):
         self.opponent_side = self.moving_side
         self.moving_side = 1 - self.moving_side
+        _ = self.moving_color
+        self.moving_color= self.opponent_color
+        self.opponent_color = _
         # if self.moving_side:
         #     print("RED MOVES")
         #     return
@@ -61,7 +71,8 @@ class Board:
             if char.lower() in Piece.letters:
                 is_red = char.isupper()
                 piece_type = Piece.letters.index(char.lower())
-                self.piece_lists[is_red][piece_type].add(rank * 9 + file)
+                # If red is playing the top side
+                self.piece_lists[is_red - self.is_red_up][piece_type].add(rank * 9 + file)
                 self.squares[rank * 9 + file] = (is_red + 1) * 8 + piece_type
                 file += 1
             if char.isdigit():
@@ -124,8 +135,8 @@ class Board:
         
         captured_piece = self.squares[moved_to]
         if captured_piece:
-            captured_type = captured_piece[1]
-            self.piece_lists[self.opponent_color][captured_type].remove(moved_to)
+            captured_type = Piece.get_type(captured_piece)
+            self.piece_lists[self.opponent_side][captured_type].remove(moved_to)
 
         # Adding current game state to history
         current_game_state = (previous_square, moved_to, captured_piece)
