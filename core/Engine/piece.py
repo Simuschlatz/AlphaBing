@@ -8,19 +8,22 @@ class Piece:
     pawn = 4
     rook = 5
     horse = 6
-    black = 0
-    red = 1
+    black = 8
+    red = 16
     letters = "keacprhKEACPRH"
 
     @staticmethod
     def is_color(piece, color):
-        # piece is equal to 0 when target_square is empty so piece[0] would raise TypeError
-        if not piece: 
-            return False
-        return piece[0] == color
+        return piece & 0b11000 == color
     
     @staticmethod
-    def is_type(piece, piece_type):
-        if not piece: 
-            return False
-        return piece[1] == piece_type
+    def is_type(piece, typ):
+        return piece & 0b00111 == typ
+
+    @staticmethod
+    def get_color(piece):
+        return piece & 0b11000
+    
+    @staticmethod
+    def get_type(piece):
+        return piece & 0b00111
