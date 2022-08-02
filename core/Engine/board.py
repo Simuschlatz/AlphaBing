@@ -12,9 +12,9 @@ class Board:
     rook = 10
     values = (king, elephant, advisor, cannon, pawn, rook, horse)
 
-    def __init__(self, FEN: str, moving_color: int) -> None:
-        self.moving_color = moving_color
-        self.opponent_color = 1 - moving_color
+    def __init__(self, FEN: str, moving_side: int, red_moves_first=True) -> None:
+        self.moving_side = moving_side
+        self.opponent_side = 1 - moving_side
         # Square-centric board repr
         self.squares = list(np.zeros(90, dtype=np.int8))
         # This keeps track of all game states in history, 
@@ -38,10 +38,10 @@ class Board:
         file = min(8, max(file, 0))
         return file, rank
 
-    def switch_moving_color(self):
-        self.opponent_color = self.moving_color
-        self.moving_color = 1 - self.moving_color
-        # if self.moving_color:
+    def switch_moving_side(self):
+        self.opponent_side = self.moving_side
+        self.moving_side = 1 - self.moving_side
+        # if self.moving_side:
         #     print("RED MOVES")
         #     return
         # print("WHITE MOVES")
@@ -59,10 +59,10 @@ class Board:
                 rank += 1
                 file = 0
             if char.lower() in Piece.letters:
-                color = char.isupper()
+                is_red = char.isupper()
                 piece_type = Piece.letters.index(char.lower())
-                self.piece_lists[color][piece_type].add(rank * 9 + file)
-                self.squares[rank * 9 + file] = (int(color), piece_type)
+                self.piece_lists[is_red][piece_type].add(rank * 9 + file)
+                self.squares[rank * 9 + file] = (is_red + 1) * 8 + piece_type
                 file += 1
             if char.isdigit():
                 file += int(char)
@@ -80,7 +80,8 @@ class Board:
                 if empty_files_in_rank:
                     fen += str(empty_files_in_rank)
                     empty_files_in_rank = 0
-                is_red, piece_type = piece
+                is_red = Piece.is_color(piece, Piece.red)
+                piece_type = Piece.get_type(piece)
                 letter = Piece.letters[is_red * 7 + piece_type]
                 fen += letter
             rank = i // 9
@@ -103,8 +104,6 @@ class Board:
     def is_capture(self, square):
         return self.squares[square]
 
-    # def is_blocking_check(check_piece):
-
     @staticmethod
     def get_horse_block(current_square, target_square):
         d_rank = target_square // 9 - current_square // 9
@@ -113,15 +112,15 @@ class Board:
         if abs(d_rank) > abs(d_file):
             return current_square + d_rank // 2 * 9
         return current_square + d_file // 2
-        
+   
 
     def make_move(self, move):
         previous_square, moved_to = move
         moved_piece = self.squares[previous_square]
-        _, piece_type = moved_piece
+        piece_type = Piece.get_type(moved_piece)
         # Updating piece lists
-        self.piece_lists[self.moving_color][piece_type].remove(previous_square)
-        self.piece_lists[self.moving_color][piece_type].add(moved_to)
+        self.piece_lists[self.moving_side][piece_type].remove(previous_square)
+        self.piece_lists[self.moving_side][piece_type].add(moved_to)
         
         captured_piece = self.squares[moved_to]
         if captured_piece:
@@ -134,7 +133,7 @@ class Board:
         # Updating the board
         self.squares[moved_to] = moved_piece
         self.squares[previous_square] = 0
-        self.switch_moving_color()
+        self.switch_moving_side()
         # print(self.load_fen_from_board())
 
         # Used for quiescene search
@@ -147,29 +146,32 @@ class Board:
         previous_square, moved_to, captured_piece = self.game_history.pop()
 
         moved_piece = self.squares[moved_to]
-        color, piece_type = moved_piece
+        is_red = Piece.is_color(moved_piece, Piece.red)
+        piece_type = Piece.get_type(moved_piece)
 
         # Reversing the move
-        self.piece_lists[color][piece_type].remove(moved_to)  
-        self.piece_lists[color][piece_type].add(previous_square)
+        self.piece_lists[is_red][piece_type].remove(moved_to)  
+        self.piece_lists[is_red][piece_type].add(previous_square)
 
         if captured_piece:
             captured_type = captured_piece[1]
-            self.piece_lists[1 - color][captured_type].add(moved_to)
+            self.piece_lists[1 - is_red][captured_type].add(moved_to)
 
         self.squares[previous_square] = moved_piece
         self.squares[moved_to] = captured_piece
 
         # Switch back to previous moving color
-        self.switch_moving_color()
+        self.switch_moving_side()
 
 
     def get_move_notation(self, move):
         former_square, new_square = move
         former_rank, former_file = self.get_file_and_rank(former_square)
         new_rank, new_file = self.get_file_and_rank(new_square)
-        color, piece_type = self.squares[former_square]
-        letter = Piece.letters[color * 7 + piece_type]
+        piece = self.squares[former_square]
+        is_red = Piece.is_color(piece, Piece.red)
+        piece_type = Piece.get_type(piece)
+        letter = Piece.letters[is_red * 7 + piece_type]
         return (f"{letter}({former_rank}{former_file})-{new_rank}{new_file}")
 
 
@@ -180,7 +182,7 @@ class Board:
         positive: good
         negative: bad
         """
-        friendly_eval = self.static_material_eval(self.moving_color)
+        friendly_eval = self.static_material_eval(self.moving_side)
         opponent_eval = self.static_material_eval(self.opponent_color)
         return friendly_eval - opponent_eval
     
