@@ -57,7 +57,7 @@ class Precomputing_moves:
     @staticmethod
     def precompute_king_moves() -> list:
         """
-        :return: a list of one hash mapfor each side of the board, containing 
+        :return: a list of one hash map for each side of the board, containing 
         all start indices as keys and the possible targets of those positions as value\n
         output form : [{int : [int, int...], int: [int]...}, {...}]
         """
@@ -73,25 +73,26 @@ class Precomputing_moves:
                 offsets.append(hor + ver)
 
         # These are the top-left corners of each palace
-        start_squares = [66 , 3]
+        start_squares = [3, 66]
         #O-----+
         #|\ | /|
         #|--+--| Top-left marked by an "O"
         #|/ | \|
         #+-----+
         
-        for color in range(2):
+        for side in range(2):
             king_moves.append({})
             # Iterating through each palace
             for row in range(3):
                 for col in range(3):
-                    current_square = start_squares[color] + row * 9 + col
+                    current_square = start_squares[side] + row * 9 + col
                     # Get the offsets for the current position in the palace
                     dir_idx = row * 3 + col
                     for offset in offsets[dir_idx]:
                         target_square = current_square + offset
-                        # Adding target square to current color at current square
-                        king_moves[color][current_square] = king_moves[color].get(current_square, []) + [target_square]
+                        # Adding target square to current side at current square
+                        king_moves[side][current_square] = king_moves[side].get(current_square, []) + [target_square]
+        print("KING MOVES: ", king_moves)
         return king_moves
 
     @classmethod
@@ -152,11 +153,11 @@ class Precomputing_moves:
         #|/ | \| of the so-called palace
         #+-----+
 
-        palace_middle_squares = [89 - 13, 13]
-        for color in range(2):
+        palace_middle_squares = [13, 89 - 13]
+        for side in range(2):
             advisor_moves.append({})
-            middle_square = palace_middle_squares[color]
-            # seperate moves for each color
+            middle_square = palace_middle_squares[side]
+            # seperate moves for each side
             for dir_index in range(4, 8):
 
                 dir_offset = cls.dir_offsets[dir_index]
@@ -164,8 +165,8 @@ class Precomputing_moves:
 
                 # All of the target squares' only move is back to the 
                 # palace_middle_square, so add move to target_square and back
-                advisor_moves[color][middle_square] = advisor_moves[color].get(middle_square, []) + [target_square]
-                advisor_moves[color][target_square] = advisor_moves[color].get(target_square, []) + [middle_square]
+                advisor_moves[side][middle_square] = advisor_moves[side].get(middle_square, []) + [target_square]
+                advisor_moves[side][target_square] = advisor_moves[side].get(target_square, []) + [middle_square]
         return advisor_moves
 
     @classmethod
@@ -176,28 +177,28 @@ class Precomputing_moves:
         output form : [{int : [int, int...], int: [int]...}, {...}]
         """
         pawn_moves = []
-        offset_push_move = [-9, 9]
+        offset_push_move = [9, -9]
 
         # Used to determine whether pawn can push foward
-        is_foward_move = (lambda rank: 0 < rank < 7, lambda rank: 9 > rank > 2)
+        is_foward_move = (lambda rank: 9 > rank > 2, lambda rank: 0 < rank < 7)
         # Used to determine whether pawn can move sideways (after crossing river)
-        is_river_crossed = (lambda rank: rank < 5, lambda rank: rank > 4)
+        is_river_crossed = (lambda rank: rank > 4, lambda rank: rank < 5)
 
-        for color in range(2):
+        for side in range(2):
             pawn_moves.append({})
             for square in range(90):
                 rank = square // 9
-                river_crossed = is_river_crossed[color](rank)
-                foward_move = is_foward_move[color](rank)
+                river_crossed = is_river_crossed[side](rank)
+                foward_move = is_foward_move[side](rank)
                 if river_crossed:
                     for dir_idx in [1, 3]:
                         if cls.dist_to_edge[square][dir_idx] < 1:
                             continue
                         offset = cls.dir_offsets[dir_idx]
-                        pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
+                        pawn_moves[side][square] = pawn_moves[side].get(square, []) + [square + offset]
                 if foward_move:
-                    offset = offset_push_move[color]
-                    pawn_moves[color][square] = pawn_moves[color].get(square, []) + [square + offset]
+                    offset = offset_push_move[side]
+                    pawn_moves[side][square] = pawn_moves[side].get(square, []) + [square + offset]
         return pawn_moves
 
     @classmethod
@@ -211,18 +212,18 @@ class Precomputing_moves:
         offsets = cls.dir_offsets[4:8]
 
         # if the normal range() function is used for both sides, is_river_crossed 
-        # will be True instantly when color = 0, so backwards from rank 9 as 9 < 5 is False
+        # will be True instantly when side = 0, so backwards from rank 9 as 9 < 5 is False
                                 # Equivalent to "reversed(range(start + 1, stop + 1, step))"
-        iteration_sequence = (lambda start, stop, step: range(stop - 1, start - 1, -step),
-                            lambda start, stop, step: range(start, stop, step))
+        iteration_sequence = (lambda start, stop, step: range(start, stop, step), 
+                            lambda start, stop, step: range(stop - 1, start - 1, -step))
         # Used to determine whether move or current position crosses river (in which case it's illegal)
-        is_river_crossed = (lambda rank: rank < 5, lambda rank: rank > 4)
+        is_river_crossed = (lambda rank: rank > 4, lambda rank: rank < 5)
 
-        for color in range(2):
+        for side in range(2):
             elephant_moves.append({})
-            for rank in iteration_sequence[color](0, 10, 2):
-                # If current position crossed river, go to next color
-                if is_river_crossed[color](rank):
+            for rank in iteration_sequence[side](0, 10, 2):
+                # If current position crossed river, go to next side
+                if is_river_crossed[side](rank):
                     break
 
                 for file in range(0, 9, 2):
@@ -234,7 +235,7 @@ class Precomputing_moves:
                             continue
 
                         target_rank = target_square // 9
-                        move_crosses_river = is_river_crossed[color](target_rank)
+                        move_crosses_river = is_river_crossed[side](target_rank)
                         if move_crosses_river:
                             continue
                         
@@ -243,5 +244,5 @@ class Precomputing_moves:
                         max_dist = max(abs(target_rank - rank), abs(target_file - file))
                         if max_dist > 2:
                             continue
-                        elephant_moves[color][square] = elephant_moves[color].get(square, []) + [target_square]
+                        elephant_moves[side][square] = elephant_moves[side].get(square, []) + [target_square]
         return elephant_moves
