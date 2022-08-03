@@ -183,14 +183,13 @@ def human_event_handler(event, board):
         board_ui = board.squares[:]
         selected_piece = None
         
-        # move = search.traverse_tree(2)
-        # is_capture = board.make_move(move)
-        # board_ui = board.squares[:]
-        # play_sfx(is_capture)
+        move = search.traverse_tree(3)
+        is_capture = board.make_move(move)
+        board_ui = board.squares[:]
+        play_sfx(is_capture)
 
         # Load moves for next player
-        moves = Legal_move_generator.load_moves()
-        print(f"length of moves: {len(moves)}")
+        moves = Legal_move_generator.load_moves() 
         if not len(moves):
             if Legal_move_generator.checks:
                 Game_manager.checkmate = True
@@ -199,6 +198,7 @@ def human_event_handler(event, board):
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
+            Game_manager.reset_game_state()
             board.reverse_move()
             board_ui = board.squares[:]
             moved_to, selected_square = None, None
