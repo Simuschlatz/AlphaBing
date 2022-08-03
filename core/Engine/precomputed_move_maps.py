@@ -92,7 +92,6 @@ class Precomputing_moves:
                         target_square = current_square + offset
                         # Adding target square to current side at current square
                         king_moves[side][current_square] = king_moves[side].get(current_square, []) + [target_square]
-        print("KING MOVES: ", king_moves)
         return king_moves
 
     @classmethod
