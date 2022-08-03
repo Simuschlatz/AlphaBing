@@ -36,7 +36,7 @@ class Legal_move_generator:
         cls.generate_advisor_moves()
         cls.generate_pawn_moves()
         cls.generate_elephant_moves()
-
+        print("CANNON DEFECT SQUARES: ", cls.cause_cannon_defect)
         return cls.moves
     
     @classmethod
@@ -64,7 +64,6 @@ class Legal_move_generator:
         cls.cause_cannon_defect = set()
 
         cls.iterations = 0
-
 
     @classmethod
     def generate_king_moves(cls) -> None:
@@ -245,7 +244,7 @@ class Legal_move_generator:
                     if Piece.is_color(target_piece, cls.board.moving_color):
                         break
 
-                    captures_checking_cannon = cls.checking_cannon_square == target_square
+                    captures_checking_cannon = target_square in cls.cause_cannon_defect and cls.checking_cannon_square == target_square
                     blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                     if blocks_all_checks or not cls.checks:
                         cls.moves.append((current_square, target_square))
@@ -430,22 +429,23 @@ class Legal_move_generator:
                 cls.pinned_squares.add(block_square)
 
     @classmethod
-    def illegal_king_targets(cls):
+    def exclude_king_moves(cls):
         # Looping over possible king moves
         for target_square in cls.king_move_map[cls.board.moving_side][cls.moving_king]:
             # Excluding squares occupied by friendly pieces
             piece_on_target = cls.board.squares[target_square]
-            if Piece.is_color(piece_on_target, cls.board.moving_side):
+            if Piece.is_color(piece_on_target, cls.board.moving_color):
                 continue
             # Looping over opponent cannons
             for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
-                cls.iterations += 1
                 dir_idx = cls.get_orth_dir_idx(cannon, target_square)
                 # If cannon could threaten king's move, generate attack ray
                 if dir_idx != None:
                     cls.generate_cannon_attack_ray(cannon, dir_idx)
+
             for rook in cls.board.piece_lists[cls.board.opponent_side][Piece.rook]:
                 dir_idx = cls.get_orth_dir_idx(rook, target_square)
+                # If cannon could threaten king's move, generate attack ray
                 if dir_idx != None:
                     cls.generate_rook_attack_ray(rook, dir_idx)
                 
@@ -455,12 +455,10 @@ class Legal_move_generator:
         """
         generates attack map along ray of given direction from given square
         """
-        offset = cls.dir_offsets[dir_idx]
+        attack_ray = cls.orthogonal_move_map[square][dir_idx]
         screen = False
         double_block = False
-        for step in range(cls.dist_to_edge[square][dir_idx]):
-            cls.iterations += 1
-            attacking_square = square + offset * (step + 1)
+        for attacking_square in attack_ray:
             piece = cls.board.squares[attacking_square]
             # attacking square is occupied
             # Cannon is in capture mode
@@ -478,6 +476,17 @@ class Legal_move_generator:
             if double_block:
                 return
 
+    @classmethod
+    def generate_rook_attack_ray(cls, square, dir_idx) -> None:
+        attack_ray = cls.orthogonal_move_map[square][dir_idx]
+        for attacking_square in attack_ray:
+            piece = cls.board.squares[attacking_square]
+            if Piece.is_color(piece, cls.board.moving_color) and Piece.is_type(piece, Piece.king):
+                continue
+            cls.attack_map.add(attacking_square)
+            # Attacking square occupied, break
+            if piece:
+                break
 
     @classmethod
     def get_cannon_imposed_limits(cls):
@@ -530,17 +539,6 @@ class Legal_move_generator:
                 screens.add(attacking_square)
 
 
-    @classmethod
-    def generate_rook_attack_ray(cls, square, dir_idx) -> None:
-        target_squares = cls.orthogonal_move_map[square][dir_idx]
-        for attacking_square in target_squares:
-            piece = cls.board.squares[attacking_square]
-            if Piece.is_color(piece, cls.board.moving_color) and Piece.is_type(piece, Piece.king):
-                continue
-            cls.rook_attack_map.add(attacking_square)
-            # Attacking square occupied, break
-            if piece:
-                break
 
     @classmethod
     def generate_rook_pins(cls):
