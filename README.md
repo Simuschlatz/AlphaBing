@@ -20,13 +20,12 @@
 <br/><br/>
 _Move Generation_
   * precomputed data + procedual generation
-  * finished: 
-    * move* and attack*maps
-    * legal move generation considering pins and blocks
-    * handling (multiple) checks, checkmate, stalemate
-    <br/>
+  * move* and attack*maps
+  * legal move generation considering pins and blocks
+  * handling (multiple) checks, checkmate, stalemate
+  <br/>
 
-_UI & UX_<br/>
+**UI & UX**<br/>
 * basic drag & drop
 * rudimentary SFX
 * marks possible captures & moves
@@ -34,7 +33,7 @@ _UI & UX_<br/>
 **AI**
 * DONE:
   * minimax algorithm
-  * alpha*beta pruning
+  * alpha-beta pruning
 * UNFINISHED:
   * move ordering
   * iterative deepening
@@ -60,19 +59,14 @@ _UI & UX_<br/>
 ## Dependencies
 * python 3
 * tensorflow
+* numpy
 * pygame
 
 ## Project-Status
 Project is: _in progress_
 
-## To-dos
-* minimax
-* computer vision
-
 ## Acknowledgements
 * Research done at [chessprogramming wiki](https://www.chessprogramming.org/)
-* Many thanks to all contributors
-
 
 ## Contact
-Created by [@SiiiMiii](https://github.com/SiiiMiii) * feel free to contact me at simon.mama07@gmail.com!
+Created by [@SiiiMiii](https://github.com/SiiiMiii) - feel free to contact me at simon.mama07@gmail.com!
