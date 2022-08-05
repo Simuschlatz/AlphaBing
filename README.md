@@ -25,16 +25,16 @@ _Move Generation_
   * handling (multiple) checks, checkmate, stalemate
   <br/>
 
-**UI & UX**<br/>
+_UI & UX_<br/>
 * basic drag & drop
 * rudimentary SFX
 * marks possible captures & moves
 
-**AI**
+_AI_
 * DONE:
   * minimax algorithm
   * alpha-beta pruning
-* UNFINISHED:
+* TO-DO:
   * move ordering
   * iterative deepening
   * position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and  SLEF)
