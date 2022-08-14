@@ -1,5 +1,5 @@
 
-pseudo code board.make_move()
+**pseudo code board.make_move()**
 
 params: move
 current, target
@@ -19,10 +19,19 @@ switch player to move
 
 
 
-pseudo code board.reverse_move()
+
+**pseudo code board.reverse_move()**
 params: move to reverse
 
 switch player to move
 
+
+**Board relative perspective**
+|play as red|red moves first|Output|
+|-----------|---------------|------|
+|True|True|True|
+|False|True|False|
+|True|False|False|
+|False|False|True|
 
 
