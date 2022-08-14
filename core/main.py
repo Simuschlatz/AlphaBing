@@ -1,3 +1,5 @@
+import sys
+print(sys.path)
 import pygame
 from Engine.board import Board
 from Engine.piece import Piece
@@ -23,7 +25,7 @@ GREY = (200, 200, 200)
 BG_COLOR = (240, 210, 170)
 
 UNIT = 80
-WIDTH = 1500
+WIDTH = 1200
 HEIGHT = 1000
 BOARD_WIDTH = 9 * UNIT
 BOARD_HEIGHT = 10 * UNIT
@@ -52,6 +54,7 @@ INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKA
 board_ui = None
 
 search = None
+AI_SEARCH_DEPTH = 3
 
 def move_feedback():
     if selected_square != None:
@@ -183,11 +186,11 @@ def human_event_handler(event, board):
         board_ui = board.squares[:]
         selected_piece = None
         
-        move = search.traverse_tree(3)
+        move = search.traverse_tree(AI_SEARCH_DEPTH)
         is_capture = board.make_move(move)
         board_ui = board.squares[:]
         play_sfx(is_capture)
-
+        print(search.searched_nodes)
         # Load moves for next player
         moves = Legal_move_generator.load_moves() 
         if not len(moves):
@@ -212,7 +215,7 @@ def main():
 
     clock = Timer(600, "Papa", "Mama")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    board = Board(fen, play_as_red)
+    board = Board(fen , play_as_red, red_moves_first=True)
     Legal_move_generator.init_board(board)
     Legal_move_generator.load_moves()
     py_clock = pygame.time.Clock()
