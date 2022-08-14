@@ -56,6 +56,11 @@ class Legal_move_generator:
         cls.pawn_attack_map = set()
         cls.king_attack_map = set()
 
+        # Opponent king can only pose a threat if it's file's dist to friendly king's file is exactly 1
+        friendly_king_file = cls.moving_king % 9
+        opponent_king_file = cls.opponent_king % 9
+        cls.flying_general_threat = abs(friendly_king_file - opponent_king_file) == 1
+        
         cls.illegal_squares = set()
         cls.pinned_squares = set()
         cls.checks = 0
@@ -368,6 +373,8 @@ class Legal_move_generator:
 
     @classmethod
     def flying_general(cls):
+        if not cls.flying_general_threat:
+            return
         dir_idx = cls.board.moving_side * 2
         friendly_king_rank = cls.moving_king // 9 
         dist_kings = abs(friendly_king_rank - cls.opponent_king // 9)
@@ -533,11 +540,9 @@ class Legal_move_generator:
                 if Piece.is_color(piece, cls.board.opponent_color) and Piece.is_type(piece, Piece.cannon):
                     if double_block:
                         cls.pinned_squares |= friendly_screens
-                        opponent_screens = screens - friendly_screens
-                        if not opponent_screens:
-                            break
-                        for screen in opponent_screens:
-                            cls.block_check_hash[screen] = cls.block_check_hash.get(screen, 0) - 1
+                        # opponent_screens = screens - friendly_screens
+                        # for screen in opponent_screens:
+                        #     cls.block_check_hash[screen] = -1
                         # cls.illegal_squares |= screens - friendly_screens
                         break
                     # Single screen
