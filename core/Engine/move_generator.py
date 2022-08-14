@@ -365,6 +365,7 @@ class Legal_move_generator:
 #-------------------------------------------------------------------------------
 #-------The part below is for calculating pins, checks, double cheks etc.-------
 #-------------------------------------------------------------------------------
+
     @classmethod
     def flying_general(cls):
         dir_idx = cls.board.moving_side * 2
@@ -456,8 +457,10 @@ class Legal_move_generator:
                 if attack_dir_idx != None:
                     cls.generate_rook_attack_ray(rook, attack_dir_idx)
 
+            # Pawns can't capture backwards, so skip dir index relative to moving side
             if move_dir_idx == cls.board.moving_side * 2:
                 continue
+
             for pawn in cls.board.piece_lists[cls.board.opponent_side][Piece.pawn]:
                 mhd = cls.board.get_manhattan_dist(pawn, target_square)
                 # Pawn is posing a threat to friendly king
@@ -530,6 +533,11 @@ class Legal_move_generator:
                 if Piece.is_color(piece, cls.board.opponent_color) and Piece.is_type(piece, Piece.cannon):
                     if double_block:
                         cls.pinned_squares |= friendly_screens
+                        opponent_screens = screens - friendly_screens
+                        if not opponent_screens:
+                            break
+                        for screen in opponent_screens:
+                            cls.block_check_hash[screen] = cls.block_check_hash.get(screen, 0) - 1
                         # cls.illegal_squares |= screens - friendly_screens
                         break
                     # Single screen
@@ -599,20 +607,6 @@ class Legal_move_generator:
                     cls.block_check_hash[block_square] = cls.block_check_hash.get(block_square, 0) + 1
                 break  
 
-    @classmethod
-    def calculate_pawn_attack_data(cls) -> None:
-        for square in cls.board.piece_lists[cls.board.opponent_side][Piece.pawn]:
-            for attacking_square in cls.pawn_move_map[cls.board.opponent_side][square]:
-                piece = cls.board.squares[attacking_square]
-
-                if Piece.is_color(piece, cls.board.moving_color):
-                    if Piece.is_type(piece, Piece.king):
-                        cls.checks += 1
-                        cls.block_check_hash[square] = cls.block_check_hash.get(square, 0) + 1
-                    continue
-                # Empty square or opponent piece
-                cls.pawn_attack_map.add(attacking_square)
-                    
     @classmethod
     def calculate_attack_data(cls) -> None:
         cls.exclude_king_moves()
