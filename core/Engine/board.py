@@ -1,3 +1,5 @@
+from math import dist
+from re import S
 from Engine.piece import Piece
 import numpy as np
 # from collections import deque
@@ -125,6 +127,11 @@ class Board:
             return current_square + d_rank // 2 * 9
         return current_square + d_file // 2
    
+    @staticmethod
+    def get_manhattan_dist(square_1, square_2):
+        dist_x = abs(square_1 % 9 - square_2 % 9)
+        dist_y = abs(square_1 // 9 - square_2 // 9)
+        return dist_x + dist_y
 
     def make_move(self, move):
         previous_square, moved_to = move

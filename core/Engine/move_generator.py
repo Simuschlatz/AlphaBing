@@ -438,24 +438,37 @@ class Legal_move_generator:
     @classmethod
     def exclude_king_moves(cls):
         # Looping over possible king moves
-        for target_square in cls.king_move_map[cls.board.moving_side][cls.moving_king]:
+        for move_dir_idx, target_square in enumerate(cls.king_move_map[cls.board.moving_side][cls.moving_king]):
             # Excluding squares occupied by friendly pieces
             piece_on_target = cls.board.squares[target_square]
             if Piece.is_color(piece_on_target, cls.board.moving_color):
                 continue
             # Looping over opponent cannons
             for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
-                dir_idx = cls.get_orth_dir_idx(cannon, target_square)
+                attack_dir_idx = cls.get_orth_dir_idx(cannon, target_square)
                 # If cannon could threaten king's move, generate attack ray
-                if dir_idx != None:
-                    cls.generate_cannon_attack_ray(cannon, dir_idx)
+                if attack_dir_idx != None:
+                    cls.generate_cannon_attack_ray(cannon, attack_dir_idx)
 
             for rook in cls.board.piece_lists[cls.board.opponent_side][Piece.rook]:
-                dir_idx = cls.get_orth_dir_idx(rook, target_square)
+                attack_dir_idx = cls.get_orth_dir_idx(rook, target_square)
                 # If cannon could threaten king's move, generate attack ray
-                if dir_idx != None:
-                    cls.generate_rook_attack_ray(rook, dir_idx)
-                
+                if attack_dir_idx != None:
+                    cls.generate_rook_attack_ray(rook, attack_dir_idx)
+
+            if move_dir_idx == cls.board.moving_side * 2:
+                continue
+            for pawn in cls.board.piece_lists[cls.board.opponent_side][Piece.pawn]:
+                mhd = cls.board.get_manhattan_dist(pawn, target_square)
+                # Pawn is posing a threat to friendly king
+                if not mhd:
+                    cls.checks += 1
+                    cls.block_check_hash[pawn] = cls.block_check_hash.get(pawn, 0) + 1
+                    # cls.block_check_hash[pawn] = 1
+                # Pawn is able to attack a pseudo-legal target square of the king, making it illegal
+                if mhd == 1:
+                    cls.pawn_attack_map.add(target_square)
+
 
     @classmethod
     def generate_cannon_attack_ray(cls, square, dir_idx):
@@ -607,7 +620,7 @@ class Legal_move_generator:
         cls.calculate_horse_attack_data()
         cls.get_cannon_imposed_limits()
         cls.generate_rook_pins()
-        cls.calculate_pawn_attack_data()
+        # cls.calculate_pawn_attack_data()
         # print("CHECK: ", cls.checks)
         cls.attack_map |= cls.horse_attack_map | cls.rook_attack_map | cls.cannon_attack_map | cls.pawn_attack_map | cls.king_attack_map
         # print("SQUARES BLOCKING CHECK: ", cls.block_check_hash) 
