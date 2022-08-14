@@ -1,5 +1,3 @@
-from math import dist
-from re import S
 from Engine.piece import Piece
 import numpy as np
 # from collections import deque
@@ -13,10 +11,10 @@ class Board:
     horse = 4
     cannon = 4.5
     rook = 10
-    values = (king, elephant, advisor, cannon, pawn, rook, horse)
+    values = (0, elephant, advisor, cannon, pawn, rook, horse)
 
     def __init__(self, FEN: str, play_as_red: int, red_moves_first=True) -> None:
-        self.moving_side = play_as_red and red_moves_first
+        self.moving_side = not(play_as_red != red_moves_first)
         self.opponent_side = 1 - self.moving_side
 
         # If we don't play as red, the pieces are at the top, 
@@ -195,7 +193,7 @@ class Board:
 
     def shef(self):
         """
-        Standard Heuristic Evaluation Function: \n
+        Standard Heuristic Evaluation Function \n
         :return: a heuristic evaluation of current material on board relative to moving color.
         positive: good
         negative: bad
