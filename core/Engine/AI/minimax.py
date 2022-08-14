@@ -1,4 +1,5 @@
 from Engine.move_generator import Legal_move_generator
+from Engine.AI.move_ordering import order_moves
 
 class Dfs:
     def __init__(self, board) -> None:
@@ -14,7 +15,7 @@ class Dfs:
         positive_infinity = float("inf")
         negative_infinity = float("-inf")
         best_eval = negative_infinity
-        current_pos_moves = Legal_move_generator.load_moves()
+        current_pos_moves = order_moves(Legal_move_generator.load_moves(), self.board)
         for move in current_pos_moves:
             self.board.make_move(move)
             evaluation = -self.minimax_alpha_beta(depth, negative_infinity, positive_infinity)
@@ -38,7 +39,8 @@ class Dfs:
         if not depth:
             return self.board.shef()
 
-        moves = Legal_move_generator.load_moves()
+        moves = order_moves(Legal_move_generator.load_moves(), self.board)
+        moves
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         if not len(moves):
