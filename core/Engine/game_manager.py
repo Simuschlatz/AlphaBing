@@ -18,3 +18,7 @@ class Game_manager:
     @classmethod
     def reset_move_counter(cls):
         cls.fifty_move_counter = 0
+
+    @classmethod
+    def reset_move_counter(cls):
+        cls.fifty_move_counter = 0
