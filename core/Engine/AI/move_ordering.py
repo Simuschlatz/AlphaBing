@@ -1,5 +1,4 @@
-import sys
-sys.path.append("/Users/simonma/Documents/GitHub/Chess-AI/core")
+
 from Engine.piece import Piece
 def order_moves(moves, board):
     """
@@ -16,5 +15,5 @@ def order_moves(moves, board):
         # this way good pieces capturing bad ones still overvalue non-capture moves
         score =  11 * captured_val - moved_val
         move_value_estimates[move] = score
-    # Sort move value estimates by their value but return the moves
+    # Sort move value estimates by their value and return the ordered moves
     return sorted(move_value_estimates, key=lambda move: move_value_estimates[move], reverse=True)
