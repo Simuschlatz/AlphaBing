@@ -14,9 +14,9 @@ class Board:
     values = (0, elephant, advisor, cannon, pawn, rook, horse)
 
     def __init__(self, FEN: str, play_as_red: int, red_moves_first=True) -> None:
+        # Look core/notes.md
         self.moving_side = not(play_as_red != red_moves_first)
         self.opponent_side = 1 - self.moving_side
-
         # If we don't play as red, the pieces are at the top, 
         self.is_red_up = not play_as_red
         # moving color is 16 if red moves first or 8 when white moves first
@@ -189,21 +189,3 @@ class Board:
         piece_type = Piece.get_type(piece)
         letter = Piece.letters[is_red * 7 + piece_type]
         return (f"{letter}({former_rank}{former_file})-{new_rank}{new_file}")
-
-
-    def shef(self):
-        """
-        Standard Heuristic Evaluation Function \n
-        :return: a heuristic evaluation of current material on board relative to moving color.
-        positive: good
-        negative: bad
-        """
-        friendly_eval = self.static_material_eval(self.moving_side)
-        opponent_eval = self.static_material_eval(self.opponent_side)
-        return friendly_eval - opponent_eval
-    
-    def static_material_eval(self, side):
-        material = 0
-        for piece_id in range(1, 7):
-            material += len(self.piece_lists[side][piece_id]) * self.values[piece_id]
-        return material
