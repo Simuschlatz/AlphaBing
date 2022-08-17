@@ -1,13 +1,12 @@
-import sys
-print(sys.path)
 import pygame
+from data_init import init_imgs
 from Engine.board import Board
 from Engine.piece import Piece
 from Engine.move_generator import Legal_move_generator
 from Engine.game_manager import Game_manager
-from data_init import init_imgs
 from Engine.timer import Timer
 from Engine.AI.minimax import Dfs
+from Engine.AI.eval_utility import Evaluation
 
 
 FPS = 45
@@ -25,14 +24,14 @@ GREY = (200, 200, 200)
 BG_COLOR = (240, 210, 170)
 
 UNIT = 80
-WIDTH = 1200
+WIDTH = 1500
 HEIGHT = 1000
 BOARD_WIDTH = 9 * UNIT
 BOARD_HEIGHT = 10 * UNIT
 FONT_SIZE = 40
 CIRCLE_DIAMETER = 15
 
-piece_style_western = True
+piece_style_western = False
 PIECES_IMGS, BOARD_IMG, BG_IMG = init_imgs(UNIT, WIDTH, HEIGHT, piece_style_western)
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -54,7 +53,7 @@ INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKA
 board_ui = None
 
 search = None
-AI_SEARCH_DEPTH = 3
+AI_SEARCH_DEPTH = 5
 
 def move_feedback():
     if selected_square != None:
@@ -62,13 +61,17 @@ def move_feedback():
         l_rank = selected_square // 9
         l_x = OFFSET_X + l_file * UNIT
         l_y = OFFSET_Y + l_rank * UNIT
-        pygame.draw.ellipse(WIN, (217, 255, 255), (l_x + UNIT / 3, l_y + UNIT / 3, UNIT / 3, UNIT / 3))
+        # Small circle diameter
+        scd = UNIT / 3
+        pygame.draw.ellipse(WIN, (217, 255, 255), (l_x + scd, l_y + scd, scd, scd))
     if moved_to != None:
         c_file = moved_to % 9
         c_rank = moved_to // 9
         c_x = OFFSET_X + c_file * UNIT
         c_y = OFFSET_Y + c_rank * UNIT
-        pygame.draw.rect(WIN, (217, 255, 255), (c_x, c_y, UNIT, UNIT))
+        # Big circle diameter 
+        bcd = UNIT * 1.1
+        pygame.draw.ellipse(WIN, (217, 255, 255), (c_x - UNIT * 0.05, c_y - UNIT * 0.05, bcd, bcd))
 
 OFFSET_X = (WIDTH - BOARD_WIDTH) / 2
 OFFSET_Y = (HEIGHT - BOARD_HEIGHT) / 2
@@ -101,9 +104,9 @@ def draw(board, remainig_times):
     move_feedback()
 
     if Game_manager.checkmate:
-        render_text("CHECKMATE!", (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
+        render_text("checkmate!", (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
     elif Game_manager.stalemate:
-        render_text("STALEMATE!", (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
+        render_text("stalemate!", (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
     else:
         # Drawing reamining time
         render_text(remainig_times[0], (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE))
@@ -190,7 +193,8 @@ def human_event_handler(event, board):
         is_capture = board.make_move(move)
         board_ui = board.squares[:]
         play_sfx(is_capture)
-        print(search.searched_nodes)
+
+        print(f"traversed nodes: {search.searched_nodes}")
         # Load moves for next player
         moves = Legal_move_generator.load_moves() 
         if not len(moves):
@@ -218,16 +222,18 @@ def main():
     board = Board(fen , play_as_red, red_moves_first=True)
     Legal_move_generator.init_board(board)
     Legal_move_generator.load_moves()
-    py_clock = pygame.time.Clock()
+    Evaluation.init(board)
     search = Dfs(board)
+    py_clock = pygame.time.Clock()
     run = True
     board_ui = board.squares[:]
-
+    # print(Evaluation.shef_advanced())
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             human_event_handler(event, board)
+
         clock.run(board.moving_side)
         rendered_text = [f"{clock.r_min_tens[0]}{clock.r_min_ones[0]}:{clock.r_sec_tens[0]}{clock.r_sec_ones[0]}",
                         f"{clock.r_min_tens[1]}{clock.r_min_ones[1]}:{clock.r_sec_tens[1]}{clock.r_sec_ones[1]}"]            
