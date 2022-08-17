@@ -35,3 +35,13 @@ switch player to move
 |False|False|True|
 
 
+**Truth Table is pst flipped**
+is_red_up   is red moving   is board flipped
+True        True            False
+False       True            True
+True        False           True
+False       False           False
+
+condition: is_red_up xor is red moving
+
+
