@@ -1,8 +1,8 @@
 from Engine.move_generator import Legal_move_generator
 from Engine.AI.move_ordering import order_moves
+from Engine.AI.eval_utility import Evaluation
 
 class Dfs:
-    
     def __init__(self, board) -> None:
         self.board = board
         self.traversed_nodes = 0
@@ -85,7 +85,7 @@ class Dfs:
 
     def alpha_beta_opt(self, depth, alpha, beta):
         if not depth:
-            return self.board.shef()
+            return Evaluation.shef_advanced()
 
         moves = order_moves(Legal_move_generator.load_moves(), self.board)
         # Check- or Stalemate, meaning game is lost
