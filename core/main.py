@@ -29,21 +29,22 @@ TURQUOISE = (64, 224, 208)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREY = (200, 200, 200)
-BG_COLOR = (240, 210, 170)
+BG_COLOR = (235, 229, 225)
 
 UNIT = 80
 WIDTH = 1500
-HEIGHT = 1000
+HEIGHT = 800
 BOARD_WIDTH = 9 * UNIT
 BOARD_HEIGHT = 10 * UNIT
 FONT_SIZE = 40
-CIRCLE_DIAMETER = 15
+MOVE_MARKER_CIRCLE = UNIT / 7
+CAPTURE_CIRCLE_D = UNIT * 1.1
 
 piece_style_western = False
 PIECES_IMGS, BOARD_IMG, BG_IMG = init_imgs(UNIT, WIDTH, HEIGHT, piece_style_western)
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("JOE")
+pygame.display.set_caption("JOE MAMA")
 pygame.display.set_icon(PIECES_IMGS[7])
 pygame.font.init()
 pygame.mixer.init()
@@ -67,11 +68,11 @@ def move_feedback():
     if selected_square != None:
         l_file = selected_square % 9
         l_rank = selected_square // 9
-        l_x = OFFSET_X + l_file * UNIT
-        l_y = OFFSET_Y + l_rank * UNIT
+        l_x = OFFSET_X + (l_file + .5) * UNIT
+        l_y = OFFSET_Y + (l_rank + .5) * UNIT
         # Small circle diameter
         scd = UNIT / 3
-        pygame.draw.ellipse(WIN, (217, 255, 255), (l_x + scd, l_y + scd, scd, scd))
+        pygame.draw.ellipse(WIN, (217, 255, 255), (l_x - scd / 2, l_y - scd / 2, scd, scd))
     if moved_to != None:
         c_file = moved_to % 9
         c_rank = moved_to // 9
@@ -92,13 +93,16 @@ def draw_moves(board, target_indices):
     for index in target_indices:
         file = index % 9
         rank = index // 9
-        x = OFFSET_X + file * UNIT
-        y = OFFSET_Y + rank * UNIT
+        x = OFFSET_X + (file + .5) * UNIT 
+        y = OFFSET_Y + (rank + .5) * UNIT
         # If piece on target, it must be opponent's,  otherwise it would've been removed
         if board.squares[index]:
-            pygame.draw.ellipse(WIN, BLUE_DARK, (x - 4, y - 4, UNIT + 8, UNIT + 8))
-        # Here, the -4 is just to correct for the unperfect aspect ratio of the board image
-        pygame.draw.ellipse(WIN, BLUE_DARK, (x + UNIT / 2 - 4, y + UNIT / 2 - 4, CIRCLE_DIAMETER, CIRCLE_DIAMETER))
+            pygame.draw.ellipse(WIN, BLUE_DARK, (x - CAPTURE_CIRCLE_D / 2,
+                                                y - CAPTURE_CIRCLE_D / 2,
+                                                CAPTURE_CIRCLE_D, CAPTURE_CIRCLE_D))
+        pygame.draw.ellipse(WIN, BLUE_DARK, (x - MOVE_MARKER_CIRCLE / 2, 
+                                            y - MOVE_MARKER_CIRCLE / 2, 
+                                             MOVE_MARKER_CIRCLE, MOVE_MARKER_CIRCLE))
 
 def render_text(text: str, pos: tuple):
     surface = DISPLAY_FONT.render(text, False, (130, 130, 130))
@@ -106,9 +110,9 @@ def render_text(text: str, pos: tuple):
 
 def draw(board, remainig_times):
 
-    # WIN.fill(BG_COLOR)
-    WIN.blit(BG_IMG, (0, 0))
-    WIN.blit(BOARD_IMG, (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2))
+    WIN.fill(BG_COLOR)
+    # WIN.blit(BG_IMG, (0, 0))
+    WIN.blit(BOARD_IMG, (OFFSET_X, OFFSET_Y))
     move_feedback()
 
     if Game_manager.checkmate:
