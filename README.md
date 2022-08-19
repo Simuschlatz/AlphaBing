@@ -59,7 +59,7 @@ _AI_
 ![Screenshot](./assets/screenshots/10.07.png)
 
 ## Dependencies
-**To run the current version of the app: **
+**To run the current version of the app:**
 * python 3
 * numpy
 * pygame
