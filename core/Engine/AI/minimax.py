@@ -1,5 +1,5 @@
 from Engine.move_generator import Legal_move_generator
-from Engine.AI.move_ordering import order_moves
+from Engine.AI.move_ordering import order_moves, order_moves_pst
 from Engine.AI.eval_utility import Evaluation
 
 class Dfs:
@@ -17,7 +17,7 @@ class Dfs:
         positive_infinity = float("inf")
         negative_infinity = float("-inf")
         best_eval = negative_infinity
-        current_pos_moves = order_moves(Legal_move_generator.load_moves(), self.board)
+        current_pos_moves = order_moves_pst(Legal_move_generator.load_moves(), self.board)
         for move in current_pos_moves:
             self.searched_nodes += 1
             self.board.make_move(move)
@@ -83,24 +83,28 @@ class Dfs:
             alpha = max(evaluation, alpha)
         return alpha
 
+
     def alpha_beta_opt(self, depth, alpha, beta):
         if not depth:
             return Evaluation.shef_advanced()
 
-        moves = order_moves(Legal_move_generator.load_moves(), self.board)
+        moves = order_moves_pst(Legal_move_generator.load_moves(), self.board)
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         if not len(moves):
             return float("-inf")
 
         for move in moves:
+            # traversing down the tree
             self.board.make_move(move)
             evaluation = -self.alpha_beta_opt(depth - 1, -beta, -alpha)
             self.board.reverse_move()
+
             # Move is even better than best eval before,
             # opponent won't choose move anyway so PRUNE YESSIR
             if evaluation >= beta:
                 return beta
             self.searched_nodes += 1
+            # Keep track of best move fro moving color
             alpha = max(evaluation, alpha)
         return alpha
