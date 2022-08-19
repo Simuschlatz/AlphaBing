@@ -1,4 +1,12 @@
+"""
+Copyright (C) 2021-2022 Simon Ma <https://github.com/SiiiMiii> 
+- All Rights Reserved. You may use, distribute and modify this code
+under the terms of the GNU General Public License
+"""
+
 import pygame
+from Engine.AI.move_ordering import order_moves, order_moves_pst
+from Engine.AI.piece_square_tables import Piece_square_table
 from data_init import init_imgs
 from Engine.board import Board
 from Engine.piece import Piece
@@ -53,7 +61,7 @@ INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKA
 board_ui = None
 
 search = None
-AI_SEARCH_DEPTH = 5
+AI_SEARCH_DEPTH = 4
 
 def move_feedback():
     if selected_square != None:
@@ -193,8 +201,8 @@ def human_event_handler(event, board):
         is_capture = board.make_move(move)
         board_ui = board.squares[:]
         play_sfx(is_capture)
-
         print(f"traversed nodes: {search.searched_nodes}")
+
         # Load moves for next player
         moves = Legal_move_generator.load_moves() 
         if not len(moves):
@@ -219,7 +227,7 @@ def main():
 
     clock = Timer(600, "Papa", "Mama")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    board = Board(fen , play_as_red, red_moves_first=True)
+    board = Board(fen , play_as_red, red_moves_first=False)
     Legal_move_generator.init_board(board)
     Legal_move_generator.load_moves()
     Evaluation.init(board)
@@ -227,7 +235,8 @@ def main():
     py_clock = pygame.time.Clock()
     run = True
     board_ui = board.squares[:]
-    # print(Evaluation.shef_advanced())
+    print(order_moves(Legal_move_generator.moves, board))
+    print(order_moves_pst(Legal_move_generator.moves, board))
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
