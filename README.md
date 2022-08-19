@@ -2,7 +2,7 @@
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 * Xiangqi is the chinese version of chess very popular amongst East Asian countries.
-* This project's final version will be a fairly sophisticated chess engine with built*in AI and the ability to process a physical board
+* This project's final version will be a fairly sophisticated chess engine with built-in AI and the ability to process a physical board
 
 ## Table of Contents
 * [Featuqres](#features)
@@ -34,9 +34,11 @@ _AI_
 * DONE:
   * minimax algorithm
   * alpha-beta pruning
-* TO-DO:
   * move ordering
+  * SHEF (Standard Heuristic Evaluation Function)
+* TO-DO:
   * iterative deepening
+  * SLEF (Self-Learning Evaluation Function)
   * position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and  SLEF)
   * handling transposition with zobrist hashing
 
@@ -57,8 +59,8 @@ _AI_
 ![Screenshot](./assets/screenshots/10.07.png)
 
 ## Dependencies
+**To run the current version of the app: **
 * python 3
-* tensorflow
 * numpy
 * pygame
 
@@ -66,6 +68,7 @@ _AI_
 Project is: _in progress_
 
 ## Acknowledgements
+* Inspiration: [@SebLague](https://github.com/SebLague)
 * Research done at [chessprogramming wiki](https://www.chessprogramming.org/)
 
 ## Contact
