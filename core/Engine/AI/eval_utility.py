@@ -1,5 +1,5 @@
 from Engine.piece import Piece
-from Engine.AI.piece_square_tables import piece_square_tables
+from Engine.AI.piece_square_tables import piece_square_tables, get_pst_value
 
 class Evaluation:
 
@@ -46,9 +46,8 @@ class Evaluation:
         mat = 0
         for piece_id in range(1, 7):
             for square in cls.board.piece_lists[moving_side][piece_id]:
-            # Subtract 1 from piece id because piece-square-tables do not include king values
-                pst = piece_square_tables[piece_id - 1]
-                mat += pst[summand + square_multiplier * square]
+                square = summand + square_multiplier * square
+                mat += get_pst_value(piece_id, square)
         return mat
 
 
