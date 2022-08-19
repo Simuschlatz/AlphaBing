@@ -24,8 +24,8 @@ def init_imgs(unit, width, height, is_western_style: bool) -> list:
                     for color in [1, 0] for img in _pieces_imgs]
 
     pieces_imgs = [pygame.transform.scale(img, (unit, unit)) for img in pieces_imgs]
-    board_img = pygame.image.load(os.path.join("assets/imgs", "board.png"))
-    board_img = pygame.transform.scale(board_img, (unit * 8, unit * 9))
+    board_img = pygame.image.load(os.path.join("assets/imgs", "board_light.svg"))
+    board_img = pygame.transform.scale(board_img, (unit * 9, unit * 10))
 
     bg = pygame.image.load(os.path.join("assets/imgs", "bg_light.jpg"))
     bg = pygame.transform.scale(bg, (width, height))
