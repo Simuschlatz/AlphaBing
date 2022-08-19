@@ -1,5 +1,5 @@
 from Engine.piece import Piece
-from Engine.AI.piece_square_tables import piece_square_tables, get_pst_value
+from Engine.AI.piece_square_tables import Piece_square_table
 
 class Evaluation:
 
@@ -28,26 +28,23 @@ class Evaluation:
 
     @classmethod
     def shef_advanced(cls):
-        is_board_flipped = cls.board.moving_side == Piece.red != cls.board.is_red_up
-        summand = 89 * is_board_flipped
-        square_multiplier = 2 * (not is_board_flipped) - 1
-        friendly_eval = cls.pst_material_eval(cls.board.moving_side, summand, square_multiplier)
-        
-        square_multiplier = 2 * (is_board_flipped) - 1
-        opponent_eval = cls.pst_material_eval(cls.board.opponent_side, 89 - summand, square_multiplier)
+        """
+        Advanced Standard Heuristic Evaluation Function \n
+        :return: a heuristic piece-square-table-based evaluation of current material on board relative to moving color.
+        """
+        friendly_eval = cls.pst_material_eval(cls.board.moving_side)
+        opponent_eval = cls.pst_material_eval(cls.board.opponent_side)
         return friendly_eval - opponent_eval
 
     @classmethod  
-    def pst_material_eval(cls, moving_side, summand, square_multiplier):
+    def pst_material_eval(cls, moving_side):
         """
-        :param summand: either 0 or 89
-        :param square_multiplier: gets multiplied with the square index of each piece and then added to summand
+        :return: Piece-square-table-based evaluation of moving side's material
         """
         mat = 0
         for piece_id in range(1, 7):
             for square in cls.board.piece_lists[moving_side][piece_id]:
-                square = summand + square_multiplier * square
-                mat += get_pst_value(piece_id, square)
+                mat += Piece_square_table.get_pst_value(piece_id, square, moving_side)
         return mat
 
 
