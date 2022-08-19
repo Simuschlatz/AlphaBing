@@ -8,13 +8,12 @@ def order_moves(moves, board):
     for move in moves:
         moved_piece = board.squares[move[0]]
         captured_piece = board.squares[move[1]]
-        moved_val = board.values[Piece.get_type(moved_piece)]
+        moved_val = board.values[Piece.get_type(moved_piece)] 
         captured_val = board.values[Piece.get_type(captured_piece)]
         # Multiply captured piece value by a number higher than the most valuable piece,
         # this way good pieces capturing bad ones still overvalue non-capture moves
-        move_value_estimates[move] = 11 * captured_val - moved_val
+        move_value_estimates[move] = 250 * captured_val - moved_val
     # Sort move value estimates by their value and return the ordered moves
-    return sorted(move_value_estimates.values())
     return sorted(move_value_estimates, key=lambda move: move_value_estimates[move], reverse=True)
 
 def order_moves_pst(moves, board):
@@ -40,5 +39,4 @@ def order_moves_pst(moves, board):
         # this way good pieces capturing bad ones still overvalue non-capture moves
         move_value_estimates[move] = captured_val * 250 - moved_val
     # Sort move value estimates by their value and return the ordered moves
-    return sorted(move_value_estimates.values())
     return sorted(move_value_estimates, key=lambda move: move_value_estimates[move], reverse=True)
