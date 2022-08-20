@@ -260,10 +260,9 @@ class Legal_move_generator:
                     captures_checking_cannon = avoids_cannon_check and cls.checking_cannon_square == target_square
                     blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                     
-                    if not blocks_all_checks:
-                        continue
-                    cls.moves.append((current_square, target_square))
-                    cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
+                    if blocks_all_checks:    
+                        cls.moves.append((current_square, target_square))
+                        cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
                     # If piece on target square and not friendly, go to next direction
                     if target_piece:
                         break
@@ -563,7 +562,7 @@ class Legal_move_generator:
                     #     continue
                     # for screen in opponent_screens:
                     #     cls.block_check_hash[screen] = cls.block_check_hash.get(screen, 0) - 1
-                    print(screens)
+
                     cls.double_screens |= screens
                     # King can't capture any opponent screens as it would move him into check
                     cls.attack_map |= opponent_screens
