@@ -50,22 +50,26 @@ class Legal_move_generator:
         cls.target_squares = {}
 
         cls.attack_map = set()
-        cls.horse_attack_map = set()
-        cls.rook_attack_map = set()
-        cls.cannon_attack_map = set()
-        cls.pawn_attack_map = set()
-        cls.king_attack_map = set()
 
         # Opponent king can only pose a threat if it's file's dist to friendly king's file is exactly 1
         cls.friendly_king_file = cls.moving_king % 9
         cls.opponent_king_file = cls.opponent_king % 9
         cls.flying_general_threat = abs(cls.friendly_king_file - cls.opponent_king_file) == 1
         
+        # Squares that would serve as screen for a threatening cannon
         cls.illegal_squares = set()
         cls.pinned_squares = set()
+        # Number of checks
         cls.checks = 0
+        # Used for tracking the number of checks a square would block if moved to
         cls.block_check_hash = {}
+        # Square used to denote a checking cannon if existing
         cls.checking_cannon_square = None
+        # squares occupied by friendly pieces that are part of two pieces blocking a cannon check that can't
+        # capture the other piece of double block as it would rearrange the double block into single screen
+        cls.double_screens = set()
+        # Sqaure of friendly piece that serves as screen for a checking cannon, 
+        # whose movement away from check-ray would resolve th check
         cls.cause_cannon_defect = None
 
     @classmethod
@@ -324,7 +328,8 @@ class Legal_move_generator:
         # it prevents the cannon check, thus counting as a blocked check
         disables_cannon = current_square == cls.cause_cannon_defect
         num_checks_blocked = cls.block_check_hash.get(target_square, 0) + disables_cannon
-        return num_checks_blocked == cls.checks + confusion_value
+        captures_other_double_screen = current_square in cls.double_screens and target_square in cls.double_screens
+        return num_checks_blocked == cls.checks + confusion_value and not captures_other_double_screen
 
 
     @classmethod
@@ -388,7 +393,7 @@ class Legal_move_generator:
             # by friendly king as opponent king's defending it
             if Piece.is_color(piece, cls.board.opponent_color):
                 if not block:
-                    cls.king_attack_map.add(square)
+                    cls.attack_map.add(square)
                 return
 
             # Friendly king
@@ -406,7 +411,7 @@ class Legal_move_generator:
         if block:
             return
         flying_general_square = friendly_king_rank * 9 + cls.opponent_king_file
-        cls.king_attack_map.add(flying_general_square)
+        cls.attack_map.add(flying_general_square)
         
     @classmethod
     def calculate_horse_attack_data(cls) -> None:
@@ -428,7 +433,7 @@ class Legal_move_generator:
 
                 # Horse is attacking the target square
                 if not block_piece:
-                    cls.horse_attack_map.add(target_square)
+                    cls.attack_map.add(target_square)
                     if is_move_check:
                         cls.checks += 1
                         cls.block_check_hash[block_square] = cls.block_check_hash.get(block_square, 0) + 1
@@ -472,7 +477,7 @@ class Legal_move_generator:
                     cls.block_check_hash[pawn] = cls.block_check_hash.get(pawn, 0) + 1
                 # Pawn is able to attack a pseudo-legal target square of the king, making it illegal
                 if mhd == 1:
-                    cls.pawn_attack_map.add(target_square)
+                    cls.attack_map.add(target_square)
 
     @classmethod
     def confine_movement(cls) -> None:
@@ -501,7 +506,7 @@ class Legal_move_generator:
             # attacking square is occupied
             # Cannon is in capture mode
             if screen:
-                cls.cannon_attack_map.add(attacking_square)
+                cls.attack_map.add(attacking_square)
 
             if Piece.is_color(piece, cls.board.moving_color) and Piece.is_type(piece, Piece.king):
                 if screen: 
@@ -549,6 +554,7 @@ class Legal_move_generator:
                 opponent_screens = screens - friendly_screens
                 # Double screen, blocking checks but pinning friendly screens
                 if double_block:
+                    # Friendly screens can't move away from current ray
                     cls.pinned_squares |= friendly_screens
                     # This is no viable solution to double screen capturing, because we
                     # only want to limit the friendly screen from capturing opponent screen
@@ -556,6 +562,8 @@ class Legal_move_generator:
                     #     continue
                     # for screen in opponent_screens:
                     #     cls.block_check_hash[screen] = cls.block_check_hash.get(screen, 0) - 1
+                    cls.double_screens |= screens
+                    # King can't capture any opponent screens as it would move him into check
                     cls.attack_map |= opponent_screens
                     break
                 # Single screen
@@ -628,5 +636,4 @@ class Legal_move_generator:
         cls.calculate_horse_attack_data()
         cls.confine_movement()
         # print("CHECK: ", cls.checks)
-        cls.attack_map |= cls.horse_attack_map | cls.rook_attack_map | cls.cannon_attack_map | cls.pawn_attack_map | cls.king_attack_map
         # print("SQUARES BLOCKING CHECK: ", cls.block_check_hash) 
