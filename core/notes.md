@@ -45,3 +45,11 @@ False       False           False
 condition: is_red_up xor is red moving
 
 
+**efficient attack data generation**
+
+for each rook
+min_dist = min(distx, disty)
+if min_dist > 1 continue
+get direction index
+if min_dist == 1 generate attack ray
+if not min_dist get cannon imposed limits
