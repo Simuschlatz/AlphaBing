@@ -209,13 +209,13 @@ class Legal_move_generator:
                 target_square = move[1]
                 if target_square in cls.illegal_squares:
                     continue
+                target_piece = cls.board.squares[target_square]
+                if Piece.is_color(target_piece, cls.board.moving_color):
+                    continue
                 # If there's a check (or multiple)
                 # Only proceed if num of checks the moves blocks is equivalent to total num of checks
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
-                    continue
-                target_piece = cls.board.squares[target_square]
-                if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
                 blocking_square = cls.board.get_horse_block(current_square, target_square)
                 is_move_blocked = cls.board.squares[blocking_square]
@@ -260,9 +260,10 @@ class Legal_move_generator:
                     captures_checking_cannon = avoids_cannon_check and cls.checking_cannon_square == target_square
                     blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                     
-                    if blocks_all_checks or not cls.checks:
-                        cls.moves.append((current_square, target_square))
-                        cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
+                    if not blocks_all_checks:
+                        continue
+                    cls.moves.append((current_square, target_square))
+                    cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
                     # If piece on target square and not friendly, go to next direction
                     if target_piece:
                         break
@@ -562,6 +563,7 @@ class Legal_move_generator:
                     #     continue
                     # for screen in opponent_screens:
                     #     cls.block_check_hash[screen] = cls.block_check_hash.get(screen, 0) - 1
+                    print(screens)
                     cls.double_screens |= screens
                     # King can't capture any opponent screens as it would move him into check
                     cls.attack_map |= opponent_screens
