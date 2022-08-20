@@ -171,7 +171,7 @@ class Precomputing_moves:
     @classmethod
     def precompute_pawn_moves(cls) -> list:
         """
-        :return: a list of one hash mapfor each side of the board, containing 
+        :return: a list of one hash map for each side of the board, containing 
         all start indices as keys and the possible targets of those positions as value\n
         output form : [{int : [int, int...], int: [int]...}, {...}]
         """
@@ -194,10 +194,10 @@ class Precomputing_moves:
                         if cls.dist_to_edge[square][dir_idx] < 1:
                             continue
                         offset = cls.dir_offsets[dir_idx]
-                        pawn_moves[side][square] = pawn_moves[side].get(square, []) + [square + offset]
+                        pawn_moves[side][square] = pawn_moves[side].get(square, set()) | {square + offset}
                 if foward_move:
                     offset = offset_push_move[side]
-                    pawn_moves[side][square] = pawn_moves[side].get(square, []) + [square + offset]
+                    pawn_moves[side][square] = pawn_moves[side].get(square, set()) | {square + offset}
         return pawn_moves
 
     @classmethod
