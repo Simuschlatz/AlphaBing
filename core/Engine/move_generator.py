@@ -43,9 +43,11 @@ class Legal_move_generator:
         """
         Initializes data used for move generation
         """
-        cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_side][Piece.king]))
-        cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_side][Piece.king]))
-
+        try:
+            cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_side][Piece.king]))
+            cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_side][Piece.king]))
+        except StopIteration:
+            print(cls.board.load_fen_from_board())
         cls.moves = []
         cls.target_squares = {}
 
@@ -446,8 +448,9 @@ class Legal_move_generator:
 
     @classmethod
     def exclude_king_moves(cls):
+        king_move_map = cls.king_move_map[cls.board.moving_side][cls.moving_king]
         # Looping over possible king moves
-        for move_dir_idx, target_square in enumerate(cls.king_move_map[cls.board.moving_side][cls.moving_king]):
+        for move_dir_idx, target_square in enumerate(king_move_map):
             # Excluding squares occupied by friendly pieces
             piece_on_target = cls.board.squares[target_square]
             if Piece.is_color(piece_on_target, cls.board.moving_color):
@@ -465,19 +468,19 @@ class Legal_move_generator:
                 if attack_dir_idx != None:
                     cls.generate_rook_attack_ray(rook, attack_dir_idx)
 
-            # Pawns can't capture backwards, so skip dir index relative to moving side
-            if move_dir_idx == cls.board.moving_side * 2:
-                continue
 
-            for pawn in cls.board.piece_lists[cls.board.opponent_side][Piece.pawn]:
-                mhd = cls.board.get_manhattan_dist(pawn, target_square)
-                # Pawn is posing a threat to friendly king
-                if not mhd:
+        for pawn in cls.board.piece_lists[cls.board.opponent_side][Piece.pawn]:
+            mhd = cls.board.get_manhattan_dist(pawn, cls.moving_king)
+            if mhd > 2:
+                continue
+            for attacked_square in cls.pawn_move_map[cls.board.opponent_side][pawn]:
+            # Pawn is posing a threat to friendly king
+                if target_square in king_move_map:
+                    cls.attack_map.add(attacked_square)
+                    continue
+                if target_square == cls.moving_king:
                     cls.checks += 1
                     cls.block_check_hash[pawn] = cls.block_check_hash.get(pawn, 0) + 1
-                # Pawn is able to attack a pseudo-legal target square of the king, making it illegal
-                if mhd == 1:
-                    cls.attack_map.add(target_square)
 
     @classmethod
     def confine_movement(cls) -> None:
