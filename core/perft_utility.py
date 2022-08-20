@@ -22,4 +22,4 @@ def dfs(depth):
 depth = 4
 p_t = time.perf_counter()
 num_positions = dfs(depth)
-print(f"depth: {depth} || nodes: {num_positions} || time: {time.perf_counter() - p_t}")
+print(f"depth: {depth} || nodes searched: {num_positions} || time: {time.perf_counter() - p_t}")
