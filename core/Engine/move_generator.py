@@ -550,10 +550,12 @@ class Legal_move_generator:
                 # Double screen, blocking checks but pinning friendly screens
                 if double_block:
                     cls.pinned_squares |= friendly_screens
-                    if not friendly_screens:
-                        continue
-                    for screen in opponent_screens:
-                        cls.block_check_hash[screen] = cls.block_check_hash.get(screen, 0) - 1
+                    # This is no viable solution to double screen capturing, because we
+                    # only want to limit the friendly screen from capturing opponent screen
+                    # if not friendly_screens:
+                    #     continue
+                    # for screen in opponent_screens:
+                    #     cls.block_check_hash[screen] = cls.block_check_hash.get(screen, 0) - 1
                     cls.attack_map |= opponent_screens
                     break
                 # Single screen
