@@ -475,19 +475,9 @@ class Legal_move_generator:
     @classmethod
     def exclude_king_moves(cls):
         king_move_map = cls.king_move_map[cls.board.moving_side][cls.moving_king]
-
+        # Filtering out squares occupied by friendly pieces
+        king_move_map = list(filter(lambda target: not Piece.is_color(cls.board.squares[target], cls.board.moving_color), king_move_map))
         # Looping over possible king moves
-        for target_square in king_move_map:
-            if Piece.is_color(cls.board.squares[target_square]) or target_square in cls.attack_map:
-                continue
-            # Looping over opponent cannons
-            for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
-                attack_dir_idx = cls.get_orth_dir_idx(cannon, target_square)
-                # If cannon could threaten king's move, generate attack ray
-                if attack_dir_idx != None:
-                    cls.generate_cannon_attack_ray(cannon, attack_dir_idx)
-
-        # king_move_map = list(filter(lambda target: target not in cls.attack_map, king_move_map))
         for target_square in king_move_map:
             if target_square in cls.attack_map:
                 continue
@@ -496,6 +486,17 @@ class Legal_move_generator:
                 # If cannon could threaten king's move, generate attack ray
                 if attack_dir_idx != None:
                     cls.generate_rook_attack_ray(rook, attack_dir_idx)
+
+        king_move_map = list(filter(lambda target: target not in cls.attack_map, king_move_map))
+        for target_square in king_move_map:
+            if target_square in cls.attack_map:
+                continue
+            # Looping over opponent cannons
+            for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
+                attack_dir_idx = cls.get_orth_dir_idx(cannon, target_square)
+                # If cannon could threaten king's move, generate attack ray
+                if attack_dir_idx != None:
+                    cls.generate_cannon_attack_ray(cannon, attack_dir_idx)
 
         cls.generate_pawn_attack_data(king_move_map)
         # -----------------------------------MISTAKE DOCUMENTATION-------------------------------------------
