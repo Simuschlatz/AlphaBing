@@ -208,13 +208,10 @@ def human_event_handler(event, board):
             Game_manager.stalemate = True
 
         move = search.traverse_tree(AI_SEARCH_DEPTH)
-        if move:
-            is_capture = board.make_move(move)
-            board_ui = board.squares[:]
-            play_sfx(is_capture)
-            print(f"traversed nodes: {search.searched_nodes}")
-        else:
-            print("AI RESIGNS")
+        is_capture = board.make_move(move)
+        board_ui = board.squares[:]
+        play_sfx(is_capture)
+        print(f"traversed nodes: {search.searched_nodes}")
 
         # Load moves for next player
         moves = Legal_move_generator.load_moves() 
