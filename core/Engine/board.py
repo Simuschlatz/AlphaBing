@@ -115,15 +115,6 @@ class Board:
     
     def is_capture(self, square):
         return self.squares[square]
-
-    @staticmethod
-    def get_horse_block(current_square, target_square):
-        d_rank = target_square // 9 - current_square // 9
-        d_file = target_square % 9 - current_square % 9
-
-        if abs(d_rank) > abs(d_file):
-            return current_square + d_rank // 2 * 9
-        return current_square + d_file // 2
    
     @staticmethod
     def get_manhattan_dist(square_1, square_2):
@@ -135,12 +126,12 @@ class Board:
         return dist_x + dist_y
 
     @staticmethod
-    def get_2d_dists(square_1, square_2):
+    def get_dists(square_1, square_2):
         """
         :return: x- and y-distance between two squares on a collapsed 9 x 10 grid
         """
-        dist_x = abs(square_1 % 9 - square_2 % 9)
-        dist_y = abs(square_1 // 9 - square_2 // 9)
+        dist_x = int(square_1 % 9 - square_2 % 9)
+        dist_y = square_1 // 9 - square_2 // 9
         return dist_x, dist_y
 
     def make_move(self, move):
