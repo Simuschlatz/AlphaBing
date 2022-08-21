@@ -213,6 +213,8 @@ def human_event_handler(event, board):
             board_ui = board.squares[:]
             play_sfx(is_capture)
             print(f"traversed nodes: {search.searched_nodes}")
+        else:
+            print("AI RESIGNS")
 
         # Load moves for next player
         moves = Legal_move_generator.load_moves() 
