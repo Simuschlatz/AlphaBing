@@ -475,10 +475,10 @@ class Legal_move_generator:
                 continue
             for attacked_square in cls.pawn_move_map[cls.board.opponent_side][pawn]:
             # Pawn is posing a threat to friendly king
-                if target_square in king_move_map:
+                if attacked_square in king_move_map:
                     cls.attack_map.add(attacked_square)
                     continue
-                if target_square == cls.moving_king:
+                if attacked_square == cls.moving_king:
                     cls.checks += 1
                     cls.block_check_hash[pawn] = cls.block_check_hash.get(pawn, 0) + 1
 
