@@ -3,6 +3,7 @@ from Engine.AI.move_ordering import order_moves, order_moves_pst
 from Engine.AI.eval_utility import Evaluation
 
 class Dfs:
+    checkmate_value = -9999
     def __init__(self, board) -> None:
         self.board = board
         self.traversed_nodes = 0
@@ -92,7 +93,9 @@ class Dfs:
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         if not len(moves):
-            return float("-inf")
+            # Return checkmate value instead of negative infinity so the ai still choses a move even if it only detects
+            # checkmates, as the checkmate value still is better than the initial beta of -infinity
+            return self.checkmate_value
 
         for move in moves:
             # traversing down the tree
