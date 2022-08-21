@@ -355,7 +355,7 @@ class Legal_move_generator:
     @classmethod
     def get_orth_dir_idx(cls, square_1, square_2):
         """
-        :return: direction index 0 to 4 between two squares from square_1's perspective
+        :return: precise direction index 0 to 4 between two squares from square_1's perspective
         """
         file_1, rank_1 = cls.board.get_file_and_rank(square_1)
         file_2, rank_2 = cls.board.get_file_and_rank(square_2)
@@ -371,6 +371,25 @@ class Legal_move_generator:
             return cls.dir_offsets.index(d_file_norm)
         return None
 
+    @classmethod
+    def estimate_dir_idx(cls, square_1, square_2):
+        """
+        :return: roughly estimated direction index 0 to 4 between two squares from square_1's perspective
+        """
+        file_1, rank_1 = cls.board.get_file_and_rank(square_1)
+        file_2, rank_2 = cls.board.get_file_and_rank(square_2)
+        d_file = file_2 - file_1
+        d_rank = rank_2 - rank_1
+        # On same file
+        if abs(d_file) < abs(d_rank):
+            d_rank_norm = d_rank // abs(d_rank)
+            return cls.dir_offsets.index(d_rank_norm * 9),
+        # On same rank
+        if abs(d_rank) < abs(d_file):
+            d_file_norm = d_file // abs(d_file)
+            return cls.dir_offsets.index(d_file_norm),
+            
+        return cls.dir_offsets.index(d_rank // abs(d_rank) * 9), cls.dir_offsets.index(d_file // abs(d_file))
 
 #-------------------------------------------------------------------------------
 #-------The part below is for calculating pins, checks, double cheks etc.-------
@@ -449,25 +468,49 @@ class Legal_move_generator:
     @classmethod
     def exclude_king_moves(cls):
         king_move_map = cls.king_move_map[cls.board.moving_side][cls.moving_king]
-        # Looping over possible king moves
-        for move_dir_idx, target_square in enumerate(king_move_map):
-            # Excluding squares occupied by friendly pieces
-            piece_on_target = cls.board.squares[target_square]
-            if Piece.is_color(piece_on_target, cls.board.moving_color):
+        # # Looping over possible king moves
+        # for target_square in king_move_map:
+        #     # Excluding squares occupied by friendly pieces
+        #     piece_on_target = cls.board.squares[target_square]
+        #     if Piece.is_color(piece_on_target, cls.board.moving_color):
+        #         continue
+        #     # Looping over opponent cannons
+        #     for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
+        #         attack_dir_idx = cls.get_orth_dir_idx(cannon, target_square)
+        #         # If cannon could threaten king's move, generate attack ray
+        #         if attack_dir_idx != None:
+        #             cls.generate_cannon_attack_ray(cannon, attack_dir_idx)
+
+        #     for rook in cls.board.piece_lists[cls.board.opponent_side][Piece.rook]:
+        #         attack_dir_idx = cls.get_orth_dir_idx(rook, target_square)
+        #         # If cannon could threaten king's move, generate attack ray
+        #         if attack_dir_idx != None:
+        #             cls.generate_rook_attack_ray(rook, attack_dir_idx)
+
+        for rook in cls.board.piece_lists[cls.board.opponent_side][Piece.rook]:
+            dists = cls.board.get_2d_dists(rook, cls.moving_king)
+            min_dist = min(*dists)
+            # If minimum distance among the two axes is greater than 1, rook can pose no threat to king
+            if min_dist > 1:
                 continue
-            # Looping over opponent cannons
-            for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
-                attack_dir_idx = cls.get_orth_dir_idx(cannon, target_square)
-                # If cannon could threaten king's move, generate attack ray
-                if attack_dir_idx != None:
-                    cls.generate_cannon_attack_ray(cannon, attack_dir_idx)
-
-            for rook in cls.board.piece_lists[cls.board.opponent_side][Piece.rook]:
-                attack_dir_idx = cls.get_orth_dir_idx(rook, target_square)
-                # If cannon could threaten king's move, generate attack ray
-                if attack_dir_idx != None:
-                    cls.generate_rook_attack_ray(rook, attack_dir_idx)
-
+            for attack_dir_idx in cls.estimate_dir_idx(rook, cls.moving_king):
+                # The minimum distance among the two axes is 1
+                if not min_dist:
+                    # The minimum distance among the two axes is 0
+                    cls.get_rook_imposed_limits(rook, attack_dir_idx)
+                cls.generate_rook_attack_ray(rook, attack_dir_idx)
+                    
+        for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
+            min_dist = min(*cls.board.get_2d_dists(cannon, cls.moving_king))
+            # If minimum distance among the two axes is greater than 1, cannon can pose no threat to king
+            if min_dist > 1:
+                continue
+            for attack_dir_idx in cls.estimate_dir_idx(cannon, cls.moving_king):
+                # The minimum distance among the two axes is 1
+                if not min_dist:
+                    # The minimum distance among the two axes is 0
+                    cls.get_cannon_imposed_limits(cannon, attack_dir_idx)
+                cls.generate_cannon_attack_ray(cannon, attack_dir_idx)
 
         for pawn in cls.board.piece_lists[cls.board.opponent_side][Piece.pawn]:
             mhd = cls.board.get_manhattan_dist(pawn, cls.moving_king)
