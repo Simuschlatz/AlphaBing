@@ -5,12 +5,12 @@ import numpy as np
 class Board:
     # Piece's values
     king = float("inf")
-    pawn = 1
-    advisor = 2
-    elephant = 2
-    horse = 4
-    cannon = 4.5
-    rook = 10
+    pawn = 10
+    advisor = 20
+    elephant = 20
+    horse = 40
+    cannon = 45
+    rook = 100
     values = (0, elephant, advisor, cannon, pawn, rook, horse)
 
     def __init__(self, FEN: str, play_as_red: int, red_moves_first=True) -> None:
@@ -127,9 +127,21 @@ class Board:
    
     @staticmethod
     def get_manhattan_dist(square_1, square_2):
+        """
+        :return: manhattan distance between two squares on a collapsed 9 x 10 grid
+        """
         dist_x = abs(square_1 % 9 - square_2 % 9)
         dist_y = abs(square_1 // 9 - square_2 // 9)
         return dist_x + dist_y
+
+    @staticmethod
+    def get_2d_dists(square_1, square_2):
+        """
+        :return: x- and y-distance between two squares on a collapsed 9 x 10 grid
+        """
+        dist_x = abs(square_1 % 9 - square_2 % 9)
+        dist_y = abs(square_1 // 9 - square_2 // 9)
+        return dist_x, dist_y
 
     def make_move(self, move):
         previous_square, moved_to = move
