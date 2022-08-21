@@ -53,3 +53,21 @@ if min_dist > 1 continue
 get direction index
 if min_dist == 1 generate attack ray
 if not min_dist get cannon imposed limits
+
+THIS IS BULLTSHIT FUCK
+
+
+**Horse attack data optimization**
+get_slope(d_1, d_2):
+return d_2 / d_1
+
+dists = get_dists(horse, friendly king)
+mhd = sum(dists)
+if mhd > 4: continue
+slope = get_slope(*sorted(dist_x, dist_y))
+
+if slope == 1 or slope == 3:
+attack_map.add()
+
+
+
