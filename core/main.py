@@ -6,7 +6,6 @@ under the terms of the GNU General Public License
 
 import pygame
 from Engine.AI.move_ordering import order_moves, order_moves_pst
-from Engine.AI.piece_square_tables import Piece_square_table
 from data_init import init_imgs
 from Engine.board import Board
 from Engine.piece import Piece
@@ -29,10 +28,10 @@ TURQUOISE = (64, 224, 208)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREY = (200, 200, 200)
-BG_COLOR = (235, 229, 225)
+BG_COLOR = (100, 100, 100)
 
 UNIT = 80
-WIDTH = 1500
+WIDTH = 1400
 HEIGHT = 800
 BOARD_WIDTH = 9 * UNIT
 BOARD_HEIGHT = 10 * UNIT
@@ -200,12 +199,20 @@ def human_event_handler(event, board):
         print(board.load_fen_from_board())
         board_ui = board.squares[:]
         selected_piece = None
-        
+        # Load moves for next player
+        moves = Legal_move_generator.load_moves() 
+        if not len(moves):
+            if Legal_move_generator.checks:
+                Game_manager.checkmate = True
+                return
+            Game_manager.stalemate = True
+
         move = search.traverse_tree(AI_SEARCH_DEPTH)
-        is_capture = board.make_move(move)
-        board_ui = board.squares[:]
-        play_sfx(is_capture)
-        print(f"traversed nodes: {search.searched_nodes}")
+        if move:
+            is_capture = board.make_move(move)
+            board_ui = board.squares[:]
+            play_sfx(is_capture)
+            print(f"traversed nodes: {search.searched_nodes}")
 
         # Load moves for next player
         moves = Legal_move_generator.load_moves() 
@@ -226,27 +233,33 @@ def human_event_handler(event, board):
 
 def main():
     global board_ui, search
+    only_display_mode = False
     play_as_red = True
     fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN
 
     clock = Timer(600, "Papa", "Mama")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    board = Board(fen , play_as_red, red_moves_first=False)
-    Legal_move_generator.init_board(board)
-    Legal_move_generator.load_moves()
+    board = Board("3a1a/h3k3r/e4R2e/2p3C1p/p3C/P/2P1P1P1P/9/4A/2E1KAE", play_as_red, red_moves_first=True)
+    if not only_display_mode:
+        Legal_move_generator.init_board(board)
+        Legal_move_generator.load_moves()
     Evaluation.init(board)
     search = Dfs(board)
     py_clock = pygame.time.Clock()
     run = True
     board_ui = board.squares[:]
-    print(order_moves(Legal_move_generator.moves, board))
-    print(order_moves_pst(Legal_move_generator.moves, board))
+    # print(order_moves(Legal_move_generator.moves, board))
+    # print(order_moves_pst(Legal_move_generator.moves, board))
     while run:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            human_event_handler(event, board)
-
+        if only_display_mode:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+        else:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                human_event_handler(event, board)
         clock.run(board.moving_side)
         rendered_text = [f"{clock.r_min_tens[0]}{clock.r_min_ones[0]}:{clock.r_sec_tens[0]}{clock.r_sec_ones[0]}",
                         f"{clock.r_min_tens[1]}{clock.r_min_ones[1]}:{clock.r_sec_tens[1]}{clock.r_sec_ones[1]}"]            
