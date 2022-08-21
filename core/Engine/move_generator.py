@@ -27,6 +27,7 @@ class Legal_move_generator:
         """
         :return: a list of tuples containing the start and end indices of all possible moves
         """
+        cls.moves = []
         cls.init()
         cls.calculate_attack_data()
         cls.generate_king_moves()
@@ -43,11 +44,11 @@ class Legal_move_generator:
         """
         Initializes data used for move generation
         """
-        try:
-            cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_side][Piece.king]))
-            cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_side][Piece.king]))
-        except StopIteration:
-            print(cls.board.load_fen_from_board())
+        # try:
+        cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_side][Piece.king]))
+        cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_side][Piece.king]))
+        # except StopIteration:
+        #     print(cls.board.load_fen_from_board())
         cls.moves = []
         cls.target_squares = {}
 
@@ -455,7 +456,7 @@ class Legal_move_generator:
                 #     continue
                 # -----------------------------------------------------------------------------------------
 
-                block_square = cls.board.get_horse_block(square, target_square)
+                block_square = cls.get_horse_block(square, target_square)
                 block_piece = cls.board.squares[block_square]
                 is_move_check = target_square == cls.moving_king
 
