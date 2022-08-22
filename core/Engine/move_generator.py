@@ -45,11 +45,11 @@ class Legal_move_generator:
         """
         Initializes data used for move generation
         """
-        # try:
-        cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_side][Piece.king]))
-        cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_side][Piece.king]))
-        # except StopIteration:
-        #     print(cls.board.load_fen_from_board())
+        try:
+            cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_side][Piece.king]))
+            cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_side][Piece.king]))
+        except StopIteration:
+            print(cls.board.load_fen_from_board())
         cls.moves = []
         cls.target_squares = {}
 
@@ -272,7 +272,7 @@ class Legal_move_generator:
                         continue
                     
                     # Because all squares between the rook and cannon (inclusive) are in block_check_hash and
-                    # current square is cause_cannon_defect, the number of checks blocked would be 2, not 1
+                    # current square is avoids_cannon_check, the number of checks blocked would be 2, not 1
                     # so it skips moves between cannon and rook, but would also skip the capture of checking cannon
                     # Thus, if rook is screen for checking cannon and captures it, increment the number of checks by 1
                     # => condition 2 == 1 becomes 2 == 2
@@ -483,13 +483,14 @@ class Legal_move_generator:
                     cls.attack_map.add(target_square)
                     if is_move_check:
                         cls.checks += 1
-                        cls.block_check_hash[block_square] = cls.block_check_hash.get(block_square, 0) + 1
+                        cls.block_check_hash[square] = cls.block_check_hash.get(square, 0) + 1
                     continue
                 # Move is blocked by opponent piece or wouldn't threaten friendly king anyways
                 if Piece.is_color(block_piece, cls.board.opponent_color) or not is_move_check:
                     continue
                 # If blocked by friendly piece and move would result in check, it's pinned
                 cls.pinned_squares.add(block_square)
+                print("PPIIIIIN BY HORSE")
 
     @classmethod
     def exclude_king_moves(cls):
