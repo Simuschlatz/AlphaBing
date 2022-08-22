@@ -95,7 +95,9 @@ class Piece_square_table:
         :return: Piece-square-table value of piece type on square relative
         to moving side's perspective
         """
-        if moving_side:
+        # The psts are viewed from below, meaning that the top-left corner of the pst would be the bottom right 
+        # corner for the top-side player. This means we have to flip the board if top-side player is moving
+        if not moving_side:
             # Tables are vertically symmetrical, so don't mirror square index along y-axis
             file = square % 9
             # flip the square index along x-axis
