@@ -7,6 +7,7 @@ class Dfs:
     def __init__(self, board) -> None:
         self.board = board
         self.traversed_nodes = 0
+        self.cutoffs = 0
 
     def traverse_tree(self, depth):
         """
@@ -85,9 +86,39 @@ class Dfs:
         return alpha
 
 
+    def quiescene(self, alpha, beta):
+        """
+        A dfs-like algorithm used for chess searches, only considering captureing moves, thus helping the conventional
+        search with misjudgment of situations when significant captures could take place in a depth below the search depth.
+        :return: the best evaluation of a particular game state, only considering captures
+        """
+        # Evaluate current position before doing any moves, so a potentially good state for non-capture moves
+        # isn't ruined by bad captures
+        eval = Evaluation.shef_advanced()
+        # Typical alpha beta operations
+        if eval >= beta:
+            return beta
+        alpha = max(eval, alpha)
+
+        moves = order_moves_pst(Legal_move_generator.load_moves(generate_quiets=False), self.board)
+        for move in moves:
+            self.board.make_move(move)
+            evaluation = -self.quiescene(-beta, -alpha)
+            self.board.reverse_move()
+            # Move is even better than best eval before,
+            # opponent won't choose move anyway so PRUNE YESSIR
+            if evaluation >= beta:
+                return beta
+            self.searched_nodes += 1
+            # Keep track of best move for moving color
+            alpha = max(evaluation, alpha)
+        # If there are no captures to be done anymore, return the best evaluation
+        return alpha
+
+
     def alpha_beta_opt(self, depth, alpha, beta):
         if not depth:
-            return Evaluation.shef_advanced()
+            return self.quiescene(alpha, beta)
 
         moves = order_moves_pst(Legal_move_generator.load_moves(), self.board)
         # Check- or Stalemate, meaning game is lost
@@ -106,8 +137,9 @@ class Dfs:
             # Move is even better than best eval before,
             # opponent won't choose move anyway so PRUNE YESSIR
             if evaluation >= beta:
+                self.cutoffs += 1
                 return beta
             self.searched_nodes += 1
-            # Keep track of best move fro moving color
+            # Keep track of best move for moving color
             alpha = max(evaluation, alpha)
         return alpha
