@@ -23,10 +23,11 @@ class Legal_move_generator:
         cls.board = board
 
     @classmethod
-    def load_moves(cls) -> list:
+    def load_moves(cls, generate_quiets=True) -> list:
         """
         :return: a list of tuples containing the start and end indices of all possible moves
         """
+        cls.generate_quiets = generate_quiets
         cls.moves = []
         cls.init()
         cls.calculate_attack_data()
@@ -105,6 +106,9 @@ class Legal_move_generator:
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
+                # If it's quiescene search and move isn't a capture, continue
+                if not cls.generate_quiets and not target_piece:
+                    continue
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
                 dir_idx = cls.dir_offsets.index(target_square - current_square)
@@ -141,6 +145,9 @@ class Legal_move_generator:
             
             for target_square in cls.elephant_move_map[cls.board.moving_side][current_square]:
                 target_piece = cls.board.squares[target_square]
+                # If it's quiescene search and move isn't a capture, continue
+                if not cls.generate_quiets and not target_piece:
+                    continue
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
                 
@@ -174,6 +181,9 @@ class Legal_move_generator:
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
+                # If it's quiescene search and move isn't a capture, continue
+                if not cls.generate_quiets and not target_piece:
+                    continue
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
                 if target_square in cls.illegal_squares:
@@ -212,6 +222,9 @@ class Legal_move_generator:
             for move in horse_moves:
                 target_square = move[1]
                 target_piece = cls.board.squares[target_square]
+                # If it's quiescene search and move isn't a capture, continue
+                if not cls.generate_quiets and not target_piece:
+                    continue
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
                 blocking_square = cls.get_horse_block(current_square, target_square)
@@ -248,6 +261,9 @@ class Legal_move_generator:
                 # "Walking" in direction using direction offsets
                 for target_square in squares_in_dir:
                     target_piece = cls.board.squares[target_square]
+                    # If it's quiescene search and move isn't a capture, continue
+                    if not cls.generate_quiets and not target_piece:
+                        continue
                     # If target_piece is friendly, go to next direction
                     if Piece.is_color(target_piece, cls.board.moving_color):
                         break
@@ -304,10 +320,13 @@ class Legal_move_generator:
                         # if target square is empty, continue
                         if not target_piece:
                             continue
-                        
                         # If target_piece is friendly, go to next direction
                         if Piece.is_color(target_piece, cls.board.moving_color):
                             break
+
+                    # If it's quiescene search and move isn't a capture, continue
+                    if not cls.generate_quiets and not target_piece:
+                        continue
                     # Can't move to or capture pieces on squares that would result in check
                     if target_square in cls.illegal_squares:
                         continue
@@ -315,7 +334,6 @@ class Legal_move_generator:
                     blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                     if not blocks_all_checks:
                         continue
-                    
                     cls.moves.append((current_square, target_square))
                     cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
                     # Move was a capture, can't move further in this direction 
@@ -478,6 +496,8 @@ class Legal_move_generator:
         king_move_map = cls.king_move_map[cls.board.moving_side][cls.moving_king]
         # Filtering out squares occupied by friendly pieces
         king_move_map = list(filter(lambda target: not Piece.is_color(cls.board.squares[target], cls.board.moving_color), king_move_map))
+        if not cls.generate_quiets:
+            king_move_map = list(filter(lambda target: cls.board.squares[target], king_move_map))
         # Looping over possible king moves
         for target_square in king_move_map:
             if target_square in cls.attack_map:
@@ -500,6 +520,7 @@ class Legal_move_generator:
                     cls.generate_cannon_attack_ray(cannon, attack_dir_idx)
 
         cls.generate_pawn_attack_data(king_move_map)
+
         # -----------------------------------MISTAKE DOCUMENTATION-------------------------------------------
         # for rook in cls.board.piece_lists[cls.board.opponent_side][Piece.rook]:
         #     dists = cls.board.get_2d_dists(rook, cls.moving_king)
@@ -513,18 +534,6 @@ class Legal_move_generator:
         #             # The minimum distance among the two axes is 0
         #             cls.get_rook_imposed_limits(rook, attack_dir_idx)
         #         cls.generate_rook_attack_ray(rook, attack_dir_idx)
-                    
-        # for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
-        #     min_dist = min(*cls.board.get_2d_dists(cannon, cls.moving_king))
-        #     # If minimum distance among the two axes is greater than 1, cannon can pose no threat to king
-        #     if min_dist > 1:
-        #         continue
-        #     for attack_dir_idx in cls.estimate_dir_idx(cannon, cls.moving_king):
-        #         # The minimum distance among the two axes is 1
-        #         if not min_dist:
-        #             # The minimum distance among the two axes is 0
-        #             cls.get_cannon_imposed_limits(cannon, attack_dir_idx)
-        #         cls.generate_cannon_attack_ray(cannon, attack_dir_idx)
         # -------------------------------------------------------------------------------------------------------
 
     @classmethod
