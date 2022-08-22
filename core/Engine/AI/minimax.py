@@ -1,9 +1,9 @@
 from Engine.move_generator import Legal_move_generator
-from Engine.AI.move_ordering import order_moves, order_moves_pst
+from Engine.AI.move_ordering import order_moves_pst
 from Engine.AI.eval_utility import Evaluation
 
 class Dfs:
-    checkmate_value = -9999
+    checkmate_value = 9999
     def __init__(self, board) -> None:
         self.board = board
         self.traversed_nodes = 0
@@ -91,10 +91,10 @@ class Dfs:
         A dfs-like algorithm used for chess searches, only considering captureing moves, thus helping the conventional
         search with misjudgment of situations when significant captures could take place in a depth below the search depth.
         :return: the best evaluation of a particular game state, only considering captures
-        """
+        """ 
         # Evaluate current position before doing any moves, so a potentially good state for non-capture moves
         # isn't ruined by bad captures
-        eval = Evaluation.shef_advanced()
+        eval = Evaluation.pst_shef()
         # Typical alpha beta operations
         if eval >= beta:
             return beta
@@ -109,7 +109,6 @@ class Dfs:
             # opponent won't choose move anyway so PRUNE YESSIR
             if evaluation >= beta:
                 return beta
-            self.searched_nodes += 1
             # Keep track of best move for moving color
             alpha = max(evaluation, alpha)
         # If there are no captures to be done anymore, return the best evaluation
@@ -124,9 +123,9 @@ class Dfs:
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         if not len(moves):
-            # Return checkmate value instead of negative infinity so the ai still choses a move even if it only detects
+            # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
             # checkmates, as the checkmate value still is better than the initial beta of -infinity
-            return self.checkmate_value
+            return -self.checkmate_value
 
         for move in moves:
             # traversing down the tree
@@ -135,11 +134,12 @@ class Dfs:
             self.board.reverse_move()
 
             # Move is even better than best eval before,
-            # opponent won't choose move anyway so PRUNE YESSIR
+            # opponent won't choose this move anyway so PRUNE YESSIR
             if evaluation >= beta:
                 self.cutoffs += 1
-                return beta
+                return beta # Return -alpha of opponent, which will be turned to alpha in depth + 1
             self.searched_nodes += 1
             # Keep track of best move for moving color
             alpha = max(evaluation, alpha)
+
         return alpha
