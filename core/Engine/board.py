@@ -32,7 +32,7 @@ class Board:
         # To keep track of the pieces' indices (Piece-centric repr)
         # Piece list at index 0 keeps track of pieces at the top, index 1 for bottom
         self.piece_lists = [[set() for _ in range(7)] for _ in range(2)]
-        # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX self.piece_list = [[set()] * 7] * 2 
+        # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
 
 
@@ -42,6 +42,7 @@ class Board:
         mouse_y = mouse_pos[1]
         rank = int((mouse_y) // unit)
         file = int((mouse_x) // unit)
+        # clamping return value within the dimensions of the board
         rank = min(9, max(rank, 0))
         file = min(8, max(file, 0))
         return file, rank
@@ -49,9 +50,9 @@ class Board:
     def switch_moving_side(self):
         self.opponent_side = self.moving_side
         self.moving_side = 1 - self.moving_side
-        _ = self.moving_color
+        temp = self.moving_color
         self.moving_color = self.opponent_color
-        self.opponent_color = _
+        self.opponent_color = temp
         # if self.moving_side:
         #     print("RED MOVES")
         #     return
@@ -96,8 +97,7 @@ class Board:
                 piece_type = Piece.get_type(piece)
                 letter = Piece.letters[is_red * 7 + piece_type]
                 fen += letter
-            rank = i // 9
-            file = i % 9
+            file, rank = self.get_file_and_rank(i)
             if rank < 9 and file == 8 and empty_files_in_rank != 9:
                 fen += "/"
                 empty_files_in_rank = 0
