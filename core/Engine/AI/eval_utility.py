@@ -27,7 +27,7 @@ class Evaluation:
         return mat
 
     @classmethod
-    def shef_advanced(cls):
+    def pst_shef(cls):
         """
         Advanced Standard Heuristic Evaluation Function \n
         :return: a heuristic piece-square-table-based evaluation of current material on board relative to moving color.
