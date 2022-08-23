@@ -10,3 +10,6 @@
 **21.08.22**
 * optimizations for rook and cannon didn't work because not enough thinking was done when planning
 * elephant move generation optimized
+
+**22.08.22**
+* quiescene search
