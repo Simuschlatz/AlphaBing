@@ -4,8 +4,9 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/SiiiMiii>
 under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import B
-from core.data_init import init_imgs
+from core.Engine import Board, Piece, Legal_move_generator, Game_manager, Timer, UI
+from core import init_imgs
+from core.Engine.AI import Dfs, Evaluation
 
 
 FPS = 45
