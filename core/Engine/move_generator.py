@@ -716,3 +716,15 @@ class Legal_move_generator:
         cls.confine_movement()
         # print("CHECK: ", cls.checks)
         # print("SQUARES BLOCKING CHECK: ", cls.block_check_hash) 
+
+
+    @classmethod
+    def get_legal_moves(cls, square):
+        moves_from_square = list(filter(lambda move: move[0] == square, cls.moves))
+        return moves_from_square
+
+    @classmethod
+    def get_legal_targets(cls, square):
+        moves_from_square = cls.get_legal_moves(square)
+        targets = list(map(lambda move: move[1], moves_from_square))
+        return targets
