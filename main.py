@@ -5,9 +5,9 @@ under the terms of the GNU General Public License
 """
 import pygame
 from core.Engine import Board, Piece, Legal_move_generator, Game_manager, Timer, UI
-from core import init_imgs
+from core import init_imgs, get_perft_result
 from core.Engine.AI import Dfs, Evaluation
-
+from time import perf_counter
 
 FPS = 45
 
@@ -55,6 +55,11 @@ board_ui = None
 
 search = None
 AI_SEARCH_DEPTH = 4
+
+def get_num_positions(depth, board):
+    p_t = perf_counter()
+    num_positions = get_perft_result(depth, board)
+    print(f"depth: {depth} || nodes searched: {num_positions} || time: {perf_counter() - p_t}")
 
 def move_feedback():
     if selected_square != None:
@@ -232,6 +237,8 @@ def main():
     clock = Timer(600, "Papa", "Mama")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     board = Board(fen, play_as_red, red_moves_first=True)
+    # To run perft search
+    # get_num_positions(4, board)
     if not only_display_mode:
         Legal_move_generator.init_board(board)
         Legal_move_generator.load_moves()
@@ -240,8 +247,6 @@ def main():
     py_clock = pygame.time.Clock()
     run = True
     board_ui = board.squares[:]
-    # print(order_moves(Legal_move_generator.moves, board))
-    # print(order_moves_pst(Legal_move_generator.moves, board))
     while run:
         if only_display_mode:
             for event in pygame.event.get():
