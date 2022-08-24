@@ -55,6 +55,10 @@ _AI_
 * I want people to know that if a normal 14 y/o, just with the help of a computer and research, can understand and implement the basics of AI and ML, can penetrate the imposing barrier of buzzwords and brainfuck, anyone with the same resources can. * very cliché
 * During the process of creation, I also discovered competitions like the national competition of Artificial Intelligence, which have been contributing to my drive of working on this project
 
+## HOW TO PLAY
+* clone this repo
+* run main.py
+
 ## Screenshots
 ![Screenshot](./assets/screenshots/10.07.png)
 
