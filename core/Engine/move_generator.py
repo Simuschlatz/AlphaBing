@@ -297,6 +297,7 @@ class Legal_move_generator:
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
             cannon_attack_map = cls.orthogonal_move_map[current_square]
+            is_double_screen = current_square in cls.double_screens
             for dir_idx, targets_in_dir in cannon_attack_map.items():
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
                     continue
@@ -307,6 +308,10 @@ class Legal_move_generator:
                 for target_square in targets_in_dir:
 
                     if cls.board.squares[target_square] and not in_attack_mode:
+                        # If cannon is pinned by rook, it can't capture by using the pinning 
+                        # rook or the king as screen, as it would place king in check
+                        if is_pinned and not is_double_screen:
+                            break
                         in_attack_mode = True
                         continue
 
