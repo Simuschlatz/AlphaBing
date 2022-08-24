@@ -182,6 +182,21 @@ class Board:
         # Switch back to previous moving color
         self.switch_moving_side()
 
+    def get_previous_configs(self, depth):
+        depth = min(len(self.game_history), depth)
+        prefix = "----"
+        for i in range(depth):
+            self.reverse_move()
+            fen = self.load_fen_from_board()
+            msg = prefix + fen + prefix
+            depth_info = f" depth: {i} "
+            len_header_prefix = (len(msg) - len(depth_info)) // 2
+            header_prefix = "-" * len_header_prefix
+            header = header_prefix + depth_info + header_prefix
+            separation = "-" * len(msg)
+            print(header)
+            print(msg)
+            print(separation)
 
     def get_move_notation(self, move):
         former_square, new_square = move
