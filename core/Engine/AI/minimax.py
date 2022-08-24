@@ -1,6 +1,6 @@
-from Engine.move_generator import Legal_move_generator
-from Engine.AI.move_ordering import order_moves_pst
-from Engine.AI.eval_utility import Evaluation
+from core.Engine.move_generator import Legal_move_generator
+from core.Engine.AI.move_ordering import order_moves_pst
+from core.Engine.AI.eval_utility import Evaluation
 
 class Dfs:
     checkmate_value = 9999

@@ -1,5 +1,5 @@
-from Engine.piece import Piece
-from Engine.precomputed_move_maps import Precomputing_moves
+from core.Engine.piece import Piece
+from core.Engine.precomputed_move_maps import Precomputing_moves
 
 class Legal_move_generator:
     """

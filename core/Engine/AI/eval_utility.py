@@ -1,5 +1,4 @@
-from Engine.piece import Piece
-from Engine.AI.piece_square_tables import Piece_square_table
+from core.Engine.AI.piece_square_tables import Piece_square_table
 
 class Evaluation:
 

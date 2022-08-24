@@ -1,5 +1,5 @@
-from Engine.piece import Piece
-from Engine.AI.piece_square_tables import Piece_square_table
+from core.Engine.piece import Piece
+from core.Engine.AI.piece_square_tables import Piece_square_table
 
 def order_moves(moves, board):
     """
@@ -23,7 +23,7 @@ def order_moves_pst(moves, board):
     orders moves heuristically based on piece-square-tables
     for the best ones to be up front
     """
-    move_value_estimates = {} # {move: value estimate, ...}
+    move_values = {} # {move: value estimate, ...}
     for move in moves:
         move_from, move_to = move
         moved_piece_type = Piece.get_type(board.squares[move_from])
@@ -32,6 +32,6 @@ def order_moves_pst(moves, board):
         captured_val = Piece_square_table.get_pst_value(captured_piece_type, move_to, 1 - board.moving_side)
         # Multiply captured piece value by a number higher than the most valuable pst-value,
         # this way good pieces capturing bad ones still overvalue non-capture moves
-        move_value_estimates[move] = captured_val * 250 - moved_val
+        move_values[move] = captured_val * 250 - moved_val
     # Sort move value estimates by their value and return the ordered moves
-    return sorted(move_value_estimates, key=lambda move: move_value_estimates[move], reverse=True)
+    return sorted(move_values, key=lambda move: move_values[move], reverse=True)

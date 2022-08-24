@@ -1,4 +1,4 @@
-from Engine.piece import Piece
+from core.Engine.piece import Piece
 import numpy as np
 # from collections import deque
 
