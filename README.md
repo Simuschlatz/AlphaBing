@@ -60,7 +60,7 @@ _AI_
 * run main.py
 
 ## Screenshots
-![Screenshot](./assets/screenshots/24.08.png)
+<img src="./assets/screenshots/24.08.png" alt="screenshot" width="600"/>
 
 ## Dependencies
 **To run the current version of the app:**
