@@ -205,11 +205,11 @@ def human_event_handler(event, board):
                 return
             Game_manager.stalemate = True
 
-        move = search.traverse_tree(AI_SEARCH_DEPTH)
-        is_capture = board.make_move(move)
-        board_ui = board.squares[:]
-        play_sfx(is_capture)
-        print(f"traversed nodes: {search.searched_nodes}")
+        # move = search.traverse_tree(AI_SEARCH_DEPTH)
+        # is_capture = board.make_move(move)
+        # board_ui = board.squares[:]
+        # play_sfx(is_capture)
+        # print(f"traversed nodes: {search.searched_nodes}")
 
         # Load moves for next player
         moves = Legal_move_generator.load_moves() 
@@ -237,11 +237,11 @@ def main():
     clock = Timer(600, "Papa", "Mama")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     board = Board(fen, play_as_red, red_moves_first=True)
-    # To run perft search
-    # get_num_positions(4, board)
     if not only_display_mode:
         Legal_move_generator.init_board(board)
         Legal_move_generator.load_moves()
+    # To run perft search
+    # get_num_positions(4, board)
     Evaluation.init(board)
     search = Dfs(board)
     py_clock = pygame.time.Clock()
