@@ -56,7 +56,7 @@ _AI_
 * During the process of creation, I also discovered competitions like the national competition of Artificial Intelligence, which have been contributing to my drive of working on this project
 
 ## Screenshots
-![Screenshot](./assets/screenshots/10.07.png)
+![Screenshot](./assets/screenshots/24.08.png)
 
 ## Dependencies
 **To run the current version of the app:**
