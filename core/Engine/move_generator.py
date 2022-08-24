@@ -50,15 +50,11 @@ class Legal_move_generator:
             cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_side][Piece.king]))
         except StopIteration:
             print(cls.board.load_fen_from_board())
+            cls.board.get_previous_configs(6)
         cls.moves = []
         cls.target_squares = {}
 
         cls.attack_map = set()
-
-        # Opponent king can only pose a threat if it's file's dist to friendly king's file is exactly 1
-        cls.friendly_king_file = cls.moving_king % 9
-        cls.opponent_king_file = cls.opponent_king % 9
-        cls.flying_general_threat = abs(cls.friendly_king_file - cls.opponent_king_file) == 1
         
         # Squares that would serve as screen for a threatening cannon
         cls.illegal_squares = set()
@@ -301,7 +297,6 @@ class Legal_move_generator:
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
             cannon_attack_map = cls.orthogonal_move_map[current_square]
-
             for dir_idx, targets_in_dir in cannon_attack_map.items():
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
                     continue
@@ -420,7 +415,11 @@ class Legal_move_generator:
 
     @classmethod
     def flying_general(cls):
-        if not cls.flying_general_threat:
+        # Opponent king can only pose a threat if it's file's dist to friendly king's file is exactly 1
+        friendly_king_file = cls.moving_king % 9
+        opponent_king_file = cls.opponent_king % 9
+        flying_general_threat = abs(friendly_king_file - opponent_king_file) < 2
+        if not flying_general_threat:
             return
         dir_idx = cls.board.moving_side * 2
         friendly_king_rank = cls.moving_king // 9 
@@ -454,7 +453,7 @@ class Legal_move_generator:
         # friendly king can't move to the opponent king's file
         if block:
             return
-        flying_general_square = friendly_king_rank * 9 + cls.opponent_king_file
+        flying_general_square = friendly_king_rank * 9 + opponent_king_file
         cls.attack_map.add(flying_general_square)
         
     @classmethod
@@ -490,7 +489,6 @@ class Legal_move_generator:
                     continue
                 # If blocked by friendly piece and move would result in check, it's pinned
                 cls.pinned_squares.add(block_square)
-                print("PPIIIIIN BY HORSE")
 
     @classmethod
     def exclude_king_moves(cls):
