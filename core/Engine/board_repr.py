@@ -27,14 +27,13 @@ class Board:
         self.squares = list(np.zeros(90, dtype=np.int8))
         # This keeps track of all game states in history, 
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
-        self.game_history = [] # Stack(: previous square, :target square :captured piece)
+        self.game_history = [] # Stack(:previous square, :target square :captured piece)
 
         # To keep track of the pieces' indices (Piece-centric repr)
         # Piece list at index 0 keeps track of pieces at the top, index 1 for bottom
         self.piece_lists = [[set() for _ in range(7)] for _ in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
-
 
     @staticmethod
     def get_board_pos(mouse_pos, unit) -> tuple:
@@ -46,6 +45,14 @@ class Board:
         rank = min(9, max(rank, 0))
         file = min(8, max(file, 0))
         return file, rank
+
+    @staticmethod
+    def get_file_and_rank(square):
+        return square % 9, square // 9
+    
+    @staticmethod
+    def get_square(file, rank):
+        return rank * 9 + file
 
     def switch_moving_side(self):
         self.opponent_side = self.moving_side
@@ -105,10 +112,6 @@ class Board:
                 fen += "9/"
                 empty_files_in_rank = 0
         return fen
-
-    @staticmethod
-    def get_file_and_rank(square):
-        return square % 9, square // 9
 
     def get_piece_list(self, color_idx, piece_type: int):
         return self.piece_lists[color_idx][piece_type]
