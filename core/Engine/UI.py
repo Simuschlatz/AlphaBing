@@ -1,13 +1,15 @@
 import pygame
 from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock
-from core.Engine.board_repr import Board
+from core.Engine.AI import AI_player
 
 class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
     MOVE_HIGHLIGHT_COLOR = (248, 241, 174)
     BG_COLOR = (100, 100, 100)
+    pygame.mixer.init()
     MOVE_SFX = pygame.mixer.Sound("assets/sfx/move.wav")
     CAPTURE_SFX = pygame.mixer.Sound("assets/sfx/capture.wav")
+
     def __init__(self, window, dimensions, board, offsets, unit, imgs):
         self.window = window
         self.WIDTH, self.HEIGHT = dimensions
@@ -37,11 +39,15 @@ class UI:
     def draw_piece(self, is_red, piece_type, coords):
         self.window.blit(self.PIECES_IMGS[is_red * 7 + piece_type], coords)
 
-    def get_circle_center(self, rect_coord, factor=1):
+    def get_circle_center(self, rect_coord, diameter, factor=1):
+        """
+        centers a rectangle coordinate to the circle center
+        :param factor: subtract or add half of diameter
+        """
         return [pos + factor * self.unit // 2 for pos in rect_coord]
 
     def render_circle(self, upper_left_corner_pos, diameter, color):
-        centered_coords = self.get_circle_center(upper_left_corner_pos)
+        centered_coords = self.get_circle_center(upper_left_corner_pos, self.unit)
         x, y = (pos - diameter // 2 for pos in centered_coords)
         pygame.draw.ellipse(self.window, color, (x, y, diameter, diameter))
     
@@ -111,7 +117,7 @@ class UI:
 
     def drag_piece(self):
         mouse_pos = pygame.mouse.get_pos()
-        piece_pos = self.get_circle_center(mouse_pos, factor=-1)
+        piece_pos = self.get_circle_center(mouse_pos, self.unit, factor=-1)
         is_red = Piece.is_color(self.selected_piece, Piece.red)
         piece_type = Piece.get_type(self.selected_piece)
         self.draw_piece(is_red, piece_type, piece_pos)
@@ -131,39 +137,73 @@ class UI:
                 self.highlight_large(square, self.MOVE_HIGHLIGHT_COLOR)
             self.highlight_small(square, self.MOVE_HIGHLIGHT_COLOR)
     
+    @staticmethod
     def audio_player(audiofile):
         """
         :param audiofile: pygame.mixer.Sound object
         """
         audiofile.play()
 
+    def play_sfx(self, is_capture):
+        if is_capture:
+            self.audio_player(self.CAPTURE_SFX)
+        else:
+            self.audio_player(self.MOVE_SFX)
+
     def event_handler(self):
+        """
+        Handles Human events
+        mousebuttondown: select and drag a piece
+        mousebuttonup: drop a piece
+        space: reverse the last move
+        """
         for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit()
+            
+            # Piece selection
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-
                 # Account for the offsets the board's (0,0) coordinate is replaced by on the window
                 file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
                 current_square = Board_utility.get_square(file, rank)
                 self.select_square(current_square)
   
+            # Piece placement
             if event.type == pygame.MOUSEBUTTONUP:
                 mouse_pos = pygame.mouse.get_pos()
-                mouse_pos_on_board = (mouse_pos[0] - OFFSET_X, mouse_pos[1] - OFFSET_Y)
-                file, rank = Board_utility.get_board_pos(mouse_pos_on_board, UNIT)
+                file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
                 target_square = rank * 9 + file
-                # Check whether move is legal
-                
-                is_capture = self.drop_piece(target_square)
-                if is_capture == -1:
-                    return
-                # Sound effects
-                play_sfx(is_capture)                   
-    
 
+                is_capture = self.drop_piece(target_square)
+                if is_capture ==  -1:
+                    continue
+                # Sound effects
+                self.play_sfx(is_capture)
+                # See if there is a mate or stalemate
+                Game_manager.check_game_state()
+                
+                AI_move = AI_player.load_move()
+                is_capture = self.internal_board.make_move(AI_move)
+                self.move_from, self.move_to = AI_move
+                self.update_ui_board()
+                # Sound effects
+                self.play_sfx(is_capture)
+                # See if there is a mate or stalemate
+                Game_manager.check_game_state()
+
+            # Move reverse
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    Game_manager.reset_game_state()
+                    self.board.reverse_move()
+                    self.reset_move_data()
+                    Legal_move_generator.load_moves()
 
     def render(self):
-
+        """
+        Does all the rendering work on the window
+        """
         self.window.fill(self.BG_COLOR)
         # self.window.blit(BG_IMG, (0, 0))
         self.window.blit(self.BOARD_IMG, self.offsets)
@@ -194,6 +234,4 @@ class UI:
             self.drag_piece()
 
         pygame.display.update()
-
-
 
