@@ -4,7 +4,7 @@ from core.Engine.AI import AI_player
 
 class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
-    MOVE_HIGHLIGHT_COLOR = (248, 241, 174)
+    MOVE_HIGHLIGHT_COLOR = (100, 100, 240)
     BG_COLOR = (100, 100, 100)
     pygame.mixer.init()
     MOVE_SFX = pygame.mixer.Sound("assets/sfx/move.wav")
@@ -22,8 +22,10 @@ class UI:
         self.off_x, self.off_y = offsets
         self.unit = unit
 
-        self.FONT_SIZE = unit // 2
-        self.DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE)
+        self.FONT_SIZE_LARGE = unit // 2
+        self.FONT_SIZE_SMALL = unit // 3
+        self.GAME_STATE_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_LARGE)
+        self.DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_SMALL)
         self.TEXT_X = self.off_x + unit * 9.5
         
         self.BIG_CIRCLE_D = unit * 1.1
@@ -35,6 +37,9 @@ class UI:
         self.selected_piece = None
         self.move_to = None
         self.legal_targets = []
+
+        self.fen = board.load_fen_from_board()
+        self.move_str = ""
 
     def draw_piece(self, is_red, piece_type, coords):
         self.window.blit(self.PIECES_IMGS[is_red * 7 + piece_type], coords)
@@ -61,14 +66,17 @@ class UI:
         coordinates = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
         self.render_circle(coordinates, self.SMALL_CIRCLE_D, color)
 
-    def render_text(self, text: str, pos: tuple):
-        surface = self.DISPLAY_FONT.render(text, False, (130, 130, 130))
+    def render_text(self, text: str, pos: tuple, large_font):
+        if large_font:
+            surface = self.GAME_STATE_FONT.render(text, False, (130, 130, 130))
+        else:
+            surface = self.DISPLAY_FONT.render(text, False, (130, 130, 130))
         self.window.blit(surface, pos)
 
     def render_remaining_time(self, player):
-        y = self.HEIGHT / 2 - (1 - player) * self.FONT_SIZE
+        y = self.HEIGHT / 2 - (1 - player) * self.FONT_SIZE_LARGE
         rendered_text = f"{Clock.r_min_tens[player]}{Clock.r_min_ones[player]}:{Clock.r_sec_tens[player]}{Clock.r_sec_ones[player]}"
-        self.render_text(rendered_text, (self.TEXT_X, y))
+        self.render_text(rendered_text, (self.TEXT_X, y), True)
 
     def is_selection_valid(self, piece):
         return Piece.is_color(piece, self.internal_board.moving_color)
@@ -92,6 +100,13 @@ class UI:
         self.reset_move_data()
         self.drop_reset()
 
+    def update_fen_str(self):
+        self.fen = self.internal_board.load_fen_from_board()
+
+    def drop_update(self, move):
+        self.update_fen_str()
+        self.move_str = self.internal_board.get_move_notation(move)
+
     def select_square(self, square):
         piece = self.internal_board.squares[square]
         if not self.is_selection_valid(piece):
@@ -99,6 +114,7 @@ class UI:
             return
         self.reset_move_data()
         self.ui_board[square] = 0
+        Legal_move_generator.load_moves()
         self.legal_targets = Legal_move_generator.get_legal_targets(square)
         self.move_from = square
         self.selected_piece = piece
@@ -111,6 +127,7 @@ class UI:
             return -1
         self.move_to = square
         move = (self.move_from, self.move_to)
+        self.drop_update(move)
         is_capture = self.internal_board.make_move(move)
         self.drop_reset()
         return is_capture
@@ -181,23 +198,25 @@ class UI:
                 # Sound effects
                 self.play_sfx(is_capture)
                 # See if there is a mate or stalemate
+                Legal_move_generator.load_moves()
                 Game_manager.check_game_state()
-                
-                AI_move = AI_player.load_move()
-                is_capture = self.internal_board.make_move(AI_move)
-                self.move_from, self.move_to = AI_move
-                self.update_ui_board()
-                # Sound effects
-                self.play_sfx(is_capture)
-                # See if there is a mate or stalemate
-                Game_manager.check_game_state()
+
+                # AI_move = AI_player.load_move()
+                # is_capture = self.internal_board.make_move(AI_move)
+                # self.move_from, self.move_to = AI_move
+                # self.update_ui_board()
+                # # Sound effects
+                # self.play_sfx(is_capture)
+                # # See if there is a mate or stalemate
+                # Game_manager.check_game_state()
 
             # Move reverse
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     Game_manager.reset_game_state()
-                    self.board.reverse_move()
-                    self.reset_move_data()
+                    self.internal_board.reverse_move()
+                    self.reset_values()
+                    self.update_fen_str()
                     Legal_move_generator.load_moves()
 
     def render(self):
@@ -210,17 +229,20 @@ class UI:
         self.move_responsiveness()
 
         if Game_manager.checkmate:
-            self.render_text("checkmate!", (self.TEXT_X, self.HEIGHT / 2 - self.FONT_SIZE / 2))
+            self.render_text("checkmate!", (self.TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
         elif Game_manager.stalemate:
-            self.render_text("stalemate!", (self.TEXT_X, self.HEIGHT / 2 - self.FONT_SIZE / 2))
+            self.render_text("stalemate!", (self.TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
         else:
             for player in range(2):
                 self.render_remaining_time(player)
         
+        self.render_text(self.fen, (self.off_x, 5), False)
+        self.render_text(self.move_str, (self.WIDTH // 10, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+
         if self.selected_piece:
             self.mark_moves()
 
-        # Draself.windowg pieces
+        # Draw pieces
         for square, piece in enumerate(self.ui_board):
             if piece:
                 file, rank = Board_utility.get_file_and_rank(square)
