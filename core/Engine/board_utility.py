@@ -4,9 +4,9 @@ class Board_utility:
     aren't part of the inner board representation
     """
     @staticmethod
-    def get_board_pos(mouse_pos, unit) -> tuple:
-        mouse_x = mouse_pos[0]
-        mouse_y = mouse_pos[1]
+    def get_board_pos(mouse_pos, unit, off_x=0, off_y=0) -> tuple:
+        mouse_x = mouse_pos[0] - off_x
+        mouse_y = mouse_pos[1] - off_y
         rank = int((mouse_y) // unit)
         file = int((mouse_x) // unit)
         # clamping return value within the dimensions of the board

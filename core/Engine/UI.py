@@ -1,10 +1,13 @@
 import pygame
 from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock
+from core.Engine.board_repr import Board
 
 class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
     MOVE_HIGHLIGHT_COLOR = (248, 241, 174)
     BG_COLOR = (100, 100, 100)
+    MOVE_SFX = pygame.mixer.Sound("assets/sfx/move.wav")
+    CAPTURE_SFX = pygame.mixer.Sound("assets/sfx/capture.wav")
     def __init__(self, window, dimensions, board, offsets, unit, imgs):
         self.window = window
         self.WIDTH, self.HEIGHT = dimensions
@@ -128,6 +131,37 @@ class UI:
                 self.highlight_large(square, self.MOVE_HIGHLIGHT_COLOR)
             self.highlight_small(square, self.MOVE_HIGHLIGHT_COLOR)
     
+    def audio_player(audiofile):
+        """
+        :param audiofile: pygame.mixer.Sound object
+        """
+        audiofile.play()
+
+    def event_handler(self):
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+
+                # Account for the offsets the board's (0,0) coordinate is replaced by on the window
+                file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
+                current_square = Board_utility.get_square(file, rank)
+                self.select_square(current_square)
+  
+            if event.type == pygame.MOUSEBUTTONUP:
+                mouse_pos = pygame.mouse.get_pos()
+                mouse_pos_on_board = (mouse_pos[0] - OFFSET_X, mouse_pos[1] - OFFSET_Y)
+                file, rank = Board_utility.get_board_pos(mouse_pos_on_board, UNIT)
+                target_square = rank * 9 + file
+                # Check whether move is legal
+                
+                is_capture = self.drop_piece(target_square)
+                if is_capture == -1:
+                    return
+                # Sound effects
+                play_sfx(is_capture)                   
+    
+
+
     def render(self):
 
         self.window.fill(self.BG_COLOR)
