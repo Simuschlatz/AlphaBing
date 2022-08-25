@@ -1,3 +1,4 @@
+from core.Engine import Legal_move_generator
 class Game_manager:
     """
     Handles states of the game (e.g. Checkmate, Stalemate...)
@@ -10,6 +11,16 @@ class Game_manager:
     def reset_game_state(cls):
         cls.checkmate = False
         cls.stalemate = False
+
+    @classmethod
+    def check_game_state(cls):
+        # Load moves for next player
+        moves = Legal_move_generator.moves
+        if not len(moves):
+            if Legal_move_generator.checks:
+                cls.checkmate = True
+                return
+            cls.stalemate = True
 
     @classmethod
     def increment_move_counter(cls):
