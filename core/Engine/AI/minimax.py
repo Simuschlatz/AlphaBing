@@ -37,6 +37,36 @@ class Dfs:
         return best_move
 
     @classmethod
+    def alpha_beta_opt(cls, depth, alpha, beta):
+        if not depth:
+            return cls.quiescene(alpha, beta)
+
+        moves = order_moves_pst(Legal_move_generator.load_moves(), cls.board)
+        # Check- or Stalemate, meaning game is lost
+        # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
+        if not len(moves):
+            # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
+            # checkmates, as the checkmate value still is better than the initial beta of -infinity
+            return -cls.checkmate_value
+
+        for move in moves:
+            # traversing down the tree
+            cls.board.make_move(move)
+            evaluation = -cls.alpha_beta_opt(depth - 1, -beta, -alpha)
+            cls.board.reverse_move()
+
+            # Move is even better than best eval before,
+            # opponent won't choose this move anyway so PRUNE YESSIR
+            if evaluation >= beta:
+                cls.cutoffs += 1
+                return beta # Return -alpha of opponent, which will be turned to alpha in depth + 1
+            cls.searched_nodes += 1
+            # Keep track of best move for moving color
+            alpha = max(evaluation, alpha)
+
+        return alpha
+
+    @classmethod
     def minimax(cls, depth):
         """
         A brute force dfs-like algorithm traversing every node of the game's 
@@ -117,32 +147,3 @@ class Dfs:
         # If there are no captures to be done anymore, return the best evaluation
         return alpha
 
-    @classmethod
-    def alpha_beta_opt(cls, depth, alpha, beta):
-        if not depth:
-            return cls.quiescene(alpha, beta)
-
-        moves = order_moves_pst(Legal_move_generator.load_moves(), cls.board)
-        # Check- or Stalemate, meaning game is lost
-        # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
-        if not len(moves):
-            # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
-            # checkmates, as the checkmate value still is better than the initial beta of -infinity
-            return -cls.checkmate_value
-
-        for move in moves:
-            # traversing down the tree
-            cls.board.make_move(move)
-            evaluation = -cls.alpha_beta_opt(depth - 1, -beta, -alpha)
-            cls.board.reverse_move()
-
-            # Move is even better than best eval before,
-            # opponent won't choose this move anyway so PRUNE YESSIR
-            if evaluation >= beta:
-                cls.cutoffs += 1
-                return beta # Return -alpha of opponent, which will be turned to alpha in depth + 1
-            cls.searched_nodes += 1
-            # Keep track of best move for moving color
-            alpha = max(evaluation, alpha)
-
-        return alpha
