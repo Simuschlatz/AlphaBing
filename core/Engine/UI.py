@@ -67,33 +67,43 @@ class UI:
     def is_target_valid(self, target):
         return target in self.legal_targets
 
-    def reset_values(self):
+    def update_ui_board(self):
         self.ui_board = self.internal_board.squares[:]
+
+    def reset_move_data(self):
         self.move_from = None
-        self.selected_piece = None
         self.move_to = None
+    
+    def drop_reset(self):
+        self.selected_piece = None
         self.legal_targets = []
+        self.update_ui_board()
+
+    def reset_values(self):
+        self.reset_move_data()
+        self.drop_reset()
 
     def select_square(self, square):
         piece = self.internal_board.squares[square]
         if not self.is_selection_valid(piece):
+            print("Can't pick up this piece")
             return
+        self.reset_move_data()
         self.ui_board[square] = 0
-        self.move_to = None
         self.legal_targets = Legal_move_generator.get_legal_targets(square)
         self.move_from = square
         self.selected_piece = piece
 
-    def drop_piece(self, square):
+    def drop_piece(self, square): 
         if not self.selected_piece:
-            return
+            return - 1
         if not self.is_target_valid(square):
             self.reset_values()
             return -1
         self.move_to = square
         move = (self.move_from, self.move_to)
         is_capture = self.internal_board.make_move(move)
-        self.reset_values()
+        self.drop_reset()
         return is_capture
 
     def drag_piece(self):
