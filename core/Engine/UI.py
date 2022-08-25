@@ -5,18 +5,27 @@ class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
     MOVE_HIGHLIGHT_COLOR = (248, 241, 174)
     BG_COLOR = (100, 100, 100)
-    def __init__(self, window, board, offsets, unit, imgs):
+    def __init__(self, window, dimensions, board, offsets, unit, imgs):
         self.window = window
+        self.WIDTH, self.HEIGHT = dimensions
         self.internal_board = board
+        # This board is created solely for UI purposes, so that the visual board can be modified
+        # without crating interdependencies with the internal board representation
         self.ui_board = board.squares[:]
+
         self.offsets = offsets
         self.off_x, self.off_y = offsets
         self.unit = unit
-        self.FONT_SIZE = unit / 2
+
+        self.FONT_SIZE = unit // 2
         self.DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE)
+        self.TEXT_X = self.off_x + unit * 9.5
+        
         self.BIG_CIRCLE_D = unit * 1.1
         self.SMALL_CIRCLE_D = unit // 7
-        self.PIECES_IMGS, self.internal_board_IMG, self.BG_IMG = imgs 
+
+        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG = imgs 
+        
         self.move_from = None
         self.selected_piece = None
         self.move_to = None
@@ -25,21 +34,32 @@ class UI:
     def draw_piece(self, is_red, piece_type, coords):
         self.window.blit(self.PIECES_IMGS[is_red * 7 + piece_type], coords)
 
+    def get_circle_center(self, rect_coord, factor=1):
+        return [pos + factor * self.unit // 2 for pos in rect_coord]
+
+    def render_circle(self, upper_left_corner_pos, diameter, color):
+        centered_coords = self.get_circle_center(upper_left_corner_pos)
+        x, y = (pos - diameter // 2 for pos in centered_coords)
+        pygame.draw.ellipse(self.window, color, (x, y, diameter, diameter))
+    
     def highlight_large(self, square, color):
         file, rank = Board_utility.get_file_and_rank(square)
         coordinates = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
-        x, y = (pos + self.unit // 2 - self.BIG_CIRCLE_D // 2 for pos in coordinates)
-        pygame.draw.ellipse(self.window, color, (x, y, self.BIG_CIRCLE_D, self.BIG_CIRCLE_D))
+        self.render_circle(coordinates, self.BIG_CIRCLE_D, color)
     
     def highlight_small(self, square, color):
         file, rank = Board_utility.get_file_and_rank(square)
         coordinates = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
-        x, y = (pos + self.unit // 2 - self.SMALL_CIRCLE_D // 2 for pos in coordinates)
-        pygame.draw.ellipse(self.window, color, (x, y, self.SMALL_CIRCLE_D, self.SMALL_CIRCLE_D))
+        self.render_circle(coordinates, self.SMALL_CIRCLE_D, color)
 
     def render_text(self, text: str, pos: tuple):
         surface = self.DISPLAY_FONT.render(text, False, (130, 130, 130))
         self.window.blit(surface, pos)
+
+    def render_remaining_time(self, player):
+        y = self.HEIGHT / 2 - (1 - player) * self.FONT_SIZE
+        rendered_text = f"{Clock.r_min_tens[player]}{Clock.r_min_ones[player]}:{Clock.r_sec_tens[player]}{Clock.r_sec_ones[player]}"
+        self.render_text(rendered_text, (self.TEXT_X, y))
 
     def is_selection_valid(self, piece):
         return Piece.is_color(piece, self.internal_board.moving_color)
@@ -78,9 +98,10 @@ class UI:
 
     def drag_piece(self):
         mouse_pos = pygame.mouse.get_pos()
+        piece_pos = self.get_circle_center(mouse_pos, factor=-1)
         is_red = Piece.is_color(self.selected_piece, Piece.red)
         piece_type = Piece.get_type(self.selected_piece)
-        self.draw_piece(is_red, piece_type, mouse_pos)
+        self.draw_piece(is_red, piece_type, piece_pos)
 
     def move_responsiveness(self):
         if self.move_from == None:
@@ -104,15 +125,14 @@ class UI:
         self.window.blit(self.BOARD_IMG, self.offsets)
         self.move_responsiveness()
 
-        # if Game_manager.checkmate:
-        #     self.render_text("checkmate!", (self.off_x + self.unit * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
-        # elif Game_manager.stalemate:
-        #     self.render_text("stalemate!", (self.off_x + self.unit * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
-        # else:
-        #     # Draself.windowg reamining time
-        #     self.render_text(remainig_times[0], (self.off_x + self.unit * 9.5, HEIGHT / 2 - FONT_SIZE))
-        #     self.render_text(remainig_times[1], (self.off_x + self.unit * 9.5, HEIGHT / 2))
-
+        if Game_manager.checkmate:
+            self.render_text("checkmate!", (self.TEXT_X, self.HEIGHT / 2 - self.FONT_SIZE / 2))
+        elif Game_manager.stalemate:
+            self.render_text("stalemate!", (self.TEXT_X, self.HEIGHT / 2 - self.FONT_SIZE / 2))
+        else:
+            for player in range(2):
+                self.render_remaining_time(player)
+        
         if self.selected_piece:
             self.mark_moves()
 
