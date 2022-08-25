@@ -9,6 +9,8 @@ from core import init_imgs, get_perft_result
 from core.Engine.AI import Dfs, Evaluation
 from time import perf_counter
 
+from core.Engine.board_utility import Board_utility
+
 FPS = 45
 
 RED = (255, 0, 0)
@@ -28,6 +30,8 @@ WIDTH = 1400
 HEIGHT = 900
 BOARD_WIDTH = 9 * UNIT
 BOARD_HEIGHT = 10 * UNIT
+OFFSET_X = (WIDTH - BOARD_WIDTH) / 2
+OFFSET_Y = (HEIGHT - BOARD_HEIGHT) / 2
 FONT_SIZE = 40
 MOVE_MARKER_CIRCLE = UNIT / 7
 CAPTURE_CIRCLE_D = UNIT * 1.1
@@ -35,7 +39,7 @@ CAPTURE_CIRCLE_D = UNIT * 1.1
 piece_style_western = True
 PIECES_IMGS, BOARD_IMG, BG_IMG = init_imgs(UNIT, WIDTH, HEIGHT, piece_style_western)
 
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("JOE MAMA")
 pygame.display.set_icon(PIECES_IMGS[7])
 pygame.font.init()
@@ -79,38 +83,20 @@ def move_feedback():
         bcd = UNIT * 1.1
         pygame.draw.ellipse(WIN, (217, 255, 255), (c_x - UNIT * 0.05, c_y - UNIT * 0.05, bcd, bcd))
 
-OFFSET_X = (WIDTH - BOARD_WIDTH) / 2
-OFFSET_Y = (HEIGHT - BOARD_HEIGHT) / 2
 selected_piece = None
 moved_to = None
 selected_square = None
-previous_targets = {}
-
-def draw_moves(board, target_indices):
-    for index in target_indices:
-        file = index % 9
-        rank = index // 9
-        x = OFFSET_X + (file + .5) * UNIT 
-        y = OFFSET_Y + (rank + .5) * UNIT
-        # If piece on target, it must be opponent's,  otherwise it would've been removed
-        if board.squares[index]:
-            pygame.draw.ellipse(WIN, BLUE_DARK, (x - CAPTURE_CIRCLE_D / 2,
-                                                y - CAPTURE_CIRCLE_D / 2,
-                                                CAPTURE_CIRCLE_D, CAPTURE_CIRCLE_D))
-        pygame.draw.ellipse(WIN, BLUE_DARK, (x - MOVE_MARKER_CIRCLE / 2, 
-                                            y - MOVE_MARKER_CIRCLE / 2, 
-                                             MOVE_MARKER_CIRCLE, MOVE_MARKER_CIRCLE))
 
 def render_text(text: str, pos: tuple):
     surface = DISPLAY_FONT.render(text, False, (130, 130, 130))
     WIN.blit(surface, pos)
 
-def draw(board, remainig_times):
+def draw(board, remainig_times, ui):
 
     WIN.fill(BG_COLOR)
     # WIN.blit(BG_IMG, (0, 0))
     WIN.blit(BOARD_IMG, (OFFSET_X, OFFSET_Y))
-    move_feedback()
+    ui.move_responsiveness()
 
     if Game_manager.checkmate:
         render_text("checkmate!", (OFFSET_X + UNIT * 9.5, HEIGHT / 2 - FONT_SIZE / 2))
@@ -124,23 +110,22 @@ def draw(board, remainig_times):
     # Drawing the moves before displaying the pieces so that a big circle (indicating capture)
     # won't cover but outline the pieces
     if selected_piece:
-        draw_moves(board, Legal_move_generator.target_squares[selected_square])
+        ui.mark_moves(board)
 
     # Drawing pieces
-    for i, piece in enumerate(board_ui):
+    for square, piece in enumerate(board_ui):
         if piece:
-            file = i % 9
-            rank = i // 9
+            file, rank = Board_utility.get_file_and_rank(square)
             is_red = Piece.is_color(piece, Piece.red)
             piece_type = Piece.get_type(piece)
             WIN.blit(PIECES_IMGS[is_red * 7 + Piece.get_type(piece)], (OFFSET_X + file * UNIT, OFFSET_Y + rank * UNIT))
     
     # Human selected a piece
-    if selected_piece:
+    if ui.selected_piece:
         # Dragging the selected piece
         mouse_pos = pygame.mouse.get_pos()
-        is_red = Piece.is_color(selected_piece, Piece.red)
-        piece_type = Piece.get_type(selected_piece)
+        is_red = Piece.is_color(ui.selected_piece, Piece.red)
+        piece_type = Piece.get_type(ui.selected_piece)
         WIN.blit(PIECES_IMGS[is_red * 7 + piece_type], (mouse_pos[0] - (UNIT // 2), (mouse_pos[1] - UNIT // 2)))
     
     pygame.display.update()
@@ -151,47 +136,28 @@ def play_sfx(is_capture):
     else:
         MOVE_SFX.play()
         
-def human_event_handler(event, board):
+def human_event_handler(event, board, ui):
     global board_ui, selected_piece, selected_square, moved_to, previous_targets
     if event.type == pygame.MOUSEBUTTONDOWN:
         mouse_pos = pygame.mouse.get_pos()
 
         # Account for the offsets the board's (0,0) coordinate is replaced by on the window
         mouse_pos_on_board = (mouse_pos[0] - OFFSET_X, mouse_pos[1] - OFFSET_Y)
-        file, rank = Board.get_board_pos(mouse_pos_on_board, UNIT)
+        file, rank = Board_utility.get_board_pos(mouse_pos_on_board, UNIT)
 
-        current_square = rank * 9 + file
-        # Check if selected square is not empty
-        if board.squares[current_square]:
-            
-            # If not a friendly color or no moves possible return
-            if current_square not in Legal_move_generator.target_squares:
-                return
-            selected_square = rank * 9 + file
-            selected_piece = board.squares[selected_square]
-            board_ui[selected_square] = 0
-            # Reset previous target square
-            if moved_to:
-                moved_to = None
+        current_square = Board_utility.get_square(file, rank)
+        ui.select_square(current_square)
                 
-    if event.type == pygame.MOUSEBUTTONUP and selected_piece:
+    if event.type == pygame.MOUSEBUTTONUP:
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_on_board = (mouse_pos[0] - OFFSET_X, mouse_pos[1] - OFFSET_Y)
-        file, rank = Board.get_board_pos(mouse_pos_on_board, UNIT)
+        file, rank = Board_utility.get_board_pos(mouse_pos_on_board, UNIT)
         target_square = rank * 9 + file
         # Check whether move is legal
-        if target_square not in Legal_move_generator.target_squares[selected_square]:
-            board_ui[selected_square] = selected_piece
-            selected_square = None
-            selected_piece = None
+        
+        is_capture = ui.drop_piece(target_square)
+        if is_capture == -1:
             return
-
-
-        moved_to = target_square
-        move = (selected_square, target_square)
-
-        print("move: ", board.get_move_notation(move))
-        is_capture = board.make_move(move)
         # Sound effects
         play_sfx(is_capture)
         print(board.load_fen_from_board())
@@ -237,9 +203,11 @@ def main():
     clock = Timer(600, "Papa", "Mama")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     board = Board(fen, play_as_red, red_moves_first=True)
+    print(board.moving_color, board.opponent_color)
     if not only_display_mode:
         Legal_move_generator.init_board(board)
         Legal_move_generator.load_moves()
+    ui = UI(WIN, board, (OFFSET_X, OFFSET_Y), UNIT)
     # To run perft search
     # get_num_positions(4, board)
     Evaluation.init(board)
@@ -256,11 +224,11 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
-                human_event_handler(event, board)
+                human_event_handler(event, board, ui)
         clock.run(board.moving_side)
         rendered_text = [f"{clock.r_min_tens[0]}{clock.r_min_ones[0]}:{clock.r_sec_tens[0]}{clock.r_sec_ones[0]}",
                         f"{clock.r_min_tens[1]}{clock.r_min_ones[1]}:{clock.r_sec_tens[1]}{clock.r_sec_ones[1]}"]            
-        draw(board, rendered_text)
+        draw(board, rendered_text, ui)
         py_clock.tick(FPS)
         # r stands for remaining
 
