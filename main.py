@@ -4,26 +4,12 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/SiiiMiii>
 under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Board, Legal_move_generator, Game_manager, Clock, UI
+from core.Engine import Board, Legal_move_generator, Clock, UI
 from core.Engine.AI import Dfs, Evaluation
 from core import init_imgs, get_perft_result
 from time import perf_counter
 
-from core.Engine.board_utility import Board_utility
-
 FPS = 45
-
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 200, 255)
-BLUE_DARK = (0, 0, 255)
-YELLOW = (255, 255, 0)
-ORANGE = (255, 165, 0)
-TURQUOISE = (64, 224, 208)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-GREY = (200, 200, 200)
-
 UNIT = 80
 WIDTH = 1400
 HEIGHT = 900
@@ -55,20 +41,8 @@ def get_num_positions(depth, board):
     p_t = perf_counter()
     num_positions = get_perft_result(depth, board)
     print(f"depth: {depth} || nodes searched: {num_positions} || time: {perf_counter() - p_t}")
-        
-def human_event_handler(event, board, ui):
-        print(board.load_fen_from_board())
 
-        # Load moves for next player
-        moves = Legal_move_generator.load_moves() 
-        if not len(moves):
-            if Legal_move_generator.checks:
-                Game_manager.checkmate = True
-                return
-            Game_manager.stalemate = True
-
-
-
+    
 def main():
     global search
     only_display_mode = False
@@ -81,12 +55,13 @@ def main():
     if not only_display_mode:
         Legal_move_generator.init_board(board)
         Legal_move_generator.load_moves()
+
+    Evaluation.init(board)
+    Dfs.init(board)
     ui = UI(WIN, (WIDTH, HEIGHT), board, (OFFSET_X, OFFSET_Y), UNIT, IMGS)
     # To run perft search
     # get_num_positions(4, board)
 
-    Evaluation.init(board)
-    Dfs.init(board)
     py_clock = pygame.time.Clock()
     run = True
     while run:
@@ -96,6 +71,7 @@ def main():
                     run = False
         else:
             ui.event_handler()
+            
         Clock.run(board.moving_side)           
         ui.render()
         py_clock.tick(FPS)
