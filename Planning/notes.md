@@ -71,3 +71,22 @@ attack_map.add()
 
 
 
+**Zobrist Hashing**
+* for each piece for each square initialize random value
+> How to get unique key
+* iterate through piece lists, get random value for piece on square
+* xor value into zobrist key
+> How use keys
+* set of zobrist keys
+* create zobrist key for position
+* if key is found, use stored values
+    * if depth > stored depth use values
+    * else update values
+* else proceed with normal minimax
+> Storing a Position
+* alpha, beta
+
+
+
+
+
