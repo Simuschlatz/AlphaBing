@@ -36,11 +36,12 @@ _AI_
   * alpha-beta pruning
   * move ordering
   * SHEF (Standard Heuristic Evaluation Function)
+* IN PROGRESS:
+  * Zobrist Hashing transposition handling
+  * SLEF (Self-Learning Evaluation Function): using machine-learning to evaluate positions with a novel method
 * TO-DO:
   * iterative deepening
-  * SLEF (Self-Learning Evaluation Function)
   * position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and  SLEF)
-  * handling transposition with zobrist hashing
 
 **Computer Vision (not implemented yet)**
 * supervised learning with tensorflow
@@ -57,7 +58,8 @@ _AI_
 
 ## HOW TO PLAY
 * clone this repo
-* run main.py
+* mac: ```python3 main.py```
+* windows: ```python main.py```
 
 ## Screenshots
 <img src="./assets/screenshots/24.08.png" alt="screenshot" width="600"/>
