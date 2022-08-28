@@ -15,7 +15,7 @@ class Board:
 
     def __init__(self, FEN: str, play_as_red: int, red_moves_first=True) -> None:
         # Look core/notes.md
-        self.moving_side = not(play_as_red != red_moves_first)
+        self.moving_side = int(not(play_as_red != red_moves_first))
         self.opponent_side = 1 - self.moving_side
         # If we don't play as red, the pieces are at the top, 
         self.is_red_up = not play_as_red
