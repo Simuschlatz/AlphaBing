@@ -59,7 +59,7 @@ _AI_
 ## HOW TO PLAY
 * clone this repo
 * mac: ```python3 main.py```
-* windows: ```python main.py
+* windows: ```python main.py```
 
 ## Screenshots
 <img src="./assets/screenshots/24.08.png" alt="screenshot" width="600"/>
