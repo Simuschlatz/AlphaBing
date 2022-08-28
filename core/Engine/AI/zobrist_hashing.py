@@ -14,13 +14,11 @@ class Zobrist_hashing:
         return int(num, 2)
 
     @classmethod
-    def get_zobrist_key(cls, moving_side, piece_lists):
+    def get_zobrist_key(cls, piece_lists):
         zobrist_key = 0
-        for piece_id, squares in reversed(enumerate(piece_lists)):
-            for square in squares:
-                zobrist_key ^= cls.table[moving_side][piece_id][square]
-        
-        return zobrist_key
-                
-
-Zobrist_hashing.init_table()
+        for side, piece_list in enumerate(piece_lists):
+            for piece_id, squares in enumerate(piece_list):
+                for square in squares:
+                    zobrist_key ^= cls.table[side][piece_id][square]
+            return zobrist_key
+            
