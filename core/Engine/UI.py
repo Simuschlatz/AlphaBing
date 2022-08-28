@@ -1,11 +1,17 @@
 import pygame
 from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock
-from core.Engine.AI import AI_player
+from core.Engine.AI import AI_player, Zobrist_hashing
 
 class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
     MOVE_HIGHLIGHT_COLOR = (100, 100, 240)
     BG_COLOR = (100, 100, 100)
+    RED = (210, 4, 45)
+    BLUE = (26, 57, 185)
+    BLACK = (0, 0, 0)
+    WHITE = (255, 255, 255)
+    GREY = (40, 40, 40)
+
     pygame.mixer.init()
     MOVE_SFX = pygame.mixer.Sound("assets/sfx/move.wav")
     CAPTURE_SFX = pygame.mixer.Sound("assets/sfx/capture.wav")
@@ -13,7 +19,7 @@ class UI:
     def __init__(self, window, dimensions, board, offsets, unit, imgs):
         self.window = window
         self.WIDTH, self.HEIGHT = dimensions
-        self.internal_board = board
+        self.board = board
         # This board is created solely for UI purposes, so that the visual board can be modified
         # without crating interdependencies with the internal board representation
         self.ui_board = board.squares[:]
@@ -39,6 +45,8 @@ class UI:
         self.legal_targets = []
 
         self.fen = board.load_fen_from_board()
+        self.zobrist = bin(Zobrist_hashing.get_zobrist_key(board.moving_side, board.piece_lists))
+        self.zobrist_off = (self.WIDTH - len(self.zobrist) * self.FONT_SIZE_SMALL / 2) / 2
         self.move_str = ""
 
     def draw_piece(self, is_red, piece_type, coords):
@@ -66,26 +74,26 @@ class UI:
         coordinates = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
         self.render_circle(coordinates, self.SMALL_CIRCLE_D, color)
 
-    def render_text(self, text: str, pos: tuple, large_font):
+    def render_text(self, text: str, color: tuple, pos: tuple, large_font):
         if large_font:
-            surface = self.GAME_STATE_FONT.render(text, False, (130, 130, 130))
+            surface = self.GAME_STATE_FONT.render(text, False, color)
         else:
-            surface = self.DISPLAY_FONT.render(text, False, (130, 130, 130))
+            surface = self.DISPLAY_FONT.render(text, False, color)
         self.window.blit(surface, pos)
 
     def render_remaining_time(self, player):
         y = self.HEIGHT / 2 - (1 - player) * self.FONT_SIZE_LARGE
         rendered_text = f"{Clock.r_min_tens[player]}{Clock.r_min_ones[player]}:{Clock.r_sec_tens[player]}{Clock.r_sec_ones[player]}"
-        self.render_text(rendered_text, (self.TEXT_X, y), True)
+        self.render_text(rendered_text, self.GREY, (self.TEXT_X, y), True)
 
     def is_selection_valid(self, piece):
-        return Piece.is_color(piece, self.internal_board.moving_color)
+        return Piece.is_color(piece, self.board.moving_color)
 
     def is_target_valid(self, target):
         return target in self.legal_targets
 
     def update_ui_board(self):
-        self.ui_board = self.internal_board.squares[:]
+        self.ui_board = self.board.squares[:]
 
     def reset_move_data(self):
         self.move_from = None
@@ -100,15 +108,17 @@ class UI:
         self.reset_move_data()
         self.drop_reset()
 
-    def update_fen_str(self):
-        self.fen = self.internal_board.load_fen_from_board()
+    def update_info(self):
+        self.fen = self.board.load_fen_from_board()
+        self.zobrist = bin(Zobrist_hashing.get_zobrist_key(self.board.moving_side, self.board.piece_lists))
+        self.zobrist_off = (self.WIDTH - len(self.zobrist) * self.FONT_SIZE_SMALL / 2) / 2
 
     def drop_update(self, move):
-        self.update_fen_str()
-        self.move_str = self.internal_board.get_move_notation(move)
+        self.update_info()
+        self.move_str = self.board.get_move_notation(move)
 
     def select_square(self, square):
-        piece = self.internal_board.squares[square]
+        piece = self.board.squares[square]
         if not self.is_selection_valid(piece):
             print("Can't pick up this piece")
             return
@@ -127,8 +137,8 @@ class UI:
             return -1
         self.move_to = square
         move = (self.move_from, self.move_to)
+        is_capture = self.board.make_move(move)
         self.drop_update(move)
-        is_capture = self.internal_board.make_move(move)
         self.drop_reset()
         return is_capture
 
@@ -150,7 +160,7 @@ class UI:
     def mark_moves(self):
         for square in self.legal_targets:
             # If piece on target, it must be opponent's,  otherwise it would've been removed
-            if self.internal_board.squares[square]:
+            if self.board.squares[square]:
                 self.highlight_large(square, self.MOVE_HIGHLIGHT_COLOR)
             self.highlight_small(square, self.MOVE_HIGHLIGHT_COLOR)
     
@@ -202,21 +212,22 @@ class UI:
                 Game_manager.check_game_state()
 
                 # AI_move = AI_player.load_move()
-                # is_capture = self.internal_board.make_move(AI_move)
+                # is_capture = self.board.make_move(AI_move)
                 # self.move_from, self.move_to = AI_move
                 # self.update_ui_board()
                 # # Sound effects
                 # self.play_sfx(is_capture)
                 # # See if there is a mate or stalemate
+                # Legal_move_generator.load_moves()
                 # Game_manager.check_game_state()
 
             # Move reverse
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     Game_manager.reset_game_state()
-                    self.internal_board.reverse_move()
+                    self.board.reverse_move()
                     self.reset_values()
-                    self.update_fen_str()
+                    self.update_info()
                     Legal_move_generator.load_moves()
 
     def render(self):
@@ -229,15 +240,21 @@ class UI:
         self.move_responsiveness()
 
         if Game_manager.checkmate:
-            self.render_text("checkmate!", (self.TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+            self.render_text("checkmate!", self.GREY, (self.TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
         elif Game_manager.stalemate:
-            self.render_text("stalemate!", (self.TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+            self.render_text("stalemate!", self.GREY, (self.TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
         else:
             for player in range(2):
                 self.render_remaining_time(player)
         
-        self.render_text(self.fen, (self.off_x, 5), False)
-        self.render_text(self.move_str, (self.WIDTH // 10, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+        # self.render_text(self.fen, self.GREY, (self.off_x, 5), False)
+        self.render_text(self.move_str, self.GREY, (self.WIDTH // 10, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+
+        for i, char in enumerate(self.zobrist[2:]):
+            if int(char):
+                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_SIZE_SMALL / 2, 10), False)
+                continue
+            self.render_text(char, self.RED, (self.zobrist_off + i * self.FONT_SIZE_SMALL / 2, 10), False)
 
         if self.selected_piece:
             self.mark_moves()
