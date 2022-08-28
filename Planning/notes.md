@@ -84,7 +84,9 @@ attack_map.add()
     * else update values
 * else proceed with normal minimax
 > Storing a Position
+* zobrist key
 * alpha, beta
+* plies played
 
 
 
