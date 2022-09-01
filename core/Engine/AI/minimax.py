@@ -1,5 +1,5 @@
 from core.Engine.move_generator import Legal_move_generator
-from core.Engine.AI.move_ordering import order_moves_pst
+from core.Engine.AI.move_ordering import order_moves, order_moves_pst
 from core.Engine.AI.eval_utility import Evaluation
 
 class Dfs:
@@ -19,14 +19,14 @@ class Dfs:
         """
         cls.searched_nodes = 0
         best_move = None
-        positive_infinity = float("inf")
-        negative_infinity = float("-inf")
-        best_eval = negative_infinity
-        current_pos_moves = order_moves_pst(Legal_move_generator.load_moves(), cls.board)
+        alpha = float("inf")
+        beta = float("-inf")
+        best_eval = beta
+        current_pos_moves = order_moves(Legal_move_generator.load_moves(), cls.board)
         for move in current_pos_moves:
             cls.searched_nodes += 1
             cls.board.make_move(move)
-            evaluation = -cls.alpha_beta_opt(depth - 1, negative_infinity, positive_infinity)
+            evaluation = -cls.alpha_beta_opt(depth - 1, beta, alpha)
             # evaluation = -cls.alpha_beta(depth - 1, negative_infinity, positive_infinity)
             # evaluation = - cls.minimax(depth - 1)
             if evaluation > best_eval:
@@ -41,7 +41,7 @@ class Dfs:
         if not depth:
             return cls.quiescene(alpha, beta)
 
-        moves = order_moves_pst(Legal_move_generator.load_moves(), cls.board)
+        moves = order_moves(Legal_move_generator.load_moves(), cls.board)
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         if not len(moves):
@@ -65,6 +65,37 @@ class Dfs:
             alpha = max(evaluation, alpha)
 
         return alpha
+
+        
+    @classmethod
+    def quiescene(cls, alpha, beta):
+        """
+        A dfs-like algorithm used for chess searches, only considering captureing moves, thus helping the conventional
+        search with misjudgment of situations when significant captures could take place in a depth below the search depth.
+        :return: the best evaluation of a particular game state, only considering captures
+        """ 
+        # Evaluate current position before doing any moves, so a potentially good state for non-capture moves
+        # isn't ruined by bad captures
+        eval = Evaluation.pst_shef()
+        # Typical alpha beta operations
+        if eval >= beta:
+            return beta
+        alpha = max(eval, alpha)
+
+        moves = order_moves_pst(Legal_move_generator.load_moves(generate_quiets=False), cls.board)
+        for move in moves:
+            cls.board.make_move(move)
+            evaluation = -cls.quiescene(-beta, -alpha)
+            cls.board.reverse_move()
+            # Move is even better than best eval before,
+            # opponent won't choose move anyway so PRUNE YESSIR
+            if evaluation >= beta:
+                return beta
+            # Keep track of best move for moving color
+            alpha = max(evaluation, alpha)
+        # If there are no captures to be done anymore, return the best evaluation
+        return alpha
+
 
     @classmethod
     def minimax(cls, depth):
@@ -116,34 +147,5 @@ class Dfs:
             if evaluation >= beta:
                 return beta
             alpha = max(evaluation, alpha)
-        return alpha
-
-    @classmethod
-    def quiescene(cls, alpha, beta):
-        """
-        A dfs-like algorithm used for chess searches, only considering captureing moves, thus helping the conventional
-        search with misjudgment of situations when significant captures could take place in a depth below the search depth.
-        :return: the best evaluation of a particular game state, only considering captures
-        """ 
-        # Evaluate current position before doing any moves, so a potentially good state for non-capture moves
-        # isn't ruined by bad captures
-        eval = Evaluation.pst_shef()
-        # Typical alpha beta operations
-        if eval >= beta:
-            return beta
-        alpha = max(eval, alpha)
-
-        moves = order_moves_pst(Legal_move_generator.load_moves(generate_quiets=False), cls.board)
-        for move in moves:
-            cls.board.make_move(move)
-            evaluation = -cls.quiescene(-beta, -alpha)
-            cls.board.reverse_move()
-            # Move is even better than best eval before,
-            # opponent won't choose move anyway so PRUNE YESSIR
-            if evaluation >= beta:
-                return beta
-            # Keep track of best move for moving color
-            alpha = max(evaluation, alpha)
-        # If there are no captures to be done anymore, return the best evaluation
         return alpha
 
