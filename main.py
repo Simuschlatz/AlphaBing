@@ -4,7 +4,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/SiiiMiii>
 under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Board, Legal_move_generator, Clock, UI
+from core.Engine import Board, Legal_move_generator, Clock, UI, Zobrist_hashing
 from core.Engine.AI import Dfs, Evaluation
 from core import init_imgs, get_perft_result
 from time import perf_counter
@@ -21,8 +21,8 @@ OFFSET_Y = (HEIGHT - BOARD_HEIGHT) / 2
 MOVE_MARKER_CIRCLE = UNIT / 7
 CAPTURE_CIRCLE_D = UNIT * 1.1
 
-piece_style_western = True
-IMGS = init_imgs(UNIT, WIDTH, HEIGHT, piece_style_western)
+piece_style_western = False
+IMGS = init_imgs(UNIT, WIDTH, HEIGHT, BOARD_WIDTH, BOARD_HEIGHT, piece_style_western)
 PIECES_IMGS, BOARD_IMG, BG_IMG = IMGS
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
@@ -44,7 +44,6 @@ def get_num_positions(depth, board):
 
     
 def main():
-    global search
     only_display_mode = False
     play_as_red = True
     fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN
@@ -56,8 +55,10 @@ def main():
         Legal_move_generator.init_board(board)
         Legal_move_generator.load_moves()
 
+    Zobrist_hashing.init_table()
     Evaluation.init(board)
     Dfs.init(board)
+
     ui = UI(WIN, (WIDTH, HEIGHT), board, (OFFSET_X, OFFSET_Y), UNIT, IMGS)
     # To run perft search
     # get_num_positions(4, board)

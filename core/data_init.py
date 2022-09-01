@@ -1,7 +1,7 @@
 import pygame
 import os
 
-def init_imgs(unit, width, height, is_western_style: bool) -> list:
+def init_imgs(unit, width, height, board_width, board_height, is_western_style: bool) -> list:
 
     pieces_file_names = ["general.png",
                         "elephant.png",
@@ -25,7 +25,7 @@ def init_imgs(unit, width, height, is_western_style: bool) -> list:
 
     pieces_imgs = [pygame.transform.scale(img, (unit, unit)) for img in pieces_imgs]
     board_img = pygame.image.load(os.path.join("assets/imgs", "board_light.svg"))
-    board_img = pygame.transform.scale(board_img, (unit * 9, unit * 10))
+    board_img = pygame.transform.scale(board_img, (board_width, board_height))
 
     bg = pygame.image.load(os.path.join("assets/imgs", "bg_light.jpg"))
     bg = pygame.transform.scale(bg, (width, height))
