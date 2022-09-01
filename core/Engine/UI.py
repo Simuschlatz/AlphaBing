@@ -1,12 +1,12 @@
 import pygame
-from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock
-from core.Engine.AI import AI_player, Zobrist_hashing
+from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock, Zobrist_hashing
+from core.Engine.AI import AI_player
 
 class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
     MOVE_HIGHLIGHT_COLOR = (100, 100, 240)
     BG_COLOR = (100, 100, 100)
-    RED = (210, 4, 45)
+    RED = (190, 63, 64)
     BLUE = (26, 57, 185)
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
@@ -30,6 +30,7 @@ class UI:
 
         self.FONT_SIZE_LARGE = unit // 2
         self.FONT_SIZE_SMALL = unit // 3
+        self.FONT_WIDTH_SMALL = self.FONT_SIZE_SMALL * 0.6
         self.GAME_STATE_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_LARGE)
         self.DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_SMALL)
         self.TEXT_X = self.off_x + unit * 9.5
@@ -46,7 +47,7 @@ class UI:
 
         self.fen = board.load_fen_from_board()
         self.zobrist = bin(Zobrist_hashing.get_zobrist_key(board.moving_side, board.piece_lists))
-        self.zobrist_off = (self.WIDTH - len(self.zobrist) * self.FONT_SIZE_SMALL / 2) / 2
+        self.zobrist_off = (self.WIDTH - len(self.zobrist) * self.FONT_WIDTH_SMALL) / 2
         self.move_str = ""
 
     def draw_piece(self, is_red, piece_type, coords):
@@ -111,12 +112,15 @@ class UI:
     def update_info(self):
         self.fen = self.board.load_fen_from_board()
         self.zobrist = bin(Zobrist_hashing.get_zobrist_key(self.board.moving_side, self.board.piece_lists))
-        self.zobrist_off = (self.WIDTH - len(self.zobrist) * self.FONT_SIZE_SMALL / 2) / 2
+        self.zobrist_off = (self.WIDTH - len(self.zobrist) * self.FONT_WIDTH_SMALL) / 2
 
-    def drop_update(self, move):
+    def drop_update(self):
         self.update_info()
-        self.move_str = self.board.get_move_notation(move)
 
+    def update_move_str(self, move):
+        self.move_str = self.board.get_move_notation(move)
+        print(self.move_str)
+        
     def select_square(self, square):
         piece = self.board.squares[square]
         if not self.is_selection_valid(piece):
@@ -137,8 +141,9 @@ class UI:
             return -1
         self.move_to = square
         move = (self.move_from, self.move_to)
+        self.update_move_str(move)
         is_capture = self.board.make_move(move)
-        self.drop_update(move)
+        self.drop_update()
         self.drop_reset()
         return is_capture
 
@@ -211,15 +216,17 @@ class UI:
                 Legal_move_generator.load_moves()
                 Game_manager.check_game_state()
 
-                # AI_move = AI_player.load_move()
-                # is_capture = self.board.make_move(AI_move)
-                # self.move_from, self.move_to = AI_move
-                # self.update_ui_board()
-                # # Sound effects
-                # self.play_sfx(is_capture)
-                # # See if there is a mate or stalemate
-                # Legal_move_generator.load_moves()
-                # Game_manager.check_game_state()
+                AI_move = AI_player.load_move()
+                self.update_move_str(AI_move)
+                is_capture = self.board.make_move(AI_move)
+                self.move_from, self.move_to = AI_move
+                self.drop_update()
+                self.update_ui_board()
+                # Sound effects
+                self.play_sfx(is_capture)
+                # See if there is a mate or stalemate
+                Legal_move_generator.load_moves()
+                Game_manager.check_game_state()
 
             # Move reverse
             if event.type == pygame.KEYDOWN:
@@ -252,9 +259,9 @@ class UI:
 
         for i, char in enumerate(self.zobrist[2:]):
             if int(char):
-                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_SIZE_SMALL / 2, 10), False)
+                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
                 continue
-            self.render_text(char, self.RED, (self.zobrist_off + i * self.FONT_SIZE_SMALL / 2, 10), False)
+            self.render_text(char, self.RED, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
 
         if self.selected_piece:
             self.mark_moves()
