@@ -308,9 +308,14 @@ class Legal_move_generator:
                 for target_square in targets_in_dir:
 
                     if cls.board.squares[target_square] and not in_attack_mode:
-                        # If cannon is pinned by rook, it can't capture by using the pinning 
-                        # rook or the king as screen, as it would place king in check
+                        # If cannon is pinned by opponent rook, it can't capture by using the pinning 
+                        # rook or the friendly king as screen, as it would place king in check
                         if is_pinned and not is_double_screen:
+                            break
+                        # Cannon is the first screen between the opponent cannon and friendly king, making it 
+                        # illegal to use opponent cannon as screen. Since the opponent cannon would be the first
+                        # piece to come across, we know that if it's in double screens, it must be the first one
+                        if Piece.is_piece(cls.board.squares[target_square], cls.board.opponent_color, Piece.cannon) and is_double_screen:
                             break
                         in_attack_mode = True
                         continue
