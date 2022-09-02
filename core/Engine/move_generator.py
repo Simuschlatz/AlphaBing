@@ -78,10 +78,10 @@ class Legal_move_generator:
 
         target_squares = cls.king_move_map[cls.board.moving_side][current_square]
         for target_square in target_squares:
-            if target_square in cls.attack_map:
-                continue
             target_piece = cls.board.squares[target_square]
             if Piece.is_color(target_piece, cls.board.moving_color):
+                continue
+            if target_square in cls.attack_map:
                 continue
             cls.moves.append((current_square, target_square))
             cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
@@ -102,10 +102,10 @@ class Legal_move_generator:
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
+                if Piece.is_color(target_piece, cls.board.moving_color):
+                    continue
                 # If it's quiescene search and move isn't a capture, continue
                 if not cls.generate_quiets and not target_piece:
-                    continue
-                if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
                 dir_idx = cls.dir_offsets.index(target_square - current_square)
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
@@ -141,19 +141,19 @@ class Legal_move_generator:
             
             for target_square in cls.elephant_move_map[cls.board.moving_side][current_square]:
                 target_piece = cls.board.squares[target_square]
-                # If it's quiescene search and move isn't a capture, continue
-                if not cls.generate_quiets and not target_piece:
-                    continue
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
-                
-                if target_square in cls.illegal_squares:
+                # If it's quiescene search and move isn't a capture, continue
+                if not cls.generate_quiets and not target_piece:
                     continue
                 
                 blocking_square = cls.get_elephant_block(current_square, target_square)
                 if cls.board.squares[blocking_square]:
                     continue
 
+                if target_square in cls.illegal_squares:
+                    continue
+                
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
                     continue
@@ -177,16 +177,16 @@ class Legal_move_generator:
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
-                # If it's quiescene search and move isn't a capture, continue
-                if not cls.generate_quiets and not target_piece:
-                    continue
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
-                if target_square in cls.illegal_squares:
+                # If it's quiescene search and move isn't a capture, continue
+                if not cls.generate_quiets and not target_piece:
                     continue
 
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
+                    continue
+                if target_square in cls.illegal_squares:
                     continue
 
                 cls.moves.append((current_square, target_square))
@@ -219,19 +219,19 @@ class Legal_move_generator:
                 target_square = move[1]
                 target_piece = cls.board.squares[target_square]
                 # If it's quiescene search and move isn't a capture, continue
-                if not cls.generate_quiets and not target_piece:
-                    continue
                 if Piece.is_color(target_piece, cls.board.moving_color):
+                    continue
+                if not cls.generate_quiets and not target_piece:
                     continue
                 blocking_square = cls.get_horse_block(current_square, target_square)
                 if cls.board.squares[blocking_square]:
-                    continue
-                if target_square in cls.illegal_squares:
                     continue
                 # If there's a check (or multiple)
                 # Only proceed if num of checks the moves blocks is equivalent to total num of checks
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
+                    continue
+                if target_square in cls.illegal_squares:
                     continue
                 cls.moves.append((current_square, target_square))
                 cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
@@ -257,12 +257,12 @@ class Legal_move_generator:
                 # "Walking" in direction using direction offsets
                 for target_square in squares_in_dir:
                     target_piece = cls.board.squares[target_square]
-                    # If it's quiescene search and move isn't a capture, continue
-                    if not cls.generate_quiets and not target_piece:
-                        continue
                     # If target_piece is friendly, go to next direction
                     if Piece.is_color(target_piece, cls.board.moving_color):
                         break
+                    # If it's quiescene search and move isn't a capture, continue
+                    if not cls.generate_quiets and not target_piece:
+                        continue
 
                     if target_square in cls.illegal_squares:
                         continue
@@ -285,6 +285,9 @@ class Legal_move_generator:
                     if blocks_all_checks and cls.checks and not avoids_cannon_check:
                         break
 
+    @classmethod
+    def is_screen_legal(cls, screen):
+        pass
 
     @classmethod
     def generate_cannon_moves(cls) -> None:
