@@ -21,7 +21,7 @@ OFFSET_Y = (HEIGHT - BOARD_HEIGHT) / 2
 MOVE_MARKER_CIRCLE = UNIT / 7
 CAPTURE_CIRCLE_D = UNIT * 1.1
 
-piece_style_western = False
+piece_style_western = True
 IMGS = init_imgs(UNIT, WIDTH, HEIGHT, BOARD_WIDTH, BOARD_HEIGHT, piece_style_western)
 PIECES_IMGS, BOARD_IMG, BG_IMG = IMGS
 
@@ -50,7 +50,7 @@ def main():
 
     Clock.init(600, "MIKE", "OXLONG")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    board = Board(fen, play_as_red, red_moves_first=True)
+    board = Board("1re1kae1r/4a/1c4hc/R3C1p1p/2p/4P/P1h3P1P/2H3HC/9/2EAKAE1R", play_as_red, red_moves_first=False)
     if not only_display_mode:
         Legal_move_generator.init_board(board)
         Legal_move_generator.load_moves()
