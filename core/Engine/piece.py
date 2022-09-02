@@ -21,6 +21,10 @@ class Piece:
         return piece & 0b00111 == typ
 
     @staticmethod
+    def is_piece(piece, color, typ):
+        return piece == color + typ
+
+    @staticmethod
     def get_color(piece):
         return piece & 0b11000
     
