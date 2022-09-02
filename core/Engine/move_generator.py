@@ -104,9 +104,6 @@ class Legal_move_generator:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
-                # If it's quiescene search and move isn't a capture, continue
-                if not cls.generate_quiets and not target_piece:
-                    continue
                 dir_idx = cls.dir_offsets.index(target_square - current_square)
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
                     continue
@@ -115,6 +112,11 @@ class Legal_move_generator:
                 captures_checking_cannon = cls.checking_cannon_square == target_square
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                 if not blocks_all_checks:
+                    continue
+                # If it's quiescene search and move isn't a capture, continue
+                # Put this guard clause as last bacause the number fo times this is False outweighs
+                # most of the others, leading to many unnecessary checks
+                if not cls.generate_quiets and not target_piece:
                     continue
 
                 cls.moves.append((current_square, target_square))
@@ -143,9 +145,6 @@ class Legal_move_generator:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
-                # If it's quiescene search and move isn't a capture, continue
-                if not cls.generate_quiets and not target_piece:
-                    continue
                 
                 blocking_square = cls.get_elephant_block(current_square, target_square)
                 if cls.board.squares[blocking_square]:
@@ -156,6 +155,9 @@ class Legal_move_generator:
                 
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
+                    continue
+                # If it's quiescene search and move isn't a capture, continue
+                if not cls.generate_quiets and not target_piece:
                     continue
                 cls.moves.append((current_square, target_square))
                 cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
@@ -179,14 +181,14 @@ class Legal_move_generator:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
-                # If it's quiescene search and move isn't a capture, continue
-                if not cls.generate_quiets and not target_piece:
-                    continue
 
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
                     continue
                 if target_square in cls.illegal_squares:
+                    continue
+                # If it's quiescene search and move isn't a capture, continue
+                if not cls.generate_quiets and not target_piece:
                     continue
 
                 cls.moves.append((current_square, target_square))
@@ -221,8 +223,6 @@ class Legal_move_generator:
                 # If it's quiescene search and move isn't a capture, continue
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
-                if not cls.generate_quiets and not target_piece:
-                    continue
                 blocking_square = cls.get_horse_block(current_square, target_square)
                 if cls.board.squares[blocking_square]:
                     continue
@@ -232,6 +232,8 @@ class Legal_move_generator:
                 if not blocks_all_checks:
                     continue
                 if target_square in cls.illegal_squares:
+                    continue
+                if not cls.generate_quiets and not target_piece:
                     continue
                 cls.moves.append((current_square, target_square))
                 cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
@@ -260,9 +262,6 @@ class Legal_move_generator:
                     # If target_piece is friendly, go to next direction
                     if Piece.is_color(target_piece, cls.board.moving_color):
                         break
-                    # If it's quiescene search and move isn't a capture, continue
-                    if not cls.generate_quiets and not target_piece:
-                        continue
 
                     if target_square in cls.illegal_squares:
                         continue
@@ -275,6 +274,10 @@ class Legal_move_generator:
                     captures_checking_cannon = avoids_cannon_check and cls.checking_cannon_square == target_square
                     blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                     
+                    # If it's quiescene search and move isn't a capture, continue
+                    if not cls.generate_quiets and not target_piece:
+                        continue
+
                     if blocks_all_checks:    
                         cls.moves.append((current_square, target_square))
                         cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
@@ -332,15 +335,15 @@ class Legal_move_generator:
                         if Piece.is_color(target_piece, cls.board.moving_color):
                             break
 
-                    # If it's quiescene search and move isn't a capture, continue
-                    if not cls.generate_quiets and not target_piece:
-                        continue
                     # Can't move to or capture pieces on squares that would result in check
                     if target_square in cls.illegal_squares:
                         continue
                     
                     blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                     if not blocks_all_checks:
+                        continue
+                    # If it's quiescene search and move isn't a capture, continue
+                    if not cls.generate_quiets and not target_piece:
                         continue
                     cls.moves.append((current_square, target_square))
                     cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
@@ -427,46 +430,62 @@ class Legal_move_generator:
 #-------------------------------------------------------------------------------
 
     @classmethod
-    def flying_general(cls):
-        # Opponent king can only pose a threat if it's file's dist to friendly king's file is exactly 1
-        friendly_king_file = cls.moving_king % 9
-        opponent_king_file = cls.opponent_king % 9
-        flying_general_threat = abs(friendly_king_file - opponent_king_file) < 2
-        if not flying_general_threat:
-            return
-        dir_idx = cls.board.moving_side * 2
-        friendly_king_rank = cls.moving_king // 9 
-        dist_kings = abs(friendly_king_rank - cls.opponent_king // 9)
+    def first_two_in_ray(cls, square_1, square_2, dir_idx):
+        """
+        :return: the first square between square_1 and square_2 if the number of squares separating them is 1
+        :param square_1: where the ray counting the number of squares starts
+        """
+        dist = abs(square_1 - square_2) // 9
         offset = cls.dir_offsets[dir_idx]
-        block = None
-        for step in range(dist_kings):
-            square = cls.opponent_king + offset * (step + 1)
+        squares = []
+        for step in range(dist - 1):
+            square = square_1 + offset * (step + 1)
             piece = cls.board.squares[square]
-
             if not piece:
                 continue
-            # Opponent piece blocks any pins, but can't be captured 
+            
+            # Second piece to come across
+            if squares:
+                return -1
+
+            squares.append(square)
+            continue
+            
+        return squares
+
+    @classmethod
+    def flying_general(cls):
+        # Opponent king can only pose a threat if it's file's dist to friendly king's file is exactly 1
+        moving_king_file = cls.moving_king % 9
+        opponent_king_file = cls.opponent_king % 9
+        flying_general_threat = abs(moving_king_file - opponent_king_file) < 2
+        if not flying_general_threat:
+            return
+
+        dir_idx = cls.board.moving_side * 2
+        blocking_squares = cls.first_two_in_ray(cls.opponent_king, cls.moving_king, dir_idx)
+        if blocking_squares == -1:
+            return
+
+        if blocking_squares:
+            # Turning list into integer
+            blocking_squares = blocking_squares.pop()
+            blocking_piece = cls.board.squares[blocking_squares]
+
+            # Opponent piece: blocks any pins, but can't be captured 
             # by friendly king as opponent king's defending it
-            if Piece.is_color(piece, cls.board.opponent_color):
-                if not block:
-                    cls.attack_map.add(square)
+            if Piece.is_color(blocking_piece, cls.board.opponent_color):
+                cls.attack_map.add(blocking_squares)
                 return
-
-            # Friendly king
-            if Piece.is_type(piece ,Piece.king):
-                # Pin piece
-                cls.pinned_squares.add(block)
-                return
-
-            # Second friendly piece in direction, no pins possible
-            if block:
-                return
-            block = square    
+            # Friendly piece: gets pinned if kings are on same rank
+            if opponent_king_file == moving_king_file:
+                cls.pinned_squares.add(blocking_squares)
+            return
+        # Number of pieces between kings is 0
         # If there're no pieces between opponent king and opposite edge of board
         # friendly king can't move to the opponent king's file
-        if block:
-            return
-        flying_general_square = friendly_king_rank * 9 + opponent_king_file
+        moving_king_rank = cls.moving_king // 9 
+        flying_general_square = moving_king_rank * 9 + opponent_king_file
         cls.attack_map.add(flying_general_square)
         
     @classmethod
