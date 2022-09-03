@@ -171,6 +171,8 @@ class Board:
         self.squares[previous_square] = moved_piece
         self.squares[moved_to] = captured_piece
 
+        self.zobrist_key ^= self.moving_side
+        
         if captured_piece:
             cap_piece_type = Piece.get_type(captured_piece)
             self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][cap_piece_type][moved_to]
@@ -178,7 +180,6 @@ class Board:
         moved_piece_type = Piece.get_type(moved_piece)
         self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][moved_piece_type][previous_square]
         self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][moved_piece_type][moved_to]
-        self.zobrist_key ^= self.moving_side
         print(self.zobrist_key)
 
         # Switch back to previous moving color
