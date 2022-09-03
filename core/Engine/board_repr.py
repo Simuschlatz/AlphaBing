@@ -125,11 +125,10 @@ class Board:
         dist_y = square_1 // 9 - square_2 // 9
         return dist_x, dist_y
 
-    def update_zobrist(self, moved_piece, captured_piece, moved_from, moved_to):
+    def update_zobrist(self, moved_piece_type, captured_piece, moved_from, moved_to):
         if captured_piece:
             cap_piece_type = Piece.get_type(captured_piece)
             self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][cap_piece_type][moved_to]
-        moved_piece_type = Piece.get_type(moved_piece)
         self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_from]
         self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_to]
         self.zobrist_key ^= self.opponent_side
@@ -154,8 +153,9 @@ class Board:
         # Updating the board
         self.squares[moved_to] = moved_piece
         self.squares[moved_from] = 0
-        self.update_zobrist(moved_piece, captured_piece, *move)
-        print(self.zobrist_key)
+        # Update zobrist key
+        self.update_zobrist(piece_type, captured_piece, *move)
+        # print(self.zobrist_key)
         self.switch_moving_side()
 
         # self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_side, self.piece_lists)
@@ -182,21 +182,11 @@ class Board:
         self.squares[previous_square] = moved_piece
         self.squares[moved_to] = captured_piece
 
-        # # Update Zobrist key
-        # if captured_piece:
-        #     cap_piece_type = Piece.get_type(captured_piece)
-        #     self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][cap_piece_type][moved_to]
-
-        # moved_piece_type = Piece.get_type(moved_piece)
-        # self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][moved_piece_type][previous_square]
-        # self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][moved_piece_type][moved_to]
-        # self.zobrist_key ^= self.opponent_side
-        # self.zobrist_key ^= self.moving_side
-
         # Switch back to previous moving color
         self.switch_moving_side()
-        self.update_zobrist(moved_piece, captured_piece, previous_square, moved_to)
-        print(self.zobrist_key)
+        # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
+        self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
+        # print(self.zobrist_key)
 
     def get_previous_configs(self, depth):
         depth = min(len(self.game_history), depth)
