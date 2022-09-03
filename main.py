@@ -50,18 +50,18 @@ def main():
 
     Clock.init(600, "MIKE", "OXLONG")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    board = Board(fen, play_as_red, red_moves_first=False)
+    Zobrist_hashing.init_table()
+    board = Board(fen, play_as_red, red_moves_first=True)
     if not only_display_mode:
         Legal_move_generator.init_board(board)
         Legal_move_generator.load_moves()
 
-    Zobrist_hashing.init_table()
     Evaluation.init(board)
     Dfs.init(board)
 
     ui = UI(WIN, (WIDTH, HEIGHT), board, (OFFSET_X, OFFSET_Y), UNIT, IMGS)
     # To run perft search
-    get_num_positions(4, board)
+    # get_num_positions(4, board)
 
     py_clock = pygame.time.Clock()
     run = True

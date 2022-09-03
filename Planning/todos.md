@@ -13,3 +13,6 @@
 
 **22.08.22**
 * quiescene search
+
+**03.09.22**
+* fifty move rules

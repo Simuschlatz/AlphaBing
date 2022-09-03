@@ -88,7 +88,7 @@ attack_map.add()
 * alpha, beta
 * plies played
 
-
-
+https://github.com/SebLague/Chess-AI/blob/main/Assets/Scripts/Core/TranspositionTable.cs
+https://github.com/SebLague/Chess-AI/blob/main/Assets/Scripts/Core/AI/Search.cs
 
 
