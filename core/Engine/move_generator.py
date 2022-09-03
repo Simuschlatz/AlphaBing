@@ -443,11 +443,9 @@ class Legal_move_generator:
             piece = cls.board.squares[square]
             if not piece:
                 continue
-            
             # Second piece to come across
             if squares:
                 return -1
-
             squares.append(square)
             continue
             
@@ -461,32 +459,69 @@ class Legal_move_generator:
         flying_general_threat = abs(moving_king_file - opponent_king_file) < 2
         if not flying_general_threat:
             return
-
+        moving_king_rank = cls.moving_king // 9 
         dir_idx = cls.board.moving_side * 2
-        blocking_squares = cls.first_two_in_ray(cls.opponent_king, cls.moving_king, dir_idx)
-        if blocking_squares == -1:
-            return
+        dist_kings = abs(moving_king_rank - cls.opponent_king // 9)
+        offset = cls.dir_offsets[dir_idx]
+        block = None
+        for step in range(dist_kings):
+            square = cls.opponent_king + offset * (step + 1)
+            piece = cls.board.squares[square]
 
-        if blocking_squares:
-            # Turning list into integer
-            blocking_squares = blocking_squares.pop()
-            blocking_piece = cls.board.squares[blocking_squares]
-
-            # Opponent piece: blocks any pins, but can't be captured 
+            if not piece:
+                continue
+            # Opponent piece blocks any pins, but can't be captured 
             # by friendly king as opponent king's defending it
-            if Piece.is_color(blocking_piece, cls.board.opponent_color):
-                cls.attack_map.add(blocking_squares)
+            if Piece.is_color(piece, cls.board.opponent_color):
+                if not block:
+                    cls.attack_map.add(square)
                 return
-            # Friendly piece: gets pinned if kings are on same rank
-            if opponent_king_file == moving_king_file:
-                cls.pinned_squares.add(blocking_squares)
-            return
-        # Number of pieces between kings is 0
+
+            # Friendly king
+            if Piece.is_type(piece ,Piece.king):
+                # Pin piece
+                cls.pinned_squares.add(block)
+                return
+
+            # Second friendly piece in direction, no pins possible
+            if block:
+                return
+            block = square    
         # If there're no pieces between opponent king and opposite edge of board
         # friendly king can't move to the opponent king's file
-        moving_king_rank = cls.moving_king // 9 
+        if block:
+            return
         flying_general_square = moving_king_rank * 9 + opponent_king_file
         cls.attack_map.add(flying_general_square)
+
+        #------------------------------------MISTAKE DOCUMENTATION--------------------------------
+        # THIS WAS A GOOD IDEA, EXCEPT FOR THE FACT THAT IT WAS A BAD IDEA.
+        # THE VERSION ABOVE IS MUCH FASTER, AS IT INTERRUPTS THE CHECK RAY MUCH EARLIER
+        
+        # blocking_squares = cls.first_two_in_ray(cls.opponent_king, cls.moving_king, dir_idx)
+        # if blocking_squares == -1:
+        #     return
+
+        # if blocking_squares:
+        #     # Turning list into integer
+        #     blocking_squares = blocking_squares.pop()
+        #     blocking_piece = cls.board.squares[blocking_squares]
+
+        #     # Opponent piece: blocks any pins, but can't be captured 
+        #     # by friendly king as opponent king's defending it
+        #     if Piece.is_color(blocking_piece, cls.board.opponent_color):
+        #         cls.attack_map.add(blocking_squares)
+        #         return
+        #     # Friendly piece: gets pinned if kings are on same rank
+        #     if opponent_king_file == moving_king_file:
+        #         cls.pinned_squares.add(blocking_squares)
+        #     return
+        # # Number of pieces between kings is 0
+        # # If there're no pieces between opponent king and opposite edge of board
+        # # friendly king can't move to the opponent king's file
+        # moving_king_rank = cls.moving_king // 9 
+        # flying_general_square = moving_king_rank * 9 + opponent_king_file
+        # cls.attack_map.add(flying_general_square)
         
     @classmethod
     def calculate_horse_attack_data(cls) -> None:
