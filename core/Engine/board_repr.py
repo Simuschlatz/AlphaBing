@@ -1,3 +1,4 @@
+from core.Engine import piece
 from core.Engine.piece import Piece
 from core.Engine.zobrist_hashing import Zobrist_hashing
 import numpy as np
@@ -124,12 +125,22 @@ class Board:
         dist_y = square_1 // 9 - square_2 // 9
         return dist_x, dist_y
 
+    def update_zobrist(self, moved_piece, captured_piece, moved_from, moved_to):
+        if captured_piece:
+            cap_piece_type = Piece.get_type(captured_piece)
+            self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][cap_piece_type][moved_to]
+        moved_piece_type = Piece.get_type(moved_piece)
+        self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_from]
+        self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_to]
+        self.zobrist_key ^= self.opponent_side
+        self.zobrist_key ^= self.moving_side
+
     def make_move(self, move, search_state=True):
-        previous_square, moved_to = move
-        moved_piece = self.squares[previous_square]
+        moved_from, moved_to = move
+        moved_piece = self.squares[moved_from]
         piece_type = Piece.get_type(moved_piece)
         # Updating piece lists
-        self.piece_lists[self.moving_side][piece_type].remove(previous_square)
+        self.piece_lists[self.moving_side][piece_type].remove(moved_from)
         self.piece_lists[self.moving_side][piece_type].add(moved_to)
         
         captured_piece = self.squares[moved_to]
@@ -138,16 +149,16 @@ class Board:
             self.piece_lists[self.opponent_side][captured_type].remove(moved_to)
 
         # Adding current game state to history
-        current_game_state = (previous_square, moved_to, captured_piece)
+        current_game_state = (moved_from, moved_to, captured_piece)
         self.game_history.append(current_game_state)
         # Updating the board
         self.squares[moved_to] = moved_piece
-        self.squares[previous_square] = 0
-        self.switch_moving_side()
-        # print(self.load_fen_from_board())
-
-        self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_side, self.piece_lists)
+        self.squares[moved_from] = 0
+        self.update_zobrist(moved_piece, captured_piece, *move)
         print(self.zobrist_key)
+        self.switch_moving_side()
+
+        # self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_side, self.piece_lists)
         # Used for quiescene search
         return bool(captured_piece)
         
@@ -171,19 +182,21 @@ class Board:
         self.squares[previous_square] = moved_piece
         self.squares[moved_to] = captured_piece
 
-        self.zobrist_key ^= self.moving_side
-        
-        if captured_piece:
-            cap_piece_type = Piece.get_type(captured_piece)
-            self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][cap_piece_type][moved_to]
+        # # Update Zobrist key
+        # if captured_piece:
+        #     cap_piece_type = Piece.get_type(captured_piece)
+        #     self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][cap_piece_type][moved_to]
 
-        moved_piece_type = Piece.get_type(moved_piece)
-        self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][moved_piece_type][previous_square]
-        self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][moved_piece_type][moved_to]
-        print(self.zobrist_key)
+        # moved_piece_type = Piece.get_type(moved_piece)
+        # self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][moved_piece_type][previous_square]
+        # self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][moved_piece_type][moved_to]
+        # self.zobrist_key ^= self.opponent_side
+        # self.zobrist_key ^= self.moving_side
 
         # Switch back to previous moving color
         self.switch_moving_side()
+        self.update_zobrist(moved_piece, captured_piece, previous_square, moved_to)
+        print(self.zobrist_key)
 
     def get_previous_configs(self, depth):
         depth = min(len(self.game_history), depth)
