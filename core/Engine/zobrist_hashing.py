@@ -1,3 +1,4 @@
+from ast import Index
 import numpy as np
 
 class Zobrist_hashing:
@@ -12,7 +13,7 @@ class Zobrist_hashing:
         # Set the seed to wedding anniversary of my parents for good luck :)
         np.random.seed(110697)
         cls.highest_value = cls.get_largest_64_bit()
-
+        cls.lowest_value = -cls.highest_value
         # Create a random value for each square for each piece for each side
         num_sides = 2
         num_pieces = 7
@@ -30,6 +31,7 @@ class Zobrist_hashing:
         :return: does exactly what the name proposes,
         returns the largest 64-Bit number possible
         """
+        # num = "1" * 64
         num = "1" * 63
         return int(num, 2)
 
@@ -47,7 +49,6 @@ class Zobrist_hashing:
                 for square in squares:
                     # Xor the table value into the key
                     zobrist_key ^= cls.table[side][piece_id][square]
-
         zobrist_key ^= moving_side
 
         return zobrist_key
