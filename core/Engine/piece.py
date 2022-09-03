@@ -8,26 +8,34 @@ class Piece:
     pawn = 4
     rook = 5
     horse = 6
-    black = 8
-    red = 16
+    black = 0
+    red = 1
     letters = "keacprhKEACPRH"
 
     @staticmethod
-    def is_color(piece, color):
-        return piece & 0b11000 == color
-    
-    @staticmethod
-    def is_type(piece, typ):
-        return piece & 0b00111 == typ
-
-    @staticmethod
-    def is_piece(piece, color, typ):
-        return piece == color + typ
-
-    @staticmethod
     def get_color(piece):
-        return piece & 0b11000
+        if not piece:
+            return False
+        return piece[0]
     
     @staticmethod
     def get_type(piece):
-        return piece & 0b00111
+        if not piece:
+            return False
+        return piece[1]
+
+    @staticmethod
+    def is_color(piece, color):
+        if not piece:
+            return False
+        return piece[0] == color
+    
+    @staticmethod
+    def is_type(piece, piece_type):
+        if not piece: 
+            return False
+        return piece[1] == piece_type
+
+    @staticmethod
+    def is_piece(piece, color, type):
+        return (color, type) == piece

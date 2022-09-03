@@ -17,13 +17,13 @@ class Board:
 
     def __init__(self, FEN: str, play_as_red: int, red_moves_first=True) -> None:
         # Look core/notes.md
-        self.moving_side = int(not(play_as_red != red_moves_first))
-        self.opponent_side = 1 - self.moving_side
+        self.moving_color = int(not(play_as_red != red_moves_first))
+        self.opponent_color = 1 - self.moving_color
         # If we don't play as red, the pieces are at the top, 
         self.is_red_up = not play_as_red
         # moving color is 16 if red moves first or 8 when white moves first
-        self.moving_color = (1 + red_moves_first) * 8
-        self.opponent_color = (2 - red_moves_first) * 8
+        # self.moving_color = (1 + red_moves_first) * 8
+        # self.opponent_color = (2 - red_moves_first) * 8
 
         # Square-centric board repr
         self.squares = list(np.zeros(90, dtype=np.int8))
@@ -35,7 +35,7 @@ class Board:
         self.piece_lists = [[set() for _ in range(7)] for _ in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
-        self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_side, self.piece_lists)
+        self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_color, self.piece_lists)
         self.repetition_history = deque([self.zobrist_key])
 
     @staticmethod
@@ -46,12 +46,12 @@ class Board:
     def get_square(file, rank):
         return rank * 9 + file
 
-    def switch_moving_side(self):
-        self.opponent_side = self.moving_side
-        self.moving_side = 1 - self.moving_side
-        temp = self.moving_color
-        self.moving_color = self.opponent_color
-        self.opponent_color = temp
+    def switch_moving_color(self):
+        self.opponent_color = self.moving_color
+        self.moving_color = 1 - self.moving_color
+        # temp = self.moving_color
+        # self.moving_color = self.opponent_color
+        # self.opponent_color = temp
 
     def load_board_from_fen(self, FEN: str) -> None:
         """
@@ -70,7 +70,8 @@ class Board:
                 piece_type = Piece.letters.index(char.lower())
                 # If red is playing the top side
                 self.piece_lists[is_red - self.is_red_up][piece_type].add(rank * 9 + file)
-                self.squares[rank * 9 + file] = (is_red + 1) * 8 + piece_type
+                # self.squares[rank * 9 + file] = (is_red + 1) * 8 + piece_type
+                self.squares[rank * 9 + file] = (int(is_red), piece_type)
                 file += 1
             if char.isdigit():
                 file += int(char)
@@ -101,8 +102,8 @@ class Board:
                 empty_files_in_rank = 0
         return fen
 
-    def get_piece_list(self, color_idx, piece_type: int):
-        return self.piece_lists[color_idx][piece_type]
+    def get_piece_list(self, side, piece_type: int):
+        return self.piece_lists[side][piece_type - 1]
     
     def is_capture(self, square):
         return self.squares[square]
@@ -128,24 +129,27 @@ class Board:
     def update_zobrist(self, moved_piece_type, captured_piece, moved_from, moved_to):
         if captured_piece:
             cap_piece_type = Piece.get_type(captured_piece)
-            self.zobrist_key ^= Zobrist_hashing.table[self.opponent_side][cap_piece_type][moved_to]
-        self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_from]
-        self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_to]
-        self.zobrist_key ^= self.opponent_side
-        self.zobrist_key ^= self.moving_side
+            self.zobrist_key ^= Zobrist_hashing.table[self.opponent_color][cap_piece_type][moved_to]
+        self.zobrist_key ^= Zobrist_hashing.table[self.moving_color][moved_piece_type][moved_from]
+        self.zobrist_key ^= Zobrist_hashing.table[self.moving_color][moved_piece_type][moved_to]
+        self.zobrist_key ^= self.opponent_color
+        self.zobrist_key ^= self.moving_color
 
     def make_move(self, move, search_state=True):
         moved_from, moved_to = move
         moved_piece = self.squares[moved_from]
         piece_type = Piece.get_type(moved_piece)
         # Updating piece lists
-        self.piece_lists[self.moving_side][piece_type].remove(moved_from)
-        self.piece_lists[self.moving_side][piece_type].add(moved_to)
+        self.piece_lists[self.moving_color][piece_type].remove(moved_from)
+        self.piece_lists[self.moving_color][piece_type].add(moved_to)
         
         captured_piece = self.squares[moved_to]
         if captured_piece:
             captured_type = Piece.get_type(captured_piece)
-            self.piece_lists[self.opponent_side][captured_type].remove(moved_to)
+            try:
+                self.piece_lists[self.opponent_color][captured_type].remove(moved_to)
+            except:
+                print(self.opponent_color, captured_type)
 
         # Adding current game state to history
         current_game_state = (moved_from, moved_to, captured_piece)
@@ -156,9 +160,9 @@ class Board:
         # Update zobrist key
         self.update_zobrist(piece_type, captured_piece, *move)
         # print(self.zobrist_key)
-        self.switch_moving_side()
+        self.switch_moving_color()
 
-        # self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_side, self.piece_lists)
+        # self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_color, self.piece_lists)
         # Used for quiescene search
         return bool(captured_piece)
         
@@ -172,18 +176,18 @@ class Board:
         piece_type = Piece.get_type(moved_piece)
 
         # Reversing the move
-        self.piece_lists[self.opponent_side][piece_type].remove(moved_to)  
-        self.piece_lists[self.opponent_side][piece_type].add(previous_square)
+        self.piece_lists[self.opponent_color][piece_type].remove(moved_to)  
+        self.piece_lists[self.opponent_color][piece_type].add(previous_square)
 
         if captured_piece:
             captured_type = Piece.get_type(captured_piece)
-            self.piece_lists[self.moving_side][captured_type].add(moved_to)
+            self.piece_lists[self.moving_color][captured_type].add(moved_to)
 
         self.squares[previous_square] = moved_piece
         self.squares[moved_to] = captured_piece
 
         # Switch back to previous moving color
-        self.switch_moving_side()
+        self.switch_moving_color()
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
         self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
         # print(self.zobrist_key)

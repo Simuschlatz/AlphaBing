@@ -46,8 +46,8 @@ class Legal_move_generator:
         Initializes data used for move generation
         """
         try:
-            cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_side][Piece.king]))
-            cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_side][Piece.king]))
+            cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_color][Piece.king]))
+            cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_color][Piece.king]))
         except StopIteration:
             print(cls.board.load_fen_from_board())
             cls.board.get_previous_configs(6)
@@ -76,7 +76,7 @@ class Legal_move_generator:
     def generate_king_moves(cls) -> None:
         current_square = cls.moving_king
 
-        target_squares = cls.king_move_map[cls.board.moving_side][current_square]
+        target_squares = cls.king_move_map[cls.board.moving_color][current_square]
         for target_square in target_squares:
             target_piece = cls.board.squares[target_square]
             if Piece.is_color(target_piece, cls.board.moving_color):
@@ -93,12 +93,12 @@ class Legal_move_generator:
         extends Legal_move_generator.moves with legal pawn moves
         """
         # Looping over friendly pawns
-        for current_square in cls.board.piece_lists[cls.board.moving_side][Piece.pawn]:
+        for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.pawn]:
             is_pinned = cls.is_pinned(current_square)
             if cls.checks and is_pinned:
                 break
             avoids_cannon_check = current_square == cls.cause_cannon_defect
-            target_squares = cls.pawn_move_map[cls.board.moving_side][current_square]
+            target_squares = cls.pawn_move_map[cls.board.moving_color][current_square]
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
@@ -136,12 +136,12 @@ class Legal_move_generator:
         """
         extends Legal_move_generator.moves with legal elephant moves
         """
-        for current_square in cls.board.piece_lists[cls.board.moving_side][Piece.elephant]:
+        for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.elephant]:
             if cls.is_pinned(current_square):
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
             
-            for target_square in cls.elephant_move_map[cls.board.moving_side][current_square]:
+            for target_square in cls.elephant_move_map[cls.board.moving_color][current_square]:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
@@ -171,11 +171,11 @@ class Legal_move_generator:
         """
         extends Legal_move_generator.moves with legal advisor moves
         """
-        for current_square in cls.board.piece_lists[cls.board.moving_side][Piece.advisor]:
+        for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.advisor]:
             if cls.is_pinned(current_square):
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
-            target_squares = cls.advisor_move_map[cls.board.moving_side][current_square]
+            target_squares = cls.advisor_move_map[cls.board.moving_color][current_square]
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
@@ -211,7 +211,7 @@ class Legal_move_generator:
         """
         extends Legal_move_generator.moves with legal horse moves
         """
-        for current_square in cls.board.piece_lists[cls.board.moving_side][Piece.horse]:
+        for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.horse]:
             if cls.is_pinned(current_square):
                 continue
             horse_moves = cls.horse_move_map[current_square]
@@ -244,7 +244,7 @@ class Legal_move_generator:
         """
         extends Legal_move_generator.moves with legal rook moves
         """
-        for current_square in cls.board.piece_lists[cls.board.moving_side][Piece.rook]:
+        for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.rook]:
             is_pinned = cls.is_pinned(current_square)
             if cls.checks and is_pinned:
                 continue
@@ -297,7 +297,7 @@ class Legal_move_generator:
         """
         extends Legal_move_generator.moves with legal cannon moves
         """
-        for current_square in cls.board.piece_lists[cls.board.moving_side][Piece.cannon]:
+        for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.cannon]:
             is_pinned = cls.is_pinned(current_square)
             if cls.checks and is_pinned:
                 continue
@@ -460,7 +460,7 @@ class Legal_move_generator:
         if not flying_general_threat:
             return
         moving_king_rank = cls.moving_king // 9 
-        dir_idx = cls.board.moving_side * 2
+        dir_idx = cls.board.moving_color * 2
         dist_kings = abs(moving_king_rank - cls.opponent_king // 9)
         offset = cls.dir_offsets[dir_idx]
         block = None
@@ -525,7 +525,7 @@ class Legal_move_generator:
         
     @classmethod
     def calculate_horse_attack_data(cls) -> None:
-        opponent_horses = cls.board.piece_lists[cls.board.opponent_side][Piece.horse]
+        opponent_horses = cls.board.piece_lists[cls.board.opponent_color][Piece.horse]
         for square in opponent_horses:
             if cls.board.get_manhattan_dist(square, cls.moving_king) > 4:
                 continue
@@ -559,7 +559,7 @@ class Legal_move_generator:
 
     @classmethod
     def exclude_king_moves(cls):
-        king_move_map = cls.king_move_map[cls.board.moving_side][cls.moving_king]
+        king_move_map = cls.king_move_map[cls.board.moving_color][cls.moving_king]
         # Filtering out squares occupied by friendly pieces
         king_move_map = list(filter(lambda target: not Piece.is_color(cls.board.squares[target], cls.board.moving_color), king_move_map))
         if not cls.generate_quiets:
@@ -568,7 +568,7 @@ class Legal_move_generator:
         for target_square in king_move_map:
             if target_square in cls.attack_map:
                 continue
-            for rook in cls.board.piece_lists[cls.board.opponent_side][Piece.rook]:
+            for rook in cls.board.piece_lists[cls.board.opponent_color][Piece.rook]:
                 attack_dir_idx = cls.get_orth_dir_idx(rook, target_square)
                 # If cannon could threaten king's move, generate attack ray
                 if attack_dir_idx != None:
@@ -579,7 +579,7 @@ class Legal_move_generator:
             if target_square in cls.attack_map:
                 continue
             # Looping over opponent cannons
-            for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
+            for cannon in cls.board.piece_lists[cls.board.opponent_color][Piece.cannon]:
                 attack_dir_idx = cls.get_orth_dir_idx(cannon, target_square)
                 # If cannon could threaten king's move, generate attack ray
                 if attack_dir_idx != None:
@@ -588,7 +588,7 @@ class Legal_move_generator:
         cls.generate_pawn_attack_data(king_move_map)
 
         # -----------------------------------MISTAKE DOCUMENTATION-------------------------------------------
-        # for rook in cls.board.piece_lists[cls.board.opponent_side][Piece.rook]:
+        # for rook in cls.board.piece_lists[cls.board.opponent_color][Piece.rook]:
         #     dists = cls.board.get_2d_dists(rook, cls.moving_king)
         #     min_dist = min(*dists)
         #     # If minimum distance among the two axes is greater than 1, rook can pose no threat to king
@@ -604,11 +604,11 @@ class Legal_move_generator:
 
     @classmethod
     def generate_pawn_attack_data(cls, king_moves):
-        for pawn in cls.board.piece_lists[cls.board.opponent_side][Piece.pawn]:
+        for pawn in cls.board.piece_lists[cls.board.opponent_color][Piece.pawn]:
             mhd = cls.board.get_manhattan_dist(pawn, cls.moving_king)
             if mhd > 2:
                 continue
-            for attacked_square in cls.pawn_move_map[cls.board.opponent_side][pawn]:
+            for attacked_square in cls.pawn_move_map[cls.board.opponent_color][pawn]:
             # Pawn is posing a threat to friendly king
                 if attacked_square in king_moves:
                     cls.attack_map.add(attacked_square)
@@ -619,12 +619,12 @@ class Legal_move_generator:
 
     @classmethod
     def confine_movement(cls) -> None:
-        for cannon in cls.board.piece_lists[cls.board.opponent_side][Piece.cannon]:
+        for cannon in cls.board.piece_lists[cls.board.opponent_color][Piece.cannon]:
             attack_dir_idx = cls.get_orth_dir_idx(cannon, cls.moving_king)
             # If cannon could threaten king's move, generate attack ray
             if attack_dir_idx != None:
                 cls.get_cannon_imposed_limits(cannon, attack_dir_idx)
-        for rook in cls.board.piece_lists[cls.board.opponent_side][Piece.rook]:
+        for rook in cls.board.piece_lists[cls.board.opponent_color][Piece.rook]:
             attack_dir_idx = cls.get_orth_dir_idx(rook, cls.moving_king)
             # If cannon could threaten king's move, generate attack ray
             if attack_dir_idx != None:
