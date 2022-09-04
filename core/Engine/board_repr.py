@@ -49,9 +49,6 @@ class Board:
     def switch_moving_color(self):
         self.opponent_color = self.moving_color
         self.moving_color = 1 - self.moving_color
-        # temp = self.moving_color
-        # self.moving_color = self.opponent_color
-        # self.opponent_color = temp
 
     def load_board_from_fen(self, FEN: str) -> None:
         """
@@ -68,7 +65,7 @@ class Board:
             if char.lower() in Piece.letters:
                 is_red = char.isupper()
                 piece_type = Piece.letters.index(char.lower())
-                # If red is playing the top side
+                # If red is playing the top side, its pieces are stored in piece list index 0
                 self.piece_lists[is_red - self.is_red_up][piece_type].add(rank * 9 + file)
                 # self.squares[rank * 9 + file] = (is_red + 1) * 8 + piece_type
                 self.squares[rank * 9 + file] = (int(is_red), piece_type)
@@ -89,9 +86,8 @@ class Board:
                 if empty_files_in_rank:
                     fen += str(empty_files_in_rank)
                     empty_files_in_rank = 0
-                is_red = Piece.is_color(piece, Piece.red)
-                piece_type = Piece.get_type(piece)
-                letter = Piece.letters[is_red * 7 + piece_type]
+                color, piece_type = piece
+                letter = Piece.letters[color * 7 + piece_type]
                 fen += letter
             file, rank = self.get_file_and_rank(i)
             if rank < 9 and file == 8 and empty_files_in_rank != 9:
@@ -138,21 +134,18 @@ class Board:
     def make_move(self, move, search_state=True):
         moved_from, moved_to = move
         moved_piece = self.squares[moved_from]
-        piece_type = Piece.get_type(moved_piece)
+        piece_type = Piece.get_type_no_check(moved_piece)
         # Updating piece lists
         self.piece_lists[self.moving_color][piece_type].remove(moved_from)
         self.piece_lists[self.moving_color][piece_type].add(moved_to)
         
         captured_piece = self.squares[moved_to]
         if captured_piece:
-            captured_type = Piece.get_type(captured_piece)
-            try:
-                self.piece_lists[self.opponent_color][captured_type].remove(moved_to)
-            except:
-                print(self.opponent_color, captured_type)
+            captured_type = Piece.get_type_no_check(captured_piece)
+            self.piece_lists[self.opponent_color][captured_type].remove(moved_to)
 
         # Adding current game state to history
-        current_game_state = (moved_from, moved_to, captured_piece)
+        current_game_state = (*move, captured_piece)
         self.game_history.append(current_game_state)
         # Updating the board
         self.squares[moved_to] = moved_piece
@@ -161,8 +154,7 @@ class Board:
         self.update_zobrist(piece_type, captured_piece, *move)
         # print(self.zobrist_key)
         self.switch_moving_color()
-
-        # self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_color, self.piece_lists)
+        
         # Used for quiescene search
         return bool(captured_piece)
         
@@ -173,14 +165,14 @@ class Board:
         previous_square, moved_to, captured_piece = self.game_history.pop()
 
         moved_piece = self.squares[moved_to]
-        piece_type = Piece.get_type(moved_piece)
+        piece_type = Piece.get_type_no_check(moved_piece)
 
         # Reversing the move
         self.piece_lists[self.opponent_color][piece_type].remove(moved_to)  
         self.piece_lists[self.opponent_color][piece_type].add(previous_square)
 
         if captured_piece:
-            captured_type = Piece.get_type(captured_piece)
+            captured_type = Piece.get_type_no_check(captured_piece)
             self.piece_lists[self.moving_color][captured_type].add(moved_to)
 
         self.squares[previous_square] = moved_piece
@@ -213,7 +205,6 @@ class Board:
         former_rank, former_file = self.get_file_and_rank(former_square)
         new_rank, new_file = self.get_file_and_rank(new_square)
         piece = self.squares[former_square]
-        is_red = Piece.is_color(piece, Piece.red)
-        piece_type = Piece.get_type(piece)
-        letter = Piece.letters[is_red * 7 + piece_type]
+        color, piece_type = piece
+        letter = Piece.letters[color * 7 + piece_type]
         return (f"{letter}({former_rank}{former_file})-{new_rank}{new_file}")
