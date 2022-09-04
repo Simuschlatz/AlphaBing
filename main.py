@@ -60,8 +60,10 @@ def main():
     Dfs.init(board)
 
     ui = UI(WIN, (WIDTH, HEIGHT), board, (OFFSET_X, OFFSET_Y), UNIT, IMGS)
-    # To run perft search
+
+    # ------To run perft search------
     # get_num_positions(4, board)
+    # -------------------------------
 
     py_clock = pygame.time.Clock()
     run = True
@@ -73,7 +75,7 @@ def main():
         else:
             ui.event_handler()
             
-        Clock.run(board.moving_side)           
+        Clock.run(board.moving_color)           
         ui.render()
         py_clock.tick(FPS)
 
