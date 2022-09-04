@@ -76,7 +76,7 @@ class Legal_move_generator:
     def generate_king_moves(cls) -> None:
         current_square = cls.moving_king
 
-        target_squares = cls.king_move_map[cls.board.moving_color][current_square]
+        target_squares = cls.king_move_map[cls.board.moving_side][current_square]
         for target_square in target_squares:
             target_piece = cls.board.squares[target_square]
             if Piece.is_color(target_piece, cls.board.moving_color):
@@ -98,7 +98,7 @@ class Legal_move_generator:
             if cls.checks and is_pinned:
                 break
             avoids_cannon_check = current_square == cls.cause_cannon_defect
-            target_squares = cls.pawn_move_map[cls.board.moving_color][current_square]
+            target_squares = cls.pawn_move_map[cls.board.moving_side][current_square]
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
@@ -141,7 +141,7 @@ class Legal_move_generator:
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
             
-            for target_square in cls.elephant_move_map[cls.board.moving_color][current_square]:
+            for target_square in cls.elephant_move_map[cls.board.moving_side][current_square]:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
@@ -175,7 +175,7 @@ class Legal_move_generator:
             if cls.is_pinned(current_square):
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
-            target_squares = cls.advisor_move_map[cls.board.moving_color][current_square]
+            target_squares = cls.advisor_move_map[cls.board.moving_side][current_square]
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
@@ -460,7 +460,7 @@ class Legal_move_generator:
         if not flying_general_threat:
             return
         moving_king_rank = cls.moving_king // 9 
-        dir_idx = cls.board.moving_color * 2
+        dir_idx = cls.board.moving_side * 2
         dist_kings = abs(moving_king_rank - cls.opponent_king // 9)
         offset = cls.dir_offsets[dir_idx]
         block = None
@@ -559,7 +559,7 @@ class Legal_move_generator:
 
     @classmethod
     def exclude_king_moves(cls):
-        king_move_map = cls.king_move_map[cls.board.moving_color][cls.moving_king]
+        king_move_map = cls.king_move_map[cls.board.moving_side][cls.moving_king]
         # Filtering out squares occupied by friendly pieces
         king_move_map = list(filter(lambda target: not Piece.is_color(cls.board.squares[target], cls.board.moving_color), king_move_map))
         if not cls.generate_quiets:
@@ -732,7 +732,8 @@ class Legal_move_generator:
             if Piece.is_color_no_check(piece, cls.board.moving_color):
                 friendly_screens.add(attacking_square)
 
-            # First piece: block - second piece: double block    
+            # First piece: block
+            # second piece: double block    
             double_block = bool(screens)
             screens.add(attacking_square)
 

@@ -17,7 +17,10 @@ class Board:
 
     def __init__(self, FEN: str, play_as_red: int, red_moves_first=True) -> None:
         # Look core/notes.md
-        self.moving_color = int(not(play_as_red != red_moves_first))
+        self.moving_side = int(not(play_as_red != red_moves_first))
+        self.opponent_side = 1 - self.moving_side
+        self.moving_color = int(red_moves_first)
+        print(self.moving_color, self.moving_side)
         self.opponent_color = 1 - self.moving_color
         # If we don't play as red, the pieces are at the top, 
         self.is_red_up = not play_as_red
@@ -49,6 +52,7 @@ class Board:
     def switch_moving_color(self):
         self.opponent_color = self.moving_color
         self.moving_color = 1 - self.moving_color
+        self.moving_side = 1 - self.moving_side
 
     def load_board_from_fen(self, FEN: str) -> None:
         """
@@ -63,12 +67,12 @@ class Board:
                 rank += 1
                 file = 0
             if char.lower() in Piece.letters:
-                is_red = char.isupper()
+                color = int(char.isupper())
                 piece_type = Piece.letters.index(char.lower())
                 # If red is playing the top side, its pieces are stored in piece list index 0
-                self.piece_lists[is_red - self.is_red_up][piece_type].add(rank * 9 + file)
+                self.piece_lists[color][piece_type].add(rank * 9 + file)
                 # self.squares[rank * 9 + file] = (is_red + 1) * 8 + piece_type
-                self.squares[rank * 9 + file] = (int(is_red), piece_type)
+                self.squares[rank * 9 + file] = (color, piece_type)
                 file += 1
             if char.isdigit():
                 file += int(char)
@@ -98,8 +102,8 @@ class Board:
                 empty_files_in_rank = 0
         return fen
 
-    def get_piece_list(self, side, piece_type: int):
-        return self.piece_lists[side][piece_type - 1]
+    def get_piece_list(self, color, piece_type: int):
+        return self.piece_lists[color][piece_type - 1]
     
     def is_capture(self, square):
         return self.squares[square]
@@ -126,10 +130,10 @@ class Board:
         if captured_piece:
             cap_piece_type = Piece.get_type(captured_piece)
             self.zobrist_key ^= Zobrist_hashing.table[self.opponent_color][cap_piece_type][moved_to]
-        self.zobrist_key ^= Zobrist_hashing.table[self.moving_color][moved_piece_type][moved_from]
-        self.zobrist_key ^= Zobrist_hashing.table[self.moving_color][moved_piece_type][moved_to]
+        self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_from]
+        self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_to]
         self.zobrist_key ^= self.opponent_color
-        self.zobrist_key ^= self.moving_color
+        self.zobrist_key ^= self.moving_side
 
     def make_move(self, move, search_state=True):
         moved_from, moved_to = move
