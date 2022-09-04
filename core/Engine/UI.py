@@ -46,12 +46,11 @@ class UI:
         self.legal_targets = []
 
         self.fen = board.load_fen_from_board()
-        self.zobrist = bin(Zobrist_hashing.get_zobrist_key(board.moving_color, board.piece_lists))
-        self.zobrist_off = (self.WIDTH - len(self.zobrist) * self.FONT_WIDTH_SMALL) / 2
+        self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
         self.move_str = ""
 
-    def draw_piece(self, is_red, piece_type, coords):
-        self.window.blit(self.PIECES_IMGS[is_red * 7 + piece_type], coords)
+    def draw_piece(self, color, piece_type, coords):
+        self.window.blit(self.PIECES_IMGS[color * 7 + piece_type], coords)
 
     def get_circle_center(self, rect_coord, diameter, factor=1):
         """
@@ -111,15 +110,13 @@ class UI:
 
     def update_info(self):
         self.fen = self.board.load_fen_from_board()
-        self.zobrist = bin(Zobrist_hashing.get_zobrist_key(self.board.moving_color, self.board.piece_lists))
-        self.zobrist_off = (self.WIDTH - len(self.zobrist) * self.FONT_WIDTH_SMALL) / 2
+        self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
 
     def drop_update(self):
         self.update_info()
 
     def update_move_str(self, move):
         self.move_str = self.board.get_move_notation(move)
-        print(self.move_str)
         
     def select_square(self, square):
         piece = self.board.squares[square]
@@ -150,9 +147,8 @@ class UI:
     def drag_piece(self):
         mouse_pos = pygame.mouse.get_pos()
         piece_pos = self.get_circle_center(mouse_pos, self.unit, factor=-1)
-        is_red = Piece.is_color(self.selected_piece, Piece.red)
-        piece_type = Piece.get_type(self.selected_piece)
-        self.draw_piece(is_red, piece_type, piece_pos)
+        color, piece_type = self.selected_piece
+        self.draw_piece(color, piece_type, piece_pos)
 
     def move_responsiveness(self):
         if self.move_from == None:
@@ -216,17 +212,17 @@ class UI:
                 Legal_move_generator.load_moves()
                 Game_manager.check_game_state()
 
-                # AI_move = AI_player.load_move()
-                # self.update_move_str(AI_move)
-                # is_capture = self.board.make_move(AI_move)
-                # self.move_from, self.move_to = AI_move
-                # self.drop_update()
-                # self.update_ui_board()
-                # # Sound effects
-                # self.play_sfx(is_capture)
-                # # See if there is a mate or stalemate
-                # Legal_move_generator.load_moves()
-                # Game_manager.check_game_state()
+                AI_move = AI_player.load_move()
+                self.update_move_str(AI_move)
+                is_capture = self.board.make_move(AI_move)
+                self.move_from, self.move_to = AI_move
+                self.drop_update()
+                self.update_ui_board()
+                # Sound effects
+                self.play_sfx(is_capture)
+                # See if there is a mate or stalemate
+                Legal_move_generator.load_moves()
+                Game_manager.check_game_state()
 
             # Move reverse
             if event.type == pygame.KEYDOWN:
@@ -257,7 +253,10 @@ class UI:
         # self.render_text(self.fen, self.GREY, (self.off_x, 5), False)
         self.render_text(self.move_str, self.GREY, (self.WIDTH // 10, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
 
-        for i, char in enumerate(self.zobrist[3:]):
+        for i, char in enumerate(bin(self.board.zobrist_key)):  
+            if not char.isdigit():
+                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+                continue
             if int(char):
                 self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
                 continue
@@ -271,9 +270,8 @@ class UI:
             if piece:
                 file, rank = Board_utility.get_file_and_rank(square)
                 pos = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
-                is_red = Piece.is_color(piece, Piece.red)
-                piece_type = Piece.get_type(piece)
-                self.draw_piece(is_red, piece_type, pos)
+                color, piece_type = piece
+                self.draw_piece(color, piece_type, pos)
         
         # Human selected a piece
         if self.selected_piece:
