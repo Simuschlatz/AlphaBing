@@ -36,14 +36,14 @@ class Evaluation:
         return friendly_eval - opponent_eval
 
     @classmethod  
-    def pst_material_eval(cls, moving_color):
+    def pst_material_eval(cls, moving_side):
         """
         :return: Piece-square-table-based evaluation of moving side's material
         """
         mat = 0
         for piece_id in range(1, 7):
-            for square in cls.board.piece_lists[moving_color][piece_id]:
-                mat += Piece_square_table.get_pst_value(piece_id, square, moving_color)
+            for square in cls.board.piece_lists[moving_side][piece_id]:
+                mat += Piece_square_table.get_pst_value(piece_id, square, moving_side)
         return mat
 
 
