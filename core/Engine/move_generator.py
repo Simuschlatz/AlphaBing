@@ -56,7 +56,7 @@ class Legal_move_generator:
 
         cls.attack_map = set()
         
-        # Squares that would serve as screen for a threatening cannon
+        # Swquares that would serve as screen for a threatening cannon
         cls.illegal_squares = set()
         cls.pinned_squares = set()
         # Number of checks
@@ -332,7 +332,7 @@ class Legal_move_generator:
                         if not target_piece:
                             continue
                         # If target_piece is friendly, go to next direction
-                        if Piece.is_color(target_piece, cls.board.moving_color):
+                        if Piece.is_color_no_check(target_piece, cls.board.moving_color):
                             break
 
                     # Can't move to or capture pieces on squares that would result in check
@@ -472,13 +472,13 @@ class Legal_move_generator:
                 continue
             # Opponent piece blocks any pins, but can't be captured 
             # by friendly king as opponent king's defending it
-            if Piece.is_color(piece, cls.board.opponent_color):
+            if Piece.is_color_no_check(piece, cls.board.opponent_color):
                 if not block:
                     cls.attack_map.add(square)
                 return
 
             # Friendly king
-            if Piece.is_type(piece ,Piece.king):
+            if Piece.is_type_no_check(piece ,Piece.king):
                 # Pin piece
                 cls.pinned_squares.add(block)
                 return
@@ -552,7 +552,7 @@ class Legal_move_generator:
                         cls.block_check_hash[square] = cls.block_check_hash.get(square, 0) + 1
                     continue
                 # Move is blocked by opponent piece or wouldn't threaten friendly king anyways
-                if Piece.is_color(block_piece, cls.board.opponent_color) or not is_move_check:
+                if Piece.is_color_no_check(block_piece, cls.board.opponent_color) or not is_move_check:
                     continue
                 # If blocked by friendly piece and move would result in check, it's pinned
                 cls.pinned_squares.add(block_square)
@@ -645,13 +645,14 @@ class Legal_move_generator:
             # Cannon is in capture mode
             if screen:
                 cls.attack_map.add(attacking_square)
-            if Piece.is_color(piece, cls.board.moving_color) and Piece.is_type(piece, Piece.king):
-                if screen: 
-                    continue
-                return
             if piece:
+                if Piece.is_piece(piece, cls.board.moving_color, Piece.king):
+                    if screen: 
+                        continue
+                    return
                 double_block = screen
-                screen = True            
+                screen = True
+
             if double_block:
                 return
 
@@ -660,11 +661,11 @@ class Legal_move_generator:
         attack_ray = cls.orthogonal_move_map[square][dir_idx]
         for attacking_square in attack_ray:
             piece = cls.board.squares[attacking_square]
-            if Piece.is_color(piece, cls.board.moving_color) and Piece.is_type(piece, Piece.king):
-                continue
             cls.attack_map.add(attacking_square)
             # Attacking square occupied, break
             if piece:
+                if Piece.is_piece(piece, cls.board.moving_color, Piece.king):
+                    continue
                 break
 
     @classmethod
@@ -728,7 +729,7 @@ class Legal_move_generator:
             if double_block:
                 break
             # If piece is friendly, we add it to the friendly blocks
-            if Piece.is_color(piece, cls.board.moving_color):
+            if Piece.is_color_no_check(piece, cls.board.moving_color):
                 friendly_screens.add(attacking_square)
 
             # First piece: block - second piece: double block    
@@ -761,7 +762,7 @@ class Legal_move_generator:
                 return  
 
             # Friendly piece
-            if Piece.is_color(piece, cls.board.moving_color):
+            if Piece.is_color_no_check(piece, cls.board.moving_color):
                 # Second friendly piece along current direction, so no pins possible
                 if friendly_block:
                     return
