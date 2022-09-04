@@ -19,9 +19,17 @@ class Piece:
         return piece[0]
     
     @staticmethod
+    def get_color_no_check(piece):
+        return piece[0]
+
+    @staticmethod
     def get_type(piece):
         if not piece:
             return False
+        return piece[1]
+
+    @staticmethod
+    def get_type_no_check(piece):
         return piece[1]
 
     @staticmethod
@@ -34,6 +42,14 @@ class Piece:
     def is_type(piece, piece_type):
         if not piece: 
             return False
+        return piece[1] == piece_type
+
+    @staticmethod
+    def is_color_no_check(piece, color):
+        return piece[0] == color
+
+    @staticmethod
+    def is_type_no_check(piece, piece_type):
         return piece[1] == piece_type
 
     @staticmethod
