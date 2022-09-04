@@ -28,8 +28,8 @@ def order_moves_pst(moves, board):
         move_from, move_to = move
         moved_piece_type = Piece.get_type(board.squares[move_from])
         captured_piece_type = Piece.get_type(board.squares[move_to])
-        moved_val = Piece_square_table.get_pst_value(moved_piece_type, move_from, board.moving_color)
-        captured_val = Piece_square_table.get_pst_value(captured_piece_type, move_to, 1 - board.moving_color)
+        moved_val = Piece_square_table.get_pst_value(moved_piece_type, move_from, board.moving_side)
+        captured_val = Piece_square_table.get_pst_value(captured_piece_type, move_to, 1 - board.moving_side)
         # Multiply captured piece value by a number higher than the most valuable pst-value,
         # this way good pieces capturing bad ones still overvalue non-capture moves
         move_values[move] = captured_val * 250 - moved_val
