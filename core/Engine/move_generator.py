@@ -31,13 +31,13 @@ class Legal_move_generator:
         cls.moves = []
         cls.init()
         cls.calculate_attack_data()
-        cls.generate_king_moves()
         cls.generate_rook_moves()
         cls.generate_cannon_moves()
+        cls.generate_pawn_moves()
         cls.generate_horse_moves()
         cls.generate_advisor_moves()
-        cls.generate_pawn_moves()
         cls.generate_elephant_moves()
+        cls.generate_king_moves()
         return cls.moves
     
     @classmethod
@@ -608,7 +608,7 @@ class Legal_move_generator:
             mhd = cls.board.get_manhattan_dist(pawn, cls.moving_king)
             if mhd > 2:
                 continue
-            for attacked_square in cls.pawn_move_map[cls.board.opponent_color][pawn]:
+            for attacked_square in cls.pawn_move_map[cls.board.opponent_side][pawn]:
             # Pawn is posing a threat to friendly king
                 if attacked_square in king_moves:
                     cls.attack_map.add(attacked_square)
