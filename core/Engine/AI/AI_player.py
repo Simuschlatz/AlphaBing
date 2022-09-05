@@ -4,5 +4,5 @@ class AI_player:
     @classmethod
     def load_move(cls):
         move = Dfs.traverse_tree(cls.SEARCH_DEPTH)
-        print(f"traversed nodes: {Dfs.searched_nodes}")
+        print(f"evaluated nodes: {Dfs.evaluated_positions}")
         return move

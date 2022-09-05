@@ -8,7 +8,7 @@ class Dfs:
     @classmethod
     def init(cls, board) -> None:
         cls.board = board
-        cls.traversed_nodes = 0
+        cls.evaluated_positions = 0
         cls.cutoffs = 0
 
     @classmethod
@@ -27,8 +27,6 @@ class Dfs:
             cls.searched_nodes += 1
             cls.board.make_move(move)
             evaluation = -cls.alpha_beta_opt(depth - 1, beta, alpha)
-            # evaluation = -cls.alpha_beta(depth - 1, negative_infinity, positive_infinity)
-            # evaluation = - cls.minimax(depth - 1)
             if evaluation > best_eval:
                 best_eval = evaluation
                 best_move = move
@@ -39,6 +37,8 @@ class Dfs:
     @classmethod
     def alpha_beta_opt(cls, depth, alpha, beta):
         if not depth:
+        #     cls.evaluated_positions += 1
+        #     return Evaluation.pst_shef()
             return cls.quiescene(alpha, beta)
 
         moves = order_moves(Legal_move_generator.load_moves(), cls.board)
@@ -60,7 +60,6 @@ class Dfs:
             if evaluation >= beta:
                 cls.cutoffs += 1
                 return beta # Return -alpha of opponent, which will be turned to alpha in depth + 1
-            cls.searched_nodes += 1
             # Keep track of best move for moving color
             alpha = max(evaluation, alpha)
 
@@ -76,6 +75,7 @@ class Dfs:
         """ 
         # Evaluate current position before doing any moves, so a potentially good state for non-capture moves
         # isn't ruined by bad captures
+        cls.evaluated_positions += 1
         eval = Evaluation.pst_shef()
         # Typical alpha beta operations
         if eval >= beta:
