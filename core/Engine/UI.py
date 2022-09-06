@@ -110,6 +110,7 @@ class UI:
 
     def update_info(self):
         self.fen = self.board.load_fen_from_board()
+        print(self.fen)
         self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
 
     def drop_update(self):
@@ -178,6 +179,50 @@ class UI:
         else:
             self.audio_player(self.MOVE_SFX)
 
+    def selection(self):
+        mouse_pos = pygame.mouse.get_pos()
+        # Account for the offsets the board's (0,0) coordinate is replaced by on the window
+        file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
+        current_square = Board_utility.get_square(file, rank)
+        self.select_square(current_square)
+
+    def make_human_move(self):
+        mouse_pos = pygame.mouse.get_pos()
+        file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
+        target_square = rank * 9 + file
+
+        is_capture = self.drop_piece(target_square)
+        if is_capture == -1:
+            return False
+        # Sound effects
+        self.play_sfx(is_capture)
+        # See if there is a mate or stalemate
+        Legal_move_generator.load_moves()
+        Game_manager.check_game_state()
+        return True
+    
+    def unmake_move(self):
+        if not self.board.game_history:
+            return
+        Game_manager.reset_mate()
+        self.board.reverse_move()
+        self.reset_values()
+        self.update_info()
+        Legal_move_generator.load_moves()
+
+    def make_AI_move(self):
+        AI_move = AI_player.load_move()
+        self.update_move_str(AI_move)
+        is_capture = self.board.make_move(AI_move)
+        self.move_from, self.move_to = AI_move
+        self.drop_update()
+        self.update_ui_board()
+        # Sound effects
+        self.play_sfx(is_capture)
+        # See if there is a mate or stalemate
+        Legal_move_generator.load_moves()
+        Game_manager.check_game_state()
+        
     def event_handler(self):
         """
         Handles Human events
@@ -191,47 +236,19 @@ class UI:
             
             # Piece selection
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-                # Account for the offsets the board's (0,0) coordinate is replaced by on the window
-                file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
-                current_square = Board_utility.get_square(file, rank)
-                self.select_square(current_square)
+               self.selection()
   
             # Piece placement
             if event.type == pygame.MOUSEBUTTONUP:
-                mouse_pos = pygame.mouse.get_pos()
-                file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
-                target_square = rank * 9 + file
-
-                is_capture = self.drop_piece(target_square)
-                if is_capture ==  -1:
+                move_succes = self.make_human_move()
+                if not move_succes:
                     continue
-                # Sound effects
-                self.play_sfx(is_capture)
-                # See if there is a mate or stalemate
-                Legal_move_generator.load_moves()
-                Game_manager.check_game_state()
-
-                AI_move = AI_player.load_move()
-                self.update_move_str(AI_move)
-                is_capture = self.board.make_move(AI_move)
-                self.move_from, self.move_to = AI_move
-                self.drop_update()
-                self.update_ui_board()
-                # Sound effects
-                self.play_sfx(is_capture)
-                # See if there is a mate or stalemate
-                Legal_move_generator.load_moves()
-                Game_manager.check_game_state()
+                self.make_AI_move()
 
             # Move reverse
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    Game_manager.reset_game_state()
-                    self.board.reverse_move()
-                    self.reset_values()
-                    self.update_info()
-                    Legal_move_generator.load_moves()
+                    self.unmake_move()
 
     def render(self):
         """
