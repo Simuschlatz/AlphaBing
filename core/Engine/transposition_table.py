@@ -5,6 +5,12 @@ class Transposition_table:
     exact_eval = 0
     upper_bound = 1
     lower_bound = 2
+
+    key = 0
+    depth = 1
+    type = 2
+    eval = 3
+
     def __init__(self, board, size=20000) -> None:
         self.board = board
         self.size = size
@@ -15,24 +21,32 @@ class Transposition_table:
         self.table.clear()
 
     def improve_mate_score():
-        """
-        improves the mate score
-        """
+        pass
+    
+    def store_pos(self, depth, eval, node_type):
+        key = self.board.zobrist_key
+        index = self.index(key)
+        entry = [key, depth, node_type, eval]
+        self.table[index] = entry
+
     def look_up_eval(self, depth, alpha, beta):
         key = self.board.zobrist_key
         index = self.index(key)
         entry = self.table.get(index, None)
         if entry:
-            if key != entry.key:
+            if key != entry[self.key]:
                 return self.invalid
-            if depth > entry.depth:
+
+            if depth > entry[self.depth]:
                 return self.invalid
-            if entry.type == self.exact_eval:
-                return entry.score
-            if entry.type == self.upper_bound and entry.score <= alpha:
-                return entry.score
-            if entry.type == self.lower_bound and entry.score >= beta:
-                return entry.score
+
+            if entry[self.type] == self.exact_eval:
+                return entry[self.eval]
+            if entry[self.type] == self.upper_bound and entry[self.eval] <= alpha:
+                return entry[self.eval]
+            if entry[self.type] == self.lower_bound and entry[self.eval] >= beta:
+                return entry[self.eval]
+
         return self.invalid
 
 
