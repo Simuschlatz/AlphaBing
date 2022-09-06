@@ -52,6 +52,7 @@ class Board:
     def switch_moving_color(self):
         self.opponent_color = self.moving_color
         self.moving_color = 1 - self.moving_color
+        self.opponent_side = self.moving_side
         self.moving_side = 1 - self.moving_side
 
     def load_board_from_fen(self, FEN: str) -> None:
@@ -163,8 +164,8 @@ class Board:
         return bool(captured_piece)
         
     def reverse_move(self):
-        if not len(self.game_history):
-            return
+        # if not len(self.game_history):
+        #     return
         # Accessing the previous game state data
         previous_square, moved_to, captured_piece = self.game_history.pop()
 
