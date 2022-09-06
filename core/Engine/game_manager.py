@@ -8,7 +8,7 @@ class Game_manager:
     fifty_move_counter = 0
 
     @classmethod
-    def reset_game_state(cls):
+    def reset_mate(cls):
         cls.checkmate = False
         cls.stalemate = False
 
