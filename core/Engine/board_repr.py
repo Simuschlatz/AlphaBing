@@ -32,14 +32,14 @@ class Board:
         self.squares = list(np.zeros(90, dtype=np.int8))
         # This keeps track of all game states in history, 
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
-        self.game_history = deque() # Stack(:previous square, :target square :captured piece)
+        self.game_history = [] # Stack(:previous square, :target square :captured piece)
         # To keep track of the pieces' indices (Piece-centric repr)
         # Piece list at index 0 keeps track of pieces at the top, index 1 for bottom
         self.piece_lists = [[set() for _ in range(7)] for _ in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
         self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_color, self.piece_lists)
-        self.repetition_history = deque([self.zobrist_key])
+        self.repetition_history = {self.zobrist_key}
 
     @staticmethod
     def get_file_and_rank(square):
@@ -136,6 +136,9 @@ class Board:
         self.zobrist_key ^= self.opponent_color
         self.zobrist_key ^= self.moving_side
 
+    def is_repetition(self):
+        return self.zobrist_key in self.repetition_history
+    
     def make_move(self, move, search_state=True):
         moved_from, moved_to = move
         moved_piece = self.squares[moved_from]
@@ -157,14 +160,15 @@ class Board:
         self.squares[moved_from] = 0
         # Update zobrist key
         self.update_zobrist(piece_type, captured_piece, *move)
+        if not search_state:
+            self.repetition_history.add(self.zobrist_key)
         # print(self.zobrist_key)
         self.switch_moving_color()
-        
         # Used for quiescene search
         return bool(captured_piece)
         
-    def reverse_move(self):
-        # if not len(self.game_history):
+    def reverse_move(self, search_state=True):
+        # if not self.game_history:
         #     return
         # Accessing the previous game state data
         previous_square, moved_to, captured_piece = self.game_history.pop()
@@ -187,13 +191,20 @@ class Board:
         self.switch_moving_color()
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
         self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
+        if not search_state:
+            self.repetition_history.pop()
+            return 
         # print(self.zobrist_key)
 
     def get_previous_configs(self, depth):
         depth = min(len(self.game_history), depth)
+        print(f"depth: {depth}")
         prefix = "----"
-        for i in range(depth):
+        for i in range(1, depth):
+            print(self.game_history)
+            previous_square, moved_to, _ = self.game_history[-1]
             self.reverse_move()
+            # move_str = self.get_move_notation((previous_square, moved_to)) + "  "
             fen = self.load_fen_from_board()
             msg = prefix + fen + prefix
             depth_info = f" depth: {i} "
@@ -201,9 +212,9 @@ class Board:
             header_prefix = "-" * len_header_prefix
             header = header_prefix + depth_info + header_prefix
             separation = "-" * len(msg)
-            print(header)
+            # print(header)
             print(msg)
-            print(separation)
+            # print(separation)
 
     def get_move_notation(self, move):
         former_square, new_square = move
