@@ -10,7 +10,7 @@ class Transposition_table:
     depth = 1
     type = 2
     eval = 3
-
+    move = 4
     def __init__(self, board, size=20000) -> None:
         self.board = board
         self.size = size
@@ -23,10 +23,10 @@ class Transposition_table:
     def improve_mate_score():
         pass
     
-    def store_pos(self, depth, eval, node_type):
+    def store_pos(self, depth, eval, node_type, move):
         key = self.board.zobrist_key
         index = self.index(key)
-        entry = [key, depth, node_type, eval]
+        entry = [key, depth, node_type, eval, move]
         self.table[index] = entry
 
     def look_up_eval(self, depth, alpha, beta):
@@ -49,4 +49,6 @@ class Transposition_table:
 
         return self.invalid
 
+    def get_move(self):
+        return self.table[self.index(self.board.zobrist_key)][self.move]
 
