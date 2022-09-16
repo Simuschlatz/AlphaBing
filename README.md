@@ -38,10 +38,10 @@ _AI_
   * SHEF (Standard Heuristic Evaluation Function)
 * IN PROGRESS:
   * Zobrist Hashing transposition handling
-  * SLEF (Self-Learning Evaluation Function): using machine-learning to evaluate positions with a novel method
+  * SLEF (Self-Learning Evaluation Function): training a model to evaluate positions with data of minimax to further look into the future - **currently hitting compatibility issues**
 * TO-DO:
   * iterative deepening
-  * position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and  SLEF)
+  * position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and  SLEF) - **currently hitting compatibility issues**
 
 **Computer Vision (not implemented yet)**
 * supervised learning with tensorflow
