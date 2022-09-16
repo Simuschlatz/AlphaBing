@@ -39,6 +39,7 @@ _AI_
 * IN PROGRESS:
   * Zobrist Hashing transposition handling
   * SLEF (Self-Learning Evaluation Function): training a model to evaluate positions with data of minimax to further look into the future - **currently hitting compatibility issues**
+  * multiprocessing
 * TO-DO:
   * iterative deepening
   * position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and  SLEF) - **currently hitting compatibility issues**
