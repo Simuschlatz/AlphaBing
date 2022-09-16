@@ -22,7 +22,7 @@ _Move Generation_
   * precomputed data + procedual generation
   * move- and attack-maps
   * legal move generation considering pins and blocks
-  * handling (multiple) checks, checkmate, stalemate
+  * handling (multiple) checks, pins... - perft results 100% matching consensus
   <br/>
 
 _UI & UX_<br/>
@@ -35,7 +35,7 @@ _AI_
   * minimax algorithm
   * alpha-beta pruning
   * move ordering
-  * SHEF (Standard Heuristic Evaluation Function)
+  * SHEF (Standard Heuristic Evaluation Function) - normal and piece-square-table based
 * IN PROGRESS:
   * Zobrist Hashing transposition handling
   * SLEF (Self-Learning Evaluation Function): training a model to evaluate positions with data of minimax to further look into the future - **currently hitting compatibility issues**
