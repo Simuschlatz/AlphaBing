@@ -1,4 +1,4 @@
-# CheapChess
+# CheapChess - a Chess-AI never seen before
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 * Xiangqi is the chinese version of chess very popular amongst East Asian countries.
