@@ -5,14 +5,16 @@
 * This project's final version will be a fairly sophisticated chess engine with built-in AI and the ability to process a physical board
 
 ## Table of Contents
-* [Featuqres](#features)
-* [General Info](#general-information)
-* [Screenshots](#screenshots)
-* [Dependencies](#dependencies)
-* [Project Status](#project-status)
-* [To-Dos](#to-dos)
-* [Acknowledgements](#acknowledgements)
-* [Contact](#contact)
+- [CheapChess - a Chess-AI never seen before](#cheapchess---a-chess-ai-never-seen-before)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [General-Information](#general-information)
+  - [HOW TO PLAY](#how-to-play)
+  - [Screenshots](#screenshots)
+  - [Dependencies](#dependencies)
+  - [Project-Status](#project-status)
+  - [Acknowledgements](#acknowledgements)
+  - [Contact](#contact)
 
 ## Features
 
@@ -37,6 +39,7 @@ _AI_
   * move ordering
   * SHEF (Standard Heuristic Evaluation Function) - normal and piece-square-table based
 * IN PROGRESS:
+  * Object detection
   * Zobrist Hashing transposition handling
   * SLEF (Self-Learning Evaluation Function): training a model to evaluate positions with data of minimax to further look into the future - **currently hitting compatibility issues**
   * multiprocessing
