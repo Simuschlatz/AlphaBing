@@ -26,7 +26,7 @@ def get_filepaths(directory):
         for file in files:
             # Join the two strings in order to form the full filepath.
             filepath = os.path.join(root, file)
-            if file.endswith(".py"):
+            if file.endswith(".py") and not file.endswith("__init__.py"):
                 file_paths.append(filepath)  # Add it to the list.
 
     return file_paths
@@ -55,8 +55,8 @@ def delete_copyright_msg():
         with open(filepath, "w") as f:
             f.seek(0)
             f.write("".join(contents[msg_lines-1:]))
-            print("YEHAA")
- 
+
+# All files in working tree, except for __init__ files
 all_file_paths = get_filepaths(".")
 # this_file = os.path.abspath(__file__)
 write_copyright_msg()
