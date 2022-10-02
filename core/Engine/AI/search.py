@@ -1,3 +1,8 @@
+"""
+Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> 
+- All Rights Reserved. You may use, distribute and modify this code
+under the terms of the GNU General Public License
+"""
 from core.Engine.move_generator import Legal_move_generator
 from core.Engine.AI.move_ordering import order_moves, order_moves_pst
 from core.Engine.AI.eval_utility import Evaluation
@@ -44,7 +49,7 @@ class Dfs:
 
         if plies > 0:
             if cls.board.is_repetition():
-                return 0 
+                return 0
             # alpha = max(alpha, -cls.checkmate_value + plies)
             # beta = min(beta, cls.checkmate_value - plies)
             # if alpha >= beta:
