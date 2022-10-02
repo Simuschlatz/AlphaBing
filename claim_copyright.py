@@ -1,16 +1,16 @@
-import os
-
-copyright_str = """Copyright (C) 2021-2022 Simon Ma <https://github.com/SiiiMiii> 
+"""
+Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> 
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
+import os
 copyright_text = '''"""
-Copyright (C) 2021-2022 Simon Ma <https://github.com/SiiiMiii> 
+Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> 
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
 '''
-msg_lines = len(copyright_str.split("\n"))
+msg_lines = len(copyright_text.split("\n"))
 
 def get_filepaths(directory):
     """
@@ -30,22 +30,34 @@ def get_filepaths(directory):
                 file_paths.append(filepath)  # Add it to the list.
 
     return file_paths
- 
-all_file_paths = get_filepaths(".")
-all_file_paths = ["main.py"]
-# print(all_file_paths)
-
 def write_copyright_msg():
     for filepath in all_file_paths:
         with open(filepath, "r+") as f:
-            print("".join(f.readlines()[1:msg_lines]))
-            print(copyright_str)
-
-            if "".join(f.readlines()[1:msg_lines]) == copyright_str:
+            contents = f.read()
+            file_lines = "\n".join(contents.split("\n")[:msg_lines-1]) + "\n"
+            print(file_lines)
+            print(copyright_text)
+            if file_lines == copyright_text:
                 print("YEHAA")
                 continue
-            
-            # content = f.read()
-            # f.seek(0, 0)
-            # f.write('"""\n' + copyright_str + '"""'+ content)
+            f.seek(0)
+            f.write(copyright_text + contents)
+
+def delete_copyright_msg():
+    for filepath in all_file_paths:
+        with open(filepath, "r") as f:
+            contents = f.readlines()
+            file_lines = "".join(contents[:msg_lines-1])
+            print(file_lines)
+            print(copyright_text)
+            if file_lines != copyright_text:
+                continue
+        with open(filepath, "w") as f:
+            f.seek(0)
+            f.write("".join(contents[msg_lines-1:]))
+            print("YEHAA")
+ 
+all_file_paths = get_filepaths(".")
+# this_file = os.path.abspath(__file__)
 write_copyright_msg()
+# delete_copyright_msg()
