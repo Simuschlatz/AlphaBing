@@ -3,7 +3,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/SiiiMiii>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
-import tensorflow
+
 import pygame
 from core.Engine import Board, Legal_move_generator, Clock, UI, Zobrist_hashing
 from core.Engine.AI import Dfs, Evaluation
