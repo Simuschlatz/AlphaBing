@@ -49,14 +49,16 @@ class Data_generator:
             piece_color, piece_type = square
             flattened = piece_color * 7 + piece_type + 1
             squeezed_squares[i] = flattened
+        return tuple(squeezed_squares)
 
     def is_redundant(self, board_config):
         return board_config in self.training_data
 
     def store_training_data(self):
-        board_config = self.parse_board_config(self.board)
+        board_config = self.parse_board_config(self.board.squares)
+        print(board_config)
         if self.is_redundant(board_config):
+            print("Redundant")
             return
-        best_eval = Dfs.alpha_beta_opt(self.num_plies_ahead, 0, alpha=float("-inf"), beta=float("inf"))
+        best_eval = 1
         self.training_data[board_config] = best_eval
-        
