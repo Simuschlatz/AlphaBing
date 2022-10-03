@@ -6,6 +6,7 @@ under the terms of the GNU General Public License
 import pygame
 from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock, Zobrist_hashing
 from core.Engine.AI import AI_player
+from core.Utils import Data_generator
 
 class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
@@ -53,6 +54,8 @@ class UI:
         self.fen = board.load_fen_from_board()
         self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
         self.move_str = ""
+
+        self.data_generator = Data_generator(board)
 
     def draw_piece(self, color, piece_type, coords):
         self.window.blit(self.PIECES_IMGS[color * 7 + piece_type], coords)
@@ -250,10 +253,14 @@ class UI:
                     continue
                 self.make_AI_move()
 
-            # Move reverse
             if event.type == pygame.KEYDOWN:
+                # Move reverse
                 if event.key == pygame.K_SPACE:
                     self.unmake_move()
+                if event.key == pygame.K_RETURN:
+                    print("ENTER")
+                    self.data_generator.store_training_data()
+                    
 
     def render(self):
         """
