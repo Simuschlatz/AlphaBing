@@ -35,10 +35,8 @@ def write_copyright_msg():
         with open(filepath, "r+") as f:
             contents = f.read()
             file_lines = "\n".join(contents.split("\n")[:msg_lines-1]) + "\n"
-            print(file_lines)
-            print(copyright_text)
             if file_lines == copyright_text:
-                print("YEHAA")
+                print(f"File {filepath} is already copyright claimed")
                 continue
             f.seek(0)
             f.write(copyright_text + contents)
@@ -48,9 +46,8 @@ def delete_copyright_msg():
         with open(filepath, "r") as f:
             contents = f.readlines()
             file_lines = "".join(contents[:msg_lines-1])
-            print(file_lines)
-            print(copyright_text)
             if file_lines != copyright_text:
+                print(f"File {filepath} does not have copyright claims to delete")
                 continue
         with open(filepath, "w") as f:
             f.seek(0)
@@ -58,6 +55,7 @@ def delete_copyright_msg():
 
 # All files in working tree, except for __init__ files
 all_file_paths = get_filepaths(".")
+
 # this_file = os.path.abspath(__file__)
 write_copyright_msg()
 # delete_copyright_msg()
