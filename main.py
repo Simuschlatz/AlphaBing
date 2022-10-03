@@ -6,7 +6,7 @@ under the terms of the GNU General Public License
 import pygame
 from core.Engine import Board, Legal_move_generator, Clock, UI, Zobrist_hashing
 from core.Engine.AI import Dfs, Evaluation
-from core import init_imgs, get_perft_result
+from core.Utils import init_imgs, get_perft_result
 from time import perf_counter
 
 FPS = 45
@@ -40,7 +40,8 @@ AI_SEARCH_DEPTH = 4
 def get_num_positions(depth, board):
     p_t = perf_counter()
     num_positions = get_perft_result(depth, board)
-    print(f"depth: {depth} || nodes searched: {num_positions} || time: {perf_counter() - p_t}")
+    time = perf_counter() - p_t
+    print(f"depth: {depth} || nodes searched: {num_positions} || time: {round(time, 2)}")
 
     
 def main():
@@ -62,7 +63,7 @@ def main():
     ui = UI(WIN, (WIDTH, HEIGHT), board, (OFFSET_X, OFFSET_Y), UNIT, IMGS)
 
     # ------To run perft search------
-    # get_num_positions(4, board)
+    get_num_positions(4, board)
     # -------------------------------
 
     py_clock = pygame.time.Clock()
