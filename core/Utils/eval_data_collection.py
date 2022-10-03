@@ -6,6 +6,7 @@ under the terms of the GNU General Public License
 import csv
 import os
 from core.Engine.AI import Dfs
+import pandas as pd
 """
 1. write into csv file --
 2. writes board list and eval of board to csv file
@@ -20,7 +21,17 @@ class Data_generator:
     print(filepath)
     def __init__(self, board):
         self.board = board
-        self.training_data = {} # {[board config]: best eval}
+        try:
+            self.training_data = pd.read_csv(self.filepath) # {[board config]: best eval}
+        except pd.errors.EmptyDataError:
+            labels = self.generate_labels()
+            self.append_row_csv(self.filepath, labels)
+            self.training_data = pd.DataFrame(columns=labels)
+        print(self.training_data)
+
+    def generate_labels(self):
+        labels = [f"s{i}" for i in range(1, 91)] + ["eval"]
+        return labels
 
     @staticmethod
     def append_row_csv(path, data):
@@ -56,9 +67,14 @@ class Data_generator:
 
     def store_training_data(self):
         board_config = self.parse_board_config(self.board.squares)
-        print(board_config)
         if self.is_redundant(board_config):
             print("Redundant")
             return
-        best_eval = 1
-        self.training_data[board_config] = best_eval
+        best_eval = [1]
+        cells = list(board_config) + best_eval
+        cells = pd.Series(cells)
+        # cells = pd.Series(cells)
+        print(cells)
+        self.training_data = pd.concat([self.training_data, cells])
+        print(self.training_data.head())
+        # print(cells)
