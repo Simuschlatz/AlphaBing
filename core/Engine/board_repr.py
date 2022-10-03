@@ -25,7 +25,6 @@ class Board:
         self.moving_side = int(not(play_as_red != red_moves_first))
         self.opponent_side = 1 - self.moving_side
         self.moving_color = int(red_moves_first)
-        print(self.moving_color, self.moving_side)
         self.opponent_color = 1 - self.moving_color
         # If we don't play as red, the pieces are at the top, 
         self.is_red_up = not play_as_red
