@@ -3,6 +3,8 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
+from re import L
+from this import d
 from core.Engine.move_generator import Legal_move_generator
 from core.Engine.AI.move_ordering import order_moves, order_moves_pst
 from core.Engine.AI.eval_utility import Evaluation
@@ -15,6 +17,8 @@ class Dfs:
         cls.board = board
         cls.evaluated_positions = 0
         cls.cutoffs = 0
+        cls.positive_infinity = float("inf")
+        cls.negative_infinity = -cls.positive_infinity
 
     @classmethod
     def search(cls, depth):
@@ -24,8 +28,8 @@ class Dfs:
         """
         Diagnostics.init()
         best_move = None
-        alpha = float("inf")
-        beta = -alpha
+        alpha = cls.positive_infinity
+        beta = cls.negative_infinity
         best_eval = beta
         current_pos_moves = order_moves(Legal_move_generator.load_moves(), cls.board)
         cls.abort_search = False
@@ -40,6 +44,24 @@ class Dfs:
                 best_eval = evaluation
                 best_move = move
         return best_move
+    
+    @classmethod
+    def get_best_eval(cls, depth):
+        Diagnostics.init()
+        alpha = cls.positive_infinity
+        beta = cls.negative_infinity
+        best_eval = beta
+        current_pos_moves = order_moves(Legal_move_generator.load_moves(), cls.board)
+        cls.abort_search = False
+        for move in current_pos_moves:
+            if cls.abort_search:
+                return best_eval
+            cls.board.make_move(move)
+            evaluation = -cls.alpha_beta_opt(depth - 1, 0, beta, alpha)
+            cls.board.reverse_move()
+            best_eval = max(evaluation, best_eval)
+        return best_eval
+            
 
     @classmethod
     def alpha_beta_opt(cls, depth, plies, alpha, beta):
@@ -62,7 +84,8 @@ class Dfs:
             # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
             # checkmates, as the checkmate value still is better than the initial beta of -infinity
             # print(cls.board.load_fen_from_board())
-            cls.abort_search = True
+            if plies % 2:
+                cls.abort_search = True
             Diagnostics.best_eval = cls.checkmate_value
             # cls.board.get_previous_configs(10)s
             return -cls.checkmate_value
