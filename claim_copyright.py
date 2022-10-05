@@ -4,6 +4,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 under the terms of the GNU General Public License
 """
 import os
+
 copyright_text = '''"""
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> 
 - All Rights Reserved. You may use, distribute and modify this code
@@ -40,6 +41,7 @@ def write_copyright_msg():
                 continue
             f.seek(0)
             f.write(copyright_text + contents)
+            print(f"File {filepath} was copyright claimed")
 
 def delete_copyright_msg():
     for filepath in all_file_paths:
@@ -52,6 +54,7 @@ def delete_copyright_msg():
         with open(filepath, "w") as f:
             f.seek(0)
             f.write("".join(contents[msg_lines-1:]))
+            print(f"File {filepath} was stripped from its copyright claim")
 
 # All files in working tree, except for __init__ files
 all_file_paths = get_filepaths(".")
