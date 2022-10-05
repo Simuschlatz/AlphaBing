@@ -9,8 +9,8 @@ from core.Engine.AI import Dfs
 import pandas as pd
 """
 1. write into csv file --
-2. writes board list and eval of board to csv file
-3. check for redundant storing of identical lists
+2. writes board list and eval of board to csv file --
+3. check for redundant storing of identical lists --
 4. ai vs ai for random boards
 """
 
@@ -73,9 +73,9 @@ class Data_generator:
             print("Redundant")
             return
         self.boards_hash.add(board_config)
-        best_eval = [1]
+        best_eval = [Dfs.get_best_eval(4)]
+        print(best_eval)
         row = list(board_config) + best_eval
-        num_rows, _ = self.training_data.shape
-        self.training_data.loc[num_rows] = row
-        print(self.training_data)
+        # num_rows, _ = self.training_data.shape
+        # self.training_data.loc[num_rows] = row
         self.append_row_csv(self.filepath, row)
