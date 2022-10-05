@@ -20,6 +20,22 @@
 
 **Game**
 <br/><br/>
+_AI_
+* DONE:
+  * minimax algorithm
+  * alpha-beta pruning
+  * move ordering
+  * SHEF (Standard Heuristic Evaluation Function) - normal and piece-square-table based
+  * Training data collection module for the SLEF model
+* IN PROGRESS:
+  * Object detection
+  * Zobrist Hashing transposition handling
+  * SLEF (Self-Learning Evaluation Function): training a model to evaluate positions with data of minimax to further look into the future - **finally got tf installed on ARM chip**
+  * multiprocessing
+* TO-DO:
+  * iterative deepening
+  * position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and  SLEF)
+
 _Move Generation_
   * precomputed data + procedual generation
   * move- and attack-maps
@@ -27,29 +43,6 @@ _Move Generation_
   * handling (multiple) checks, pins... - perft results 100% matching consensus
   <br/>
 
-_UI & UX_<br/>
-* basic drag & drop
-* rudimentary SFX
-* marks possible captures & moves
-
-_AI_
-* DONE:
-  * minimax algorithm
-  * alpha-beta pruning
-  * move ordering
-  * SHEF (Standard Heuristic Evaluation Function) - normal and piece-square-table based
-* IN PROGRESS:
-  * Object detection
-  * Zobrist Hashing transposition handling
-  * SLEF (Self-Learning Evaluation Function): training a model to evaluate positions with data of minimax to further look into the future - **currently hitting compatibility issues**
-  * multiprocessing
-* TO-DO:
-  * iterative deepening
-  * position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and  SLEF) - **currently hitting compatibility issues**
-
-**Computer Vision (not implemented yet)**
-* supervised learning with tensorflow
-* classification on physical board (types & positions)
 
 ## General-Information
 > **What problem does it intend to solve?**
