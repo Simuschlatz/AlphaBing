@@ -6,7 +6,7 @@ under the terms of the GNU General Public License
 import pygame
 import os
 
-def init_imgs(unit, width, height, board_width, board_height, is_western_style: bool) -> list:
+def init_imgs(unit, window_dims, board_dims, button_dims, is_western_style: bool) -> list:
 
     pieces_file_names = ["general.png",
                         "elephant.png",
@@ -30,9 +30,11 @@ def init_imgs(unit, width, height, board_width, board_height, is_western_style: 
 
     pieces_imgs = [pygame.transform.scale(img, (unit, unit)) for img in pieces_imgs]
     board_img = pygame.image.load(os.path.join("assets/imgs", "board_light.svg"))
-    board_img = pygame.transform.scale(board_img, (board_width, board_height))
+    board_img = pygame.transform.scale(board_img, board_dims)
 
     bg = pygame.image.load(os.path.join("assets/imgs", "bg_light.jpg"))
-    bg = pygame.transform.scale(bg, (width, height))
+    bg = pygame.transform.scale(bg, window_dims)
 
-    return pieces_imgs, board_img, bg
+    ai_button = pygame.image.load(os.path.join("assets/imgs", "button_activate-ai.png"))
+    ai_button = pygame.transform.scale(ai_button, button_dims)
+    return pieces_imgs, board_img, bg, ai_button
