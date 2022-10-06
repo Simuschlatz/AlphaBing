@@ -73,9 +73,9 @@ class Data_generator:
             print("Redundant")
             return
         self.boards_hash.add(board_config)
-        best_eval = [Dfs.get_best_eval(2)]
-        print(best_eval)
-        row = list(board_config) + best_eval
+        row = list(board_config)
+        best_eval = Dfs.get_best_eval(2)
+        row.append(best_eval)
         # num_rows, _ = self.training_data.shape
         # self.training_data.loc[num_rows] = row
         self.append_row_csv(self.filepath, row)
