@@ -15,6 +15,7 @@ WIDTH = 1400
 HEIGHT = 900
 BOARD_WIDTH = 9 * UNIT
 BOARD_HEIGHT = 10 * UNIT
+BUTTON_DIMS = (UNIT * 2.2, UNIT * .83)
 OFFSET_X = (WIDTH - BOARD_WIDTH) / 2
 OFFSET_Y = (HEIGHT - BOARD_HEIGHT) / 2
 
@@ -22,8 +23,8 @@ MOVE_MARKER_CIRCLE = UNIT / 7
 CAPTURE_CIRCLE_D = UNIT * 1.1
 
 piece_style_western = True
-IMGS = init_imgs(UNIT, WIDTH, HEIGHT, BOARD_WIDTH, BOARD_HEIGHT, piece_style_western)
-PIECES_IMGS, BOARD_IMG, BG_IMG = IMGS
+IMGS = init_imgs(UNIT, (WIDTH, HEIGHT), (BOARD_WIDTH, BOARD_HEIGHT), BUTTON_DIMS, piece_style_western)
+PIECES_IMGS, BOARD_IMG, BG_IMG, BUTTON_IMG = IMGS
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("JOE MAMA")
@@ -63,7 +64,7 @@ def main():
     ui = UI(WIN, (WIDTH, HEIGHT), board, (OFFSET_X, OFFSET_Y), UNIT, IMGS)
 
     # ------To run perft search------
-    get_num_positions(4, board)
+    # get_num_positions(4, board)
     # -------------------------------
 
     py_clock = pygame.time.Clock()
