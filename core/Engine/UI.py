@@ -8,6 +8,15 @@ from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager
 from core.Engine.AI import AI_player
 from core.Utils import Data_generator
 
+class Button:
+    def __init__(self, x, y, image=None):
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+
+    def draw(self, window):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
 class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
     MOVE_HIGHLIGHT_COLOR = (100, 100, 240)
@@ -44,13 +53,15 @@ class UI:
         self.BIG_CIRCLE_D = unit * 1.1
         self.SMALL_CIRCLE_D = unit // 7
 
-        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG = imgs 
-        
+        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG, self.AI_BUTTON_IMG = imgs 
+
+        self.AI_BUTTON = Button(unit, unit, self.AI_BUTTON_IMG)
         self.move_from = None
         self.selected_piece = None
         self.move_to = None
         self.legal_targets = []
 
+        self.activate_ai = False
         self.fen = board.load_fen_from_board()
         self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
         self.move_str = ""
@@ -282,6 +293,7 @@ class UI:
         # self.render_text(self.fen, self.GREY, (self.off_x, 5), False)
         self.render_text(self.move_str, self.GREY, (self.WIDTH // 10, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
 
+        self.AI_BUTTON.draw(self.window)
         for i, char in enumerate(bin(self.board.zobrist_key)):  
             if not char.isdigit():
                 self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
