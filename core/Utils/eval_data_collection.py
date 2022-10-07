@@ -14,7 +14,7 @@ import pandas as pd
 4. ai vs ai for random boards
 """
 
-class Data_generator:
+class TrainingDataCollector:
     dir_path = "core/Engine/AI/SLEF"
     filepath = os.path.join(dir_path, "eval_data.csv")
     num_plies_ahead = 1
