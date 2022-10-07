@@ -6,16 +6,29 @@ under the terms of the GNU General Public License
 import pygame
 from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock, Zobrist_hashing
 from core.Engine.AI import AI_player
-from core.Utils import Data_generator
+from core.Utils import TrainingDataCollector
 
 class Button:
-    def __init__(self, x, y, image=None):
+    def __init__(self, x, y, image):
         self.image = image
         self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
+        self.top_left = (x, y)
+        self.rect.topleft = self.top_left
 
     def draw(self, window):
         window.blit(self.image, (self.rect.x, self.rect.y))
+
+    def check_click(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):
+            print("CLICK")
+            return True
+        return False
+
+    def change_image(self, new_image):
+        self.image = new_image
+        self.rect = self.image.get_rect()
+        self.rect.topleft = self.top_left
+
 
 class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
@@ -43,30 +56,39 @@ class UI:
         self.off_x, self.off_y = offsets
         self.unit = unit
 
+        # Font stuff
         self.FONT_SIZE_LARGE = unit // 2
         self.FONT_SIZE_SMALL = unit // 3
         self.FONT_WIDTH_SMALL = self.FONT_SIZE_SMALL * 0.55
         self.GAME_STATE_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_LARGE)
         self.DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_SMALL)
-        self.TEXT_X = self.off_x + unit * 9.5
-        
+        self.TIMER_TEXT_X, self.TIMER_TEXT_Y = self.off_x + unit * 9.5, [self.HEIGHT / 2 - (1 - player) * self.FONT_SIZE_LARGE for player in range(2)]
+        self.MOVE_STR_POS = (self.WIDTH // 20, self.WIDTH // 20)
+        # Circle diameters to mark moves and captures
         self.BIG_CIRCLE_D = unit * 1.1
         self.SMALL_CIRCLE_D = unit // 7
 
-        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG, self.AI_BUTTON_IMG = imgs 
+        # All the images
+        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG, self.BTN_ACTIVATE_IMG, self.BTN_DEACTIVATE_IMG = imgs 
 
-        self.AI_BUTTON = Button(unit, unit, self.AI_BUTTON_IMG)
+        # Move logics
         self.move_from = None
         self.selected_piece = None
         self.move_to = None
         self.legal_targets = []
 
+        # Activate AI option
+        self.AI_BUTTON_HEIGHT = self.BTN_ACTIVATE_IMG.get_height()
+        self.AI_BUTTON = Button(self.WIDTH // 20, self.HEIGHT // 2 - self.AI_BUTTON_HEIGHT // 2, self.BTN_ACTIVATE_IMG)
         self.activate_ai = False
+
+        # Analytics
         self.fen = board.load_fen_from_board()
         self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
         self.move_str = ""
 
-        self.data_generator = Data_generator(board)
+        # Data collector for Self-Learning-Evaluation-Function (SLEF)
+        self.training_data_generator = TrainingDataCollector(board)
 
     def draw_piece(self, color, piece_type, coords):
         self.window.blit(self.PIECES_IMGS[color * 7 + piece_type], coords)
@@ -101,9 +123,8 @@ class UI:
         self.window.blit(surface, pos)
 
     def render_remaining_time(self, player):
-        y = self.HEIGHT / 2 - (1 - player) * self.FONT_SIZE_LARGE
         rendered_text = f"{Clock.r_min_tens[player]}{Clock.r_min_ones[player]}:{Clock.r_sec_tens[player]}{Clock.r_sec_ones[player]}"
-        self.render_text(rendered_text, self.GREY, (self.TEXT_X, y), True)
+        self.render_text(rendered_text, self.GREY, (self.TIMER_TEXT_X, self.TIMER_TEXT_Y[player]), True)
 
     def is_selection_valid(self, piece):
         return Piece.is_color(piece, self.board.moving_color)
@@ -198,8 +219,7 @@ class UI:
         else:
             self.audio_player(self.MOVE_SFX)
 
-    def selection(self):
-        mouse_pos = pygame.mouse.get_pos()
+    def selection(self, mouse_pos):
         # Account for the offsets the board's (0,0) coordinate is replaced by on the window
         file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
         current_square = Board_utility.get_square(file, rank)
@@ -241,6 +261,13 @@ class UI:
         # See if there is a mate or stalemate
         Legal_move_generator.load_moves()
         Game_manager.check_game_state()
+    
+    def get_button_img(self):
+        return self.BTN_DEACTIVATE_IMG if self.activate_ai else self.BTN_ACTIVATE_IMG
+
+    def ai_button_response(self):
+        self.activate_ai = not self.activate_ai
+        self.AI_BUTTON.change_image(self.get_button_img())
         
     def event_handler(self):
         """
@@ -255,12 +282,17 @@ class UI:
             
             # Piece selection
             if event.type == pygame.MOUSEBUTTONDOWN:
-               self.selection()
+                mouse_pos = pygame.mouse.get_pos()
+                is_btn_clicked = self.AI_BUTTON.check_click(mouse_pos)
+                if is_btn_clicked:
+                    self.ai_button_response()
+                else:
+                    self.selection(mouse_pos)
   
             # Piece placement
             if event.type == pygame.MOUSEBUTTONUP:
                 move_succes = self.make_human_move()
-                if not move_succes:
+                if not move_succes or not self.activate_ai:
                     continue
                 self.make_AI_move()
 
@@ -283,25 +315,25 @@ class UI:
         self.move_responsiveness()
 
         if Game_manager.checkmate:
-            self.render_text("checkmate!", self.GREY, (self.TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+            self.render_text("checkmate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
         elif Game_manager.stalemate:
-            self.render_text("stalemate!", self.GREY, (self.TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+            self.render_text("stalemate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
         else:
             for player in range(2):
                 self.render_remaining_time(player)
         
         # self.render_text(self.fen, self.GREY, (self.off_x, 5), False)
-        self.render_text(self.move_str, self.GREY, (self.WIDTH // 10, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+        self.render_text(self.move_str, self.GREY, self.MOVE_STR_POS, True)
 
         self.AI_BUTTON.draw(self.window)
-        for i, char in enumerate(bin(self.board.zobrist_key)):  
-            if not char.isdigit():
-                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
-                continue
-            if int(char):
-                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
-                continue
-            self.render_text(char, self.RED, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+        # for i, char in enumerate(bin(self.board.zobrist_key)):  
+        #     if not char.isdigit():
+        #         self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+        #         continue
+        #     if int(char):
+        #         self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+        #         continue
+        #     self.render_text(char, self.RED, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
 
         if self.selected_piece:
             self.mark_moves()
