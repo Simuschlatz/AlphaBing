@@ -64,6 +64,7 @@ class UI:
         self.DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_SMALL)
         self.TIMER_TEXT_X, self.TIMER_TEXT_Y = self.off_x + unit * 9.5, [self.HEIGHT / 2 - (1 - player) * self.FONT_SIZE_LARGE for player in range(2)]
         self.MOVE_STR_POS = (self.WIDTH // 20, self.WIDTH // 20)
+        
         # Circle diameters to mark moves and captures
         self.BIG_CIRCLE_D = unit * 1.1
         self.SMALL_CIRCLE_D = unit // 7
@@ -302,7 +303,7 @@ class UI:
                     self.unmake_move()
                 if event.key == pygame.K_RETURN:
                     print("ENTER")
-                    self.data_generator.store_training_data()
+                    self.training_data_generator.store_training_data()
                     
 
     def render(self):
