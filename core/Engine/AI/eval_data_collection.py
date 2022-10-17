@@ -17,14 +17,13 @@ import pandas as pd
 class TrainingDataCollector:
     dir_path = "core/Engine/AI/SLEF"
     filepaths = [os.path.join(dir_path, "eval_data_black.csv"), os.path.join(dir_path, "eval_data_red.csv")]
-    num_plies_ahead = 1
-    print(filepaths)
+    num_plies_ahead = 2
 
     def __init__(self, board):
         self.board = board
         self.boards_hash = []
         self.labels = self.generate_labels()
-        for color_idx, filepath in enumerate(self.filepaths):
+        for filepath in self.filepaths:
             training_data = None
             # File is not empty, meaning its content can be read by pandas
             if os.stat(filepath).st_size > 0:
@@ -35,7 +34,8 @@ class TrainingDataCollector:
                 training_data = pd.DataFrame(columns=self.labels)
 
             num_rows = len(training_data)
-            self.boards_hash.append({tuple(self.training_data.iloc[i][:-1]) for i in range(num_rows)})
+            # Copying all the existing boards, excluding their evals to save memory
+            self.boards_hash.append({tuple(training_data.iloc[i][:-1]) for i in range(num_rows)})
             print(training_data)
 
     @staticmethod
@@ -82,7 +82,7 @@ class TrainingDataCollector:
             return
         self.boards_hash[self.board.moving_side].add(board_config)
         row = list(board_config)
-        best_eval = Dfs.get_best_eval(2)
+        best_eval = Dfs.get_best_eval(self.num_plies_ahead)
         row.append(best_eval)
         # num_rows, _ = self.training_data.shape
         # self.training_data.loc[num_rows] = row
