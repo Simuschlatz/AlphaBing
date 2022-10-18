@@ -4,9 +4,8 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock, Zobrist_hashing
-from core.Engine.AI import AI_player
-from core.Utils import TrainingDataCollector
+from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock, Zobrist_hashing, game_manager
+from core.Engine.AI import AI_player, TrainingDataCollector
 
 class Button:
     def __init__(self, x, y, image):
@@ -20,7 +19,6 @@ class Button:
 
     def check_click(self, mouse_pos):
         if self.rect.collidepoint(mouse_pos):
-            print("CLICK")
             return True
         return False
 
@@ -83,6 +81,8 @@ class UI:
         self.AI_BUTTON = Button(self.WIDTH // 20, self.HEIGHT // 2 - self.AI_BUTTON_HEIGHT // 2, self.BTN_ACTIVATE_IMG)
         self.activate_ai = False
 
+        self.ai_vs_ai = True
+
         # Analytics
         self.fen = board.load_fen_from_board()
         self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
@@ -97,7 +97,7 @@ class UI:
     def get_circle_center(self, rect_coord, diameter, factor=1):
         """
         centers a rectangle coordinate to the circle center
-        :param factor: subtract or add half of diameter
+        :param factor: -1 or 1 => subtract or add half of diameter
         """
         return [pos + factor * self.unit // 2 for pos in rect_coord]
 
@@ -269,18 +269,25 @@ class UI:
     def ai_button_response(self):
         self.activate_ai = not self.activate_ai
         self.AI_BUTTON.change_image(self.get_button_img())
-        
+
     def event_handler(self):
         """
         Handles Human events
         mousebuttondown: select and drag a piece
         mousebuttonup: drop a piece
         space: reverse the last move
+        enter: save board config and evaluation in csv file
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit()
             
+            if self.ai_vs_ai:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_a:
+                        self.ai_vs_ai = not self.ai_vs_ai
+                continue
+
             # Piece selection
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
@@ -353,3 +360,12 @@ class UI:
 
         pygame.display.update()
 
+    def update(self):
+        Clock.run(self.board.moving_color)  
+        self.render()
+        self.event_handler()
+        if Game_manager.checkmate:
+            return
+        if self.ai_vs_ai:
+            self.make_AI_move()
+            self.training_data_generator.store_training_data()
