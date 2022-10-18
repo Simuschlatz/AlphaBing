@@ -22,7 +22,9 @@ OFFSET_Y = (HEIGHT - BOARD_HEIGHT) // 2
 MOVE_MARKER_CIRCLE = UNIT / 7
 CAPTURE_CIRCLE_D = UNIT * 1.1
 
+# Style of piece images
 piece_style_western = True
+
 IMGS = init_imgs(UNIT, (WIDTH, HEIGHT), (BOARD_WIDTH, BOARD_HEIGHT), BUTTON_DIMS, piece_style_western)
 # PIECES_IMGS, BOARD_IMG, BG_IMG, BUTTON_IMGS = IMGS
 
@@ -74,11 +76,9 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
-        else:
-            ui.event_handler()
-            
-        Clock.run(board.moving_color)           
-        ui.render()
+            ui.render()
+            continue    
+        ui.update()
         py_clock.tick(FPS)
 
 if __name__ == "__main__":
