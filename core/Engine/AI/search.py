@@ -11,14 +11,14 @@ from core.Engine.AI.eval_utility import Evaluation
 from core.Engine.AI.AI_diagnostics import Diagnostics
 class Dfs:
     checkmate_value = 9999
-    
+    positive_infinity = float("inf")
+    negative_infinity = -positive_infinity
+
     @classmethod
     def init(cls, board) -> None:
         cls.board = board
         cls.evaluated_positions = 0
         cls.cutoffs = 0
-        cls.positive_infinity = float("inf")
-        cls.negative_infinity = -cls.positive_infinity
 
     @classmethod
     def search(cls, depth):
@@ -32,17 +32,17 @@ class Dfs:
         beta = cls.negative_infinity
         best_eval = beta
         current_pos_moves = order_moves(Legal_move_generator.load_moves(), cls.board)
-        cls.abort_search = False
+        cls.mate_found = False
         Diagnostics.depth = 0
         for move in current_pos_moves:
-            if cls.abort_search:
-                return best_move
             cls.board.make_move(move)
             evaluation = -cls.alpha_beta_opt(depth - 1, 0, beta, alpha)
             cls.board.reverse_move()
             if evaluation > best_eval:
                 best_eval = evaluation
                 best_move = move
+            if cls.mate_found:
+                return best_move
         return best_move
     
     @classmethod
@@ -85,7 +85,7 @@ class Dfs:
             # checkmates, as the checkmate value still is better than the initial beta of -infinity
             # print(cls.board.load_fen_from_board())
             if plies % 2:
-                cls.abort_search = True
+                cls.mate_found = True
             Diagnostics.best_eval = cls.checkmate_value
             # cls.board.get_previous_configs(10)s
             return -cls.checkmate_value
