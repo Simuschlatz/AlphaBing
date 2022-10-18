@@ -17,7 +17,7 @@ import pandas as pd
 class TrainingDataCollector:
     dir_path = "core/Engine/AI/SLEF"
     filepaths = [os.path.join(dir_path, "eval_data_black.csv"), os.path.join(dir_path, "eval_data_red.csv")]
-    num_plies_ahead = 2
+    num_plies_ahead = 3
 
     def __init__(self, board):
         self.board = board
@@ -83,6 +83,9 @@ class TrainingDataCollector:
         self.boards_hash[self.board.moving_side].add(board_config)
         row = list(board_config)
         best_eval = Dfs.get_best_eval(self.num_plies_ahead)
+        # We don't want the model to learn evaluate checkmates, as it is much too complex to recognise.
+        if best_eval == Dfs.checkmate_value:
+            return
         row.append(best_eval)
         # num_rows, _ = self.training_data.shape
         # self.training_data.loc[num_rows] = row
