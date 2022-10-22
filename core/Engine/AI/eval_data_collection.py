@@ -28,10 +28,10 @@ class TrainingDataCollector:
             # File is not empty, meaning its content can be read by pandas
             if os.stat(filepath).st_size > 0:
                 training_data = pd.read_csv(filepath)
+                continue
             # File is empty, so add the labels and create a data frame 
-            else:
-                self.append_row_csv(filepath, self.labels)
-                training_data = pd.DataFrame(columns=self.labels)
+            self.append_row_csv(filepath, self.labels)
+            training_data = pd.DataFrame(columns=self.labels)
 
             num_rows = len(training_data)
             # Copying all the existing boards, excluding their evals to save memory
@@ -51,15 +51,6 @@ class TrainingDataCollector:
             writer = csv.writer(f)
             # write a row to the csv file
             writer.writerow(data)
-
-    @staticmethod
-    def append_rows_csv(path, data):
-        # open the file in the write mode
-        with open(path, 'a') as f:
-            # create the csv writer
-            writer = csv.writer(f)
-            # write a row to the csv file
-            writer.writerows(data)
 
     @staticmethod
     def parse_board_config(squares):
