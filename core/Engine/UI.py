@@ -14,7 +14,7 @@ class Button:
         self.top_left = (x, y)
         self.rect.topleft = self.top_left
 
-    def draw(self, window):
+    def render(self, window):
         window.blit(self.image, (self.rect.x, self.rect.y))
 
     def check_click(self, mouse_pos):
@@ -91,8 +91,17 @@ class UI:
         # Data collector for Self-Learning-Evaluation-Function (SLEF)
         self.training_data_generator = TrainingDataCollector(board)
 
-    def draw_piece(self, color, piece_type, coords):
+    def render_piece(self, color, piece_type, coords):
         self.window.blit(self.PIECES_IMGS[color * 7 + piece_type], coords)
+    
+    def render_pieces(self):
+        for square, piece in enumerate(self.ui_board):
+            if not piece:
+                continue
+            file, rank = Board_utility.get_file_and_rank(square)
+            pos = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
+            color, piece_type = piece
+            self.render_piece(color, piece_type, pos)
 
     def get_circle_center(self, rect_coord, diameter, factor=1):
         """
@@ -126,6 +135,30 @@ class UI:
     def render_remaining_time(self, player):
         rendered_text = f"{Clock.r_min_tens[player]}{Clock.r_min_ones[player]}:{Clock.r_sec_tens[player]}{Clock.r_sec_ones[player]}"
         self.render_text(rendered_text, self.GREY, (self.TIMER_TEXT_X, self.TIMER_TEXT_Y[player]), True)
+    
+    def render_game_state(self):
+        if Game_manager.checkmate:
+            self.render_text("checkmate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+        elif Game_manager.stalemate:
+            self.render_text("stalemate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+        else:
+            for player in range(2):
+                self.render_remaining_time(player)
+
+    def render_move_str(self):
+        self.render_text(self.move_str, self.GREY, self.MOVE_STR_POS, True)
+
+    def render_zobrist(self):
+        for i, char in enumerate(bin(self.board.zobrist_key)):  
+            if not char.isdigit():
+                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+                continue
+            # 1 is blue
+            if int(char):
+                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+                continue
+            # 0 is red
+            self.render_text(char, self.RED, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
 
     def is_selection_valid(self, piece):
         return Piece.is_color(piece, self.board.moving_color)
@@ -187,10 +220,12 @@ class UI:
         return is_capture
 
     def drag_piece(self):
+        if not self.selected_piece:
+            return
         mouse_pos = pygame.mouse.get_pos()
         piece_pos = self.get_circle_center(mouse_pos, self.unit, factor=-1)
         color, piece_type = self.selected_piece
-        self.draw_piece(color, piece_type, piece_pos)
+        self.render_piece(color, piece_type, piece_pos)
 
     def move_responsiveness(self):
         if self.move_from == None:
@@ -201,10 +236,13 @@ class UI:
         self.highlight_large(self.move_to, self.MOVE_RESPONSE_COLOR)
 
     def mark_moves(self):
+        if not self.select_square:
+            return
         for square in self.legal_targets:
             # If piece on target, it must be opponent's,  otherwise it would've been removed
             if self.board.squares[square]:
                 self.highlight_large(square, self.MOVE_HIGHLIGHT_COLOR)
+                continue
             self.highlight_small(square, self.MOVE_HIGHLIGHT_COLOR)
     
     @staticmethod
@@ -318,45 +356,22 @@ class UI:
         Does all the rendering work on the window
         """
         self.window.fill(self.BG_COLOR)
-        # self.window.blit(BG_IMG, (0, 0))
         self.window.blit(self.BOARD_IMG, self.offsets)
+
         self.move_responsiveness()
 
-        if Game_manager.checkmate:
-            self.render_text("checkmate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
-        elif Game_manager.stalemate:
-            self.render_text("stalemate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
-        else:
-            for player in range(2):
-                self.render_remaining_time(player)
-        
-        # self.render_text(self.fen, self.GREY, (self.off_x, 5), False)
-        self.render_text(self.move_str, self.GREY, self.MOVE_STR_POS, True)
+        self.render_game_state()
+        self.render_move_str
 
-        self.AI_BUTTON.draw(self.window)
-        # for i, char in enumerate(bin(self.board.zobrist_key)):  
-        #     if not char.isdigit():
-        #         self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
-        #         continue
-        #     if int(char):
-        #         self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
-        #         continue
-        #     self.render_text(char, self.RED, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+        self.AI_BUTTON.render(self.window)
+        self.render_zobrist()
 
-        if self.selected_piece:
-            self.mark_moves()
+        self.mark_moves()
 
-        # Draw pieces
-        for square, piece in enumerate(self.ui_board):
-            if piece:
-                file, rank = Board_utility.get_file_and_rank(square)
-                pos = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
-                color, piece_type = piece
-                self.draw_piece(color, piece_type, pos)
+        self.render_pieces()
         
         # Human selected a piece
-        if self.selected_piece:
-            self.drag_piece()
+        self.drag_piece()
 
         pygame.display.update()
 
