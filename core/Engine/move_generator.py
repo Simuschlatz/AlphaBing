@@ -4,24 +4,24 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 under the terms of the GNU General Public License
 """
 from core.Engine.piece import Piece
-from core.Engine.precomputed_move_maps import Precomputing_moves
+from core.Engine.precomputed_move_maps import PrecomputingMoves
 
-class Legal_move_generator:
+class LegalMoveGenerator:
     """
     Generates legal moves from pseudo-legal-move-maps \n
     call load_moves() to receive a list of all legal moves for the current state of the game.
     """
-    Precomputing_moves.init_constants()
-    dir_offsets = Precomputing_moves.dir_offsets
-    dist_to_edge = Precomputing_moves.dist_to_edge
+    PrecomputingMoves.init_constants()
+    dir_offsets = PrecomputingMoves.dir_offsets
+    dist_to_edge = PrecomputingMoves.dist_to_edge
 
     # Precalculating move maps
-    king_move_map = Precomputing_moves.precompute_king_moves()
-    orthogonal_move_map = Precomputing_moves.precompute_orthogonal_moves()
-    horse_move_map = Precomputing_moves.precompute_horse_moves()
-    advisor_move_map = Precomputing_moves.precompute_advisor_moves()
-    elephant_move_map = Precomputing_moves.precompute_elephant_moves()
-    pawn_move_map = Precomputing_moves.precompute_pawn_moves()
+    king_move_map = PrecomputingMoves.precompute_king_moves()
+    orthogonal_move_map = PrecomputingMoves.precompute_orthogonal_moves()
+    horse_move_map = PrecomputingMoves.precompute_horse_moves()
+    advisor_move_map = PrecomputingMoves.precompute_advisor_moves()
+    elephant_move_map = PrecomputingMoves.precompute_elephant_moves()
+    pawn_move_map = PrecomputingMoves.precompute_pawn_moves()
 
     @classmethod
     def init_board(cls, board):
@@ -71,7 +71,7 @@ class Legal_move_generator:
         # Square used to denote a checking cannon if existing
         cls.checking_cannon_square = None
         # squares occupied by friendly pieces that are part of two pieces blocking a cannon check that can't
-        # capture the other piece of double block as it would rearrange the double block into single screen
+        # capture the other piece of double block as it would rearrange the double block into single screen, resulting in check
         cls.double_screens = set()
         # Sqaure of friendly piece that serves as screen for a checking cannon, 
         # whose movement away from check-ray would resolve th check
@@ -325,7 +325,8 @@ class Legal_move_generator:
                             break
                         # Cannon is the first screen between the opponent cannon and friendly king, making it 
                         # illegal to use opponent cannon as screen. Since the opponent cannon would be the first
-                        # piece to come across, we know that if it's in double screens, it must be the first one
+                        # piece to come across as attack mode is off, we know that if it's in double screens, 
+                        # it must be the first one
                         if Piece.is_piece(cls.board.squares[target_square], cls.board.opponent_color, Piece.cannon) and is_double_screen:
                             break
                         in_attack_mode = True
@@ -339,13 +340,15 @@ class Legal_move_generator:
                         # If target_piece is friendly, go to next direction
                         if Piece.is_color_no_check(target_piece, cls.board.moving_color):
                             break
-
-                    # Can't move to or capture pieces on squares that would result in check
-                    if target_square in cls.illegal_squares:
-                        continue
                     
                     blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                     if not blocks_all_checks:
+                        if target_piece:
+                            break
+                        continue
+                    
+                    # Can't move to or capture pieces on squares that would result in check
+                    if target_square in cls.illegal_squares:
                         continue
                     # If it's quiescene search and move isn't a capture, continue
                     if not cls.generate_quiets and not target_piece:

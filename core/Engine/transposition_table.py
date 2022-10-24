@@ -3,9 +3,13 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
-from core.Engine import Zobrist_hashing, tt_entry
+from core.Engine import ZobristHashing, TtEntry
 
-class Transposition_table:
+class TranspositionTable:
+    """
+    TODO: repetition
+    
+    """
     invalid = None
     exact_eval = 0
     upper_bound = 1

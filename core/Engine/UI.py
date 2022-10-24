@@ -4,7 +4,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Board_utility, Piece, Legal_move_generator, Game_manager, Clock, Zobrist_hashing, game_manager
+from core.Engine import BoardUtility, Piece, LegalMoveGenerator, GameManager, Clock, ZobristHashing, GameManager
 from core.Engine.AI import AI_player, TrainingDataCollector
 
 class Button:
@@ -81,7 +81,7 @@ class UI:
         self.AI_BUTTON = Button(self.WIDTH // 20, self.HEIGHT // 2 - self.AI_BUTTON_HEIGHT // 2, self.BTN_ACTIVATE_IMG)
         self.activate_ai = False
 
-        self.ai_vs_ai = True
+        self.ai_vs_ai = False
 
         # Analytics
         self.fen = board.load_fen_from_board()
@@ -98,8 +98,8 @@ class UI:
         for square, piece in enumerate(self.ui_board):
             if not piece:
                 continue
-            file, rank = Board_utility.get_file_and_rank(square)
-            pos = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
+            file, rank = BoardUtility.get_file_and_rank(square)
+            pos = BoardUtility.get_display_coords(file, rank, self.unit, *self.offsets)
             color, piece_type = piece
             self.render_piece(color, piece_type, pos)
 
@@ -116,13 +116,13 @@ class UI:
         pygame.draw.ellipse(self.window, color, (x, y, diameter, diameter))
     
     def highlight_large(self, square, color):
-        file, rank = Board_utility.get_file_and_rank(square)
-        coordinates = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
+        file, rank = BoardUtility.get_file_and_rank(square)
+        coordinates = BoardUtility.get_display_coords(file, rank, self.unit, *self.offsets)
         self.render_circle(coordinates, self.BIG_CIRCLE_D, color)
     
     def highlight_small(self, square, color):
-        file, rank = Board_utility.get_file_and_rank(square)
-        coordinates = Board_utility.get_display_coords(file, rank, self.unit, *self.offsets)
+        file, rank = BoardUtility.get_file_and_rank(square)
+        coordinates = BoardUtility.get_display_coords(file, rank, self.unit, *self.offsets)
         self.render_circle(coordinates, self.SMALL_CIRCLE_D, color)
 
     def render_text(self, text: str, color: tuple, pos: tuple, large_font):
@@ -137,9 +137,9 @@ class UI:
         self.render_text(rendered_text, self.GREY, (self.TIMER_TEXT_X, self.TIMER_TEXT_Y[player]), True)
     
     def render_game_state(self):
-        if Game_manager.checkmate:
+        if GameManager.checkmate:
             self.render_text("checkmate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
-        elif Game_manager.stalemate:
+        elif GameManager.stalemate:
             self.render_text("stalemate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
         else:
             for player in range(2):
@@ -200,8 +200,8 @@ class UI:
             return
         self.reset_move_data()
         self.ui_board[square] = 0
-        Legal_move_generator.load_moves()
-        self.legal_targets = Legal_move_generator.get_legal_targets(square)
+        LegalMoveGenerator.load_moves()
+        self.legal_targets = LegalMoveGenerator.get_legal_targets(square)
         self.move_from = square
         self.selected_piece = piece
 
@@ -260,13 +260,13 @@ class UI:
 
     def selection(self, mouse_pos):
         # Account for the offsets the board's (0,0) coordinate is replaced by on the window
-        file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
-        current_square = Board_utility.get_square(file, rank)
+        file, rank = BoardUtility.get_board_pos(mouse_pos, self.unit, *self.offsets)
+        current_square = BoardUtility.get_square(file, rank)
         self.select_square(current_square)
 
     def make_human_move(self):
         mouse_pos = pygame.mouse.get_pos()
-        file, rank = Board_utility.get_board_pos(mouse_pos, self.unit, *self.offsets)
+        file, rank = BoardUtility.get_board_pos(mouse_pos, self.unit, *self.offsets)
         target_square = rank * 9 + file
 
         is_capture = self.drop_piece(target_square)
@@ -275,18 +275,18 @@ class UI:
         # Sound effects
         self.play_sfx(is_capture)
         # See if there is a mate or stalemate
-        Legal_move_generator.load_moves()
-        Game_manager.check_game_state()
+        LegalMoveGenerator.load_moves()
+        GameManager.check_game_state()
         return True
     
     def unmake_move(self):
         if not self.board.game_history:
             return
-        Game_manager.reset_mate()
+        GameManager.reset_mate()
         self.board.reverse_move()
         self.reset_values()
         self.update_info()
-        Legal_move_generator.load_moves()
+        LegalMoveGenerator.load_moves()
 
     def make_AI_move(self):
         AI_move = AI_player.load_move()
@@ -298,8 +298,8 @@ class UI:
         # Sound effects
         self.play_sfx(is_capture)
         # See if there is a mate or stalemate
-        Legal_move_generator.load_moves()
-        Game_manager.check_game_state()
+        LegalMoveGenerator.load_moves()
+        GameManager.check_game_state()
     
     def get_button_img(self):
         return self.BTN_DEACTIVATE_IMG if self.activate_ai else self.BTN_ACTIVATE_IMG
@@ -379,7 +379,7 @@ class UI:
         Clock.run(self.board.moving_color)  
         self.render()
         self.event_handler()
-        if Game_manager.checkmate:
+        if GameManager.checkmate:
             return
         if self.ai_vs_ai:
             self.make_AI_move()

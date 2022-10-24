@@ -3,9 +3,8 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
-from core.Engine import piece
 from core.Engine.piece import Piece
-from core.Engine.zobrist_hashing import Zobrist_hashing
+from core.Engine.zobrist_hashing import ZobristHashing
 import numpy as np
 from collections import deque
 
@@ -36,13 +35,13 @@ class Board:
         self.squares = list(np.zeros(90, dtype=np.int8))
         # This keeps track of all game states in history, 
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
-        self.game_history = [] # Stack(:previous square, :target square :captured piece)
+        self.game_history = deque() # Stack(:previous square, :target square :captured piece)
         # To keep track of the pieces' indices (Piece-centric repr)
         # Piece list at index 0 keeps track of pieces at the top, index 1 for bottom
         self.piece_lists = [[set() for _ in range(7)] for _ in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
-        self.zobrist_key = Zobrist_hashing.get_zobrist_key(self.moving_color, self.piece_lists)
+        self.zobrist_key = ZobristHashing.get_zobrist_key(self.moving_color, self.piece_lists)
         self.repetition_history = {self.zobrist_key}
 
     @staticmethod
@@ -134,9 +133,9 @@ class Board:
     def update_zobrist(self, moved_piece_type, captured_piece, moved_from, moved_to):
         if captured_piece:
             cap_piece_type = Piece.get_type(captured_piece)
-            self.zobrist_key ^= Zobrist_hashing.table[self.opponent_color][cap_piece_type][moved_to]
-        self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_from]
-        self.zobrist_key ^= Zobrist_hashing.table[self.moving_side][moved_piece_type][moved_to]
+            self.zobrist_key ^= ZobristHashing.table[self.opponent_color][cap_piece_type][moved_to]
+        self.zobrist_key ^= ZobristHashing.table[self.moving_side][moved_piece_type][moved_from]
+        self.zobrist_key ^= ZobristHashing.table[self.moving_side][moved_piece_type][moved_to]
         self.zobrist_key ^= self.opponent_color
         self.zobrist_key ^= self.moving_side
 
@@ -206,7 +205,7 @@ class Board:
         prefix = "----"
         for i in range(1, depth):
             print(self.game_history)
-            previous_square, moved_to, _ = self.game_history[-1]
+            previous_square, moved_to, _ = list(self.game_history)[-1]
             self.reverse_move()
             # move_str = self.get_move_notation((previous_square, moved_to)) + "  "
             fen = self.load_fen_from_board()

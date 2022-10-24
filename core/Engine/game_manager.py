@@ -3,8 +3,8 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
-from core.Engine import Legal_move_generator
-class Game_manager:
+from core.Engine import LegalMoveGenerator
+class GameManager:
     """
     Handles states of the game (e.g. Checkmate, Stalemate...)
     """
@@ -20,9 +20,9 @@ class Game_manager:
     @classmethod
     def check_game_state(cls):
         # Load moves for next player
-        moves = Legal_move_generator.moves
+        moves = LegalMoveGenerator.moves
         if not len(moves):
-            if Legal_move_generator.checks:
+            if LegalMoveGenerator.checks:
                 cls.checkmate = True
                 return
             cls.stalemate = True
@@ -34,3 +34,4 @@ class Game_manager:
     @classmethod
     def reset_move_counter(cls):
         cls.fifty_move_counter = 0
+        

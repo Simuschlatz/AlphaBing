@@ -3,7 +3,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
-class Board_utility:
+class BoardUtility:
     """
     Contains all methods that relate to the board but
     aren't part of the inner board representation

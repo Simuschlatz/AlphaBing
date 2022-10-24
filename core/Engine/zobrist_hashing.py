@@ -3,10 +3,9 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
-from ast import Index
 import numpy as np
 
-class Zobrist_hashing:
+class ZobristHashing:
     """
     A neat way to generate numbers for a given state of a game, showing that sometimes 
     benefits of speed outweigh imperfection

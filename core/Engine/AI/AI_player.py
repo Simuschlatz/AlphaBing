@@ -5,7 +5,7 @@ under the terms of the GNU General Public License
 """
 from core.Engine.AI import Dfs
 
-class AI_player:
+class AIPlayer:
     SEARCH_DEPTH = 4
     @classmethod
     def load_move(cls):

@@ -3,7 +3,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
-from core.Engine.move_generator import Legal_move_generator
+from core.Engine.move_generator import LegalMoveGenerator
 
 def get_perft_result(depth, board):
     """
@@ -12,7 +12,7 @@ def get_perft_result(depth, board):
     :return: The branching factor b to the power of depth d, in other words:
     The total number of possible positions found looking depth moves ahead
     """
-    moves = Legal_move_generator.load_moves()
+    moves = LegalMoveGenerator.load_moves()
     num_positions = 0
     if not depth - 1:
         num_positions += len(moves)

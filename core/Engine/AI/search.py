@@ -3,9 +3,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
-from re import L
-from this import d
-from core.Engine.move_generator import Legal_move_generator
+from core.Engine.move_generator import LegalMoveGenerator
 from core.Engine.AI.move_ordering import order_moves, order_moves_pst
 from core.Engine.AI.eval_utility import Evaluation
 from core.Engine.AI.AI_diagnostics import Diagnostics
@@ -31,7 +29,7 @@ class Dfs:
         alpha = cls.positive_infinity
         beta = cls.negative_infinity
         best_eval = beta
-        current_pos_moves = order_moves(Legal_move_generator.load_moves(), cls.board)
+        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
         cls.mate_found = False
         Diagnostics.depth = 0
         for move in current_pos_moves:
@@ -51,7 +49,7 @@ class Dfs:
         alpha = cls.positive_infinity
         beta = cls.negative_infinity
         best_eval = beta
-        current_pos_moves = order_moves(Legal_move_generator.load_moves(), cls.board)
+        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
         cls.abort_search = False
         for move in current_pos_moves:
             if cls.abort_search:
@@ -77,7 +75,7 @@ class Dfs:
             # if alpha >= beta:
             #     return alpha
 
-        moves = order_moves(Legal_move_generator.load_moves(), cls.board)
+        moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         if not moves:
@@ -123,7 +121,7 @@ class Dfs:
             return beta
         alpha = max(eval, alpha)
 
-        moves = order_moves_pst(Legal_move_generator.load_moves(generate_quiets=False), cls.board)
+        moves = order_moves_pst(LegalMoveGenerator.load_moves(generate_quiets=False), cls.board)
         for move in moves:
             cls.board.make_move(move)
             evaluation = -cls.quiescene(-beta, -alpha)
@@ -150,7 +148,7 @@ class Dfs:
         if not depth:
             return cls.board.shef()
 
-        moves = Legal_move_generator.load_moves()
+        moves = LegalMoveGenerator.load_moves()
         
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
@@ -172,7 +170,7 @@ class Dfs:
         if not depth:
             return cls.board.shef()
 
-        moves = Legal_move_generator.load_moves()
+        moves = LegalMoveGenerator.load_moves()
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         if not len(moves):

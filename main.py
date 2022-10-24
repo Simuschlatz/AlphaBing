@@ -4,7 +4,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Board, Legal_move_generator, Clock, UI, Zobrist_hashing
+from core.Engine import Board, LegalMoveGenerator, Clock, UI, ZobristHashing
 from core.Engine.AI import Dfs, Evaluation
 from core.Utils import init_imgs, get_perft_result
 from time import perf_counter
@@ -54,11 +54,11 @@ def main():
 
     Clock.init(600, "MIKE", "OXLONG")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    Zobrist_hashing.init_table()
+    ZobristHashing.init_table()
     board = Board(fen, play_as_red, red_moves_first=True)
     if not only_display_mode:
-        Legal_move_generator.init_board(board)
-        Legal_move_generator.load_moves()
+        LegalMoveGenerator.init_board(board)
+        LegalMoveGenerator.load_moves()
 
     Evaluation.init(board)
     Dfs.init(board)
@@ -66,7 +66,13 @@ def main():
     ui = UI(WIN, (WIDTH, HEIGHT), board, (OFFSET_X, OFFSET_Y), UNIT, IMGS)
 
     # ------To run perft search------
-    # get_num_positions(4, board)
+    # iterative = True
+    # depth = 4
+    # depths = [depth]
+    # if iterative:
+    #     depths = range(1, depth + 1)
+    # for d in depths:
+    #     get_num_positions(d, board)
     # -------------------------------
 
     py_clock = pygame.time.Clock()
