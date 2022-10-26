@@ -5,7 +5,6 @@
 * This project's final version will be a fairly sophisticated chess engine with built-in AI and the ability to process a physical board
 
 ## Table of Contents
-- [CheapChess - a Chess-AI never seen before](#cheapchess---a-chess-ai-never-seen-before)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [General-Information](#general-information)
