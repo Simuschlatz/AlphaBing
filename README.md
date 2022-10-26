@@ -1,18 +1,14 @@
 # CheapChess - Combining Algorithmic Powers With The Beauty of Machine Learning
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
-* Xiangqi is the chinese version of chess very popular amongst East Asian countries.
-* This project's final version will be a fairly sophisticated chess engine with built-in AI and the ability to process a physical board
 
 ## Table of Contents
-- [CheapChess - a Chess-AI never seen before](#cheapchess---a-chess-ai-never-seen-before)
-  - [Table of Contents](#table-of-contents)
   - [Features](#features)
-  - [General-Information](#general-information)
-  - [HOW TO PLAY](#how-to-play)
+  - [General Information](#general-information)
+  - [How To Play](#how-to-play)
   - [Screenshots](#screenshots)
   - [Dependencies](#dependencies)
-  - [Project-Status](#project-status)
+  - [Project Status](#project-status)
   - [Acknowledgements](#acknowledgements)
   - [Contact](#contact)
 
@@ -73,6 +69,3 @@ Project is: _in progress_
 ## Acknowledgements
 * Inspiration: [@SebLague](https://github.com/SebLague)
 * Research done at [chessprogramming wiki](https://www.chessprogramming.org/)
-
-## Contact
-Created by [@SiiiMiii](https://github.com/SiiiMiii) - feel free to contact me at simon.mama07@gmail.com!
