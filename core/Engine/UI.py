@@ -5,7 +5,7 @@ under the terms of the GNU General Public License
 """
 import pygame
 from core.Engine import BoardUtility, Piece, LegalMoveGenerator, GameManager, Clock, ZobristHashing, GameManager
-from core.Engine.AI import AI_player, TrainingDataCollector
+from core.Engine.AI import AIPlayer, TrainingDataCollector
 
 class Button:
     def __init__(self, x, y, image):
@@ -81,7 +81,7 @@ class UI:
         self.AI_BUTTON = Button(self.WIDTH // 20, self.HEIGHT // 2 - self.AI_BUTTON_HEIGHT // 2, self.BTN_ACTIVATE_IMG)
         self.activate_ai = False
 
-        self.ai_vs_ai = False
+        self.ai_vs_ai = True
 
         # Analytics
         self.fen = board.load_fen_from_board()
@@ -289,7 +289,7 @@ class UI:
         LegalMoveGenerator.load_moves()
 
     def make_AI_move(self):
-        AI_move = AI_player.load_move()
+        AI_move = AIPlayer.load_move()
         self.update_move_str(AI_move)
         is_capture = self.board.make_move(AI_move)
         self.move_from, self.move_to = AI_move
