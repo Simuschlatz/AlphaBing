@@ -72,6 +72,3 @@ Project is: _in progress_
 ## Acknowledgements
 * Inspiration: [@SebLague](https://github.com/SebLague)
 * Research done at [chessprogramming wiki](https://www.chessprogramming.org/)
-
-## Contact
-Created by [@SiiiMiii](https://github.com/SiiiMiii) - feel free to contact me at simon.mama07@gmail.com!
