@@ -13,32 +13,34 @@
   - [Contact](#contact)
 
 ## Features
+**Move Generation_**
+* precomputed data + procedual generation
+* move- and attack-maps
+* legal move generation considering pins and blocks
+* handling (multiple) checks, pins... with 99%-100% accuracy
+<br></br>
 
-**Game**
-<br/><br/>
-_AI_
-* DONE:
+**State of the art method**
+* _DONE:_
   * minimax algorithm
   * alpha-beta pruning
   * move ordering
   * SHEF (Standard Heuristic Evaluation Function) - normal and piece-square-table based
   * Training data collection module for the SLEF model
-* IN PROGRESS:
+* _IN PROGRESS:_
   * Object detection
   * Zobrist Hashing transposition handling
   * SLEF (Self-Learning Evaluation Function): training a model to evaluate positions with data of minimax to further look into the future - **finally got tf installed on ARM chip**
   * multiprocessing
-* TO-DO:
+* _TO-DO_
   * iterative deepening
   * position evaluation using CPEF (Combined Position Evaluation Function, weighed sum of SHEF and  SLEF)
 
-_Move Generation_
-  * precomputed data + procedual generation
-  * move- and attack-maps
-  * legal move generation considering pins and blocks
-  * handling (multiple) checks, pins... - perft results 100% matching consensus
-  <br/>
-
+**AlphaZero based approach**
+* reinforcement learning by self-play
+* Monte Carlo Tree Search (MCTS)
+* using move generator for policy network
+* value network
 
 ## General-Information
 > **What problem does it intend to solve?**
