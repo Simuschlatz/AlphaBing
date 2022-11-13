@@ -81,7 +81,7 @@ class UI:
         self.AI_BUTTON = Button(self.WIDTH // 20, self.HEIGHT // 2 - self.AI_BUTTON_HEIGHT // 2, self.BTN_ACTIVATE_IMG)
         self.activate_ai = False
 
-        self.ai_vs_ai = True
+        self.ai_vs_ai = False
 
         # Analytics
         self.fen = board.load_fen_from_board()
@@ -346,6 +346,8 @@ class UI:
                 # Move reverse
                 if event.key == pygame.K_SPACE:
                     self.unmake_move()
+                if event.key == pygame.K_a:
+                    self.ai_vs_ai = not self.ai_vs_ai
                 if event.key == pygame.K_RETURN:
                     print("ENTER")
                     self.training_data_generator.store_training_data()
