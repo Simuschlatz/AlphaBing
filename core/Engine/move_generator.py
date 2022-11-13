@@ -6,6 +6,8 @@ under the terms of the GNU General Public License
 from core.Engine.piece import Piece
 from core.Engine.precomputed_move_maps import PrecomputingMoves
 
+# The code doesn't look well designed as there seem to be lots of repetitions, but reusing the same code is difficult, 
+# as the order of operations for maximum performance vary from every piece's behavior
 class LegalMoveGenerator:
     """
     Generates legal moves from pseudo-legal-move-maps \n
@@ -57,7 +59,6 @@ class LegalMoveGenerator:
             print(cls.board.load_fen_from_board())
             cls.board.get_previous_configs(6)
         cls.moves = []
-        cls.target_squares = {}
 
         cls.attack_map = set()
         
@@ -89,8 +90,54 @@ class LegalMoveGenerator:
             if target_square in cls.attack_map:
                 continue
             cls.moves.append((current_square, target_square))
-            cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
+            
 
+    @classmethod
+    def generate_rook_moves(cls) -> None:
+        """
+        extends Legal_move_generator.moves with legal rook moves
+        """
+        for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.rook]:
+            is_pinned = cls.is_pinned(current_square)
+            if cls.checks and is_pinned:
+                continue
+            avoids_cannon_check = current_square == cls.cause_cannon_defect
+
+            rook_move_map = cls.orthogonal_move_map[current_square]
+            # Going through chosen direction indices
+            for dir_idx, squares_in_dir in rook_move_map.items():
+                if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
+                    continue
+                target_piece = False
+                # "Walking" in direction using direction offsets
+                for target_square in squares_in_dir:
+                    target_piece = cls.board.squares[target_square]
+                    # If target_piece is friendly, go to next direction
+                    if Piece.is_color(target_piece, cls.board.moving_color):
+                        break
+                    if target_square in cls.illegal_squares:
+                        continue
+                    # Because all squares between the rook and cannon (inclusive) are in block_check_hash and
+                    # current square is avoids_cannon_check, the number of checks blocked would be 2, not 1
+                    # so it skips moves between cannon and rook, but would also skip the capture of checking cannon
+                    # Thus, if rook is screen for checking cannon and captures it, increment the number of checks by 1
+                    # => condition 2 == 1 becomes 2 == 2
+                    captures_checking_cannon = avoids_cannon_check and cls.checking_cannon_square == target_square
+                    blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
+                    
+                    # If it's quiescene search and move isn't a capture, continue
+                    if not cls.generate_quiets and not target_piece:
+                        continue
+
+                    if blocks_all_checks:    
+                        cls.moves.append((current_square, target_square))
+                        
+                    # If piece on target square and not friendly, go to next direction
+                    if target_piece:
+                        break
+                    # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
+                    if blocks_all_checks and cls.checks and not avoids_cannon_check:
+                        break
 
     @classmethod
     def generate_pawn_moves(cls) -> None:
@@ -109,23 +156,25 @@ class LegalMoveGenerator:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
+                if target_square in cls.illegal_squares:
+                    continue
                 dir_idx = cls.dir_offsets.index(target_square - current_square)
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
                     continue
-                if target_square in cls.illegal_squares:
-                    continue
+                # Because all squares between the pawn and cannon (inclusive) are in block_check_hash and
+                # current square is avoids_cannon_check, the number of checks blocked would be 2, not 1
+                # so it skips moves between cannon and pawn, but would also skip the capture of checking cannon
+                # Thus, if pawn is screen for checking cannon and captures it, increment the number of checks by 1
+                # => condition 2 == 1 becomes 2 == 2
                 captures_checking_cannon = cls.checking_cannon_square == target_square
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                 if not blocks_all_checks:
                     continue
-                # If it's quiescene search and move isn't a capture, continue
-                # Put this guard clause as last bacause the number fo times this is False outweighs
-                # most of the others, leading to many unnecessary checks
+                # This guard clause is rarely True, so put it last to avoid unnecessary checks
                 if not cls.generate_quiets and not target_piece:
                     continue
-
+        
                 cls.moves.append((current_square, target_square))
-                cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
                 # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
                 if blocks_all_checks and cls.checks and not avoids_cannon_check:
                     break
@@ -165,11 +214,10 @@ class LegalMoveGenerator:
                 if not cls.generate_quiets and not target_piece:
                     continue
                 cls.moves.append((current_square, target_square))
-                cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
+
                 # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
                 if blocks_all_checks and cls.checks and not avoids_cannon_check:
                     break
-
 
     @classmethod
     def generate_advisor_moves(cls) -> None:
@@ -197,7 +245,7 @@ class LegalMoveGenerator:
                     continue
 
                 cls.moves.append((current_square, target_square))
-                cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
+                
                  # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
                 if blocks_all_checks and cls.checks and not avoids_cannon_check:
                     break
@@ -231,72 +279,17 @@ class LegalMoveGenerator:
                 blocking_square = cls.get_horse_block(current_square, target_square)
                 if cls.board.squares[blocking_square]:
                     continue
+                if target_square in cls.illegal_squares:
+                    continue
                 # If there's a check (or multiple)
                 # Only proceed if num of checks the moves blocks is equivalent to total num of checks
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
                     continue
-                if target_square in cls.illegal_squares:
-                    continue
                 if not cls.generate_quiets and not target_piece:
                     continue
                 cls.moves.append((current_square, target_square))
-                cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
-
-
-    @classmethod
-    def generate_rook_moves(cls) -> None:
-        """
-        extends Legal_move_generator.moves with legal rook moves
-        """
-        for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.rook]:
-            is_pinned = cls.is_pinned(current_square)
-            if cls.checks and is_pinned:
-                continue
-            avoids_cannon_check = current_square == cls.cause_cannon_defect
-
-            rook_move_map = cls.orthogonal_move_map[current_square]
-            # Going through chosen direction indices
-            for dir_idx, squares_in_dir in rook_move_map.items():
-                if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
-                    continue
-                target_piece = False
-                # "Walking" in direction using direction offsets
-                for target_square in squares_in_dir:
-                    target_piece = cls.board.squares[target_square]
-                    # If target_piece is friendly, go to next direction
-                    if Piece.is_color(target_piece, cls.board.moving_color):
-                        break
-
-                    if target_square in cls.illegal_squares:
-                        continue
-                    
-                    # Because all squares between the rook and cannon (inclusive) are in block_check_hash and
-                    # current square is avoids_cannon_check, the number of checks blocked would be 2, not 1
-                    # so it skips moves between cannon and rook, but would also skip the capture of checking cannon
-                    # Thus, if rook is screen for checking cannon and captures it, increment the number of checks by 1
-                    # => condition 2 == 1 becomes 2 == 2
-                    captures_checking_cannon = avoids_cannon_check and cls.checking_cannon_square == target_square
-                    blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
-                    
-                    # If it's quiescene search and move isn't a capture, continue
-                    if not cls.generate_quiets and not target_piece:
-                        continue
-
-                    if blocks_all_checks:    
-                        cls.moves.append((current_square, target_square))
-                        cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
-                    # If piece on target square and not friendly, go to next direction
-                    if target_piece:
-                        break
-                    # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
-                    if blocks_all_checks and cls.checks and not avoids_cannon_check:
-                        break
-
-    @classmethod
-    def is_screen_legal(cls, screen):
-        pass
-
+                
     @classmethod
     def generate_cannon_moves(cls) -> None:
         """
@@ -354,7 +347,7 @@ class LegalMoveGenerator:
                     if not cls.generate_quiets and not target_piece:
                         continue
                     cls.moves.append((current_square, target_square))
-                    cls.target_squares[current_square] = cls.target_squares.get(current_square, []) + [target_square]
+                    
                     # Move was a capture, can't move further in this direction 
                     if target_piece:
                         break
@@ -504,7 +497,7 @@ class LegalMoveGenerator:
 
         #------------------------------------MISTAKE DOCUMENTATION--------------------------------
         # THIS WAS A GOOD IDEA, EXCEPT FOR THE FACT THAT IT WAS A BAD IDEA.
-        # THE VERSION ABOVE IS MUCH FASTER, AS IT INTERRUPTS THE CHECK RAY MUCH EARLIER
+        # THE VERSION ABOVE IS MUCH FASTER, AS IT INTERRUPTS THE CHECK RAY EARLIER
         
         # blocking_squares = cls.first_two_in_ray(cls.opponent_king, cls.moving_king, dir_idx)
         # if blocking_squares == -1:
