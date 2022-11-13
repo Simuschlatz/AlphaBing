@@ -36,7 +36,7 @@ class TrainingDataCollector:
             num_rows = len(training_data)
             # Copying all the existing boards, excluding their evals to save memory
             self.boards_hash.append({tuple(training_data.iloc[i][:-1]) for i in range(num_rows)})
-            print(training_data)
+            # print(training_data)
 
     @staticmethod
     def generate_labels():
