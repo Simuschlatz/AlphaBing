@@ -18,12 +18,12 @@ class LegalMoveGenerator:
     dist_to_edge = PrecomputingMoves.dist_to_edge
 
     # Precalculating move maps
-    king_move_map = PrecomputingMoves.precompute_king_moves()
-    orthogonal_move_map = PrecomputingMoves.precompute_orthogonal_moves()
-    horse_move_map = PrecomputingMoves.precompute_horse_moves()
-    advisor_move_map = PrecomputingMoves.precompute_advisor_moves()
-    elephant_move_map = PrecomputingMoves.precompute_elephant_moves()
-    pawn_move_map = PrecomputingMoves.precompute_pawn_moves()
+    king_mm = PrecomputingMoves.precompute_king_moves()
+    orthogonal_mm = PrecomputingMoves.precompute_orthogonal_moves()
+    horse_mm = PrecomputingMoves.precompute_horse_moves()
+    advisor_mm = PrecomputingMoves.precompute_advisor_moves()
+    elephant_mm = PrecomputingMoves.precompute_elephant_moves()
+    pawn_mm = PrecomputingMoves.precompute_pawn_moves()
 
     @classmethod
     def init_board(cls, board):
@@ -79,10 +79,86 @@ class LegalMoveGenerator:
         cls.cause_cannon_defect = None
 
     @classmethod
+    def blocks_all_checks(cls, current_square, target_square, confusion_value=0):
+        # If the piece is a screen for opponent cannon and moves out of the way,
+        # it prevents the cannon check, thus counting as a blocked check
+        disables_cannon = current_square == cls.cause_cannon_defect
+        num_checks_blocked = cls.block_check_hash.get(target_square, 0) + disables_cannon
+        captures_other_double_screen = current_square in cls.double_screens and target_square in cls.double_screens
+        return num_checks_blocked == cls.checks + confusion_value and not captures_other_double_screen
+
+
+    @classmethod
+    def is_pinned(cls, square):
+        return square in cls.pinned_squares
+    
+
+    @classmethod
+    def moves_along_ray(cls, king_square: int, current_square: int, dir_idx: int):
+        """
+        :return: bool if move keeps a piece along the ray between two squares \n
+        only to be used for orthogonally moving pieces.
+        """
+        target_square = current_square + cls.dir_offsets[dir_idx]
+        pin_ray_delta_dist = abs(current_square - king_square) % 9
+        move_ray_delta_dist = abs(target_square - king_square) % 9
+
+        return pin_ray_delta_dist == move_ray_delta_dist
+
+
+    @classmethod
+    def get_orth_dir_idx(cls, square_1, square_2):
+        """
+        :return: precise direction index 0 to 4 between two squares from square_1's perspective
+        """
+        file_1, rank_1 = cls.board.get_file_and_rank(square_1)
+        file_2, rank_2 = cls.board.get_file_and_rank(square_2)
+        d_file = file_2 - file_1
+        d_rank = rank_2 - rank_1
+        if d_file and d_rank or not d_file and not d_rank:
+            return None
+        # On same file
+        if not d_file and d_rank:
+            d_rank_norm = d_rank // abs(d_rank)
+            return cls.dir_offsets.index(d_rank_norm * 9)
+        # On same rank
+        d_file_norm = d_file // abs(d_file)
+        return cls.dir_offsets.index(d_file_norm)
+
+    @classmethod
+    def estimate_dir_idx(cls, square_1, square_2):
+        """
+        :return: roughly estimated direction index 0 to 4 between two squares from square_1's perspective
+        NOTE: Not used right now
+        """
+        file_1, rank_1 = cls.board.get_file_and_rank(square_1)
+        file_2, rank_2 = cls.board.get_file_and_rank(square_2)
+        d_file = file_2 - file_1
+        d_rank = rank_2 - rank_1
+        # On same file
+        if abs(d_file) < abs(d_rank):
+            d_rank_norm = d_rank // abs(d_rank)
+            return cls.dir_offsets.index(d_rank_norm * 9),
+        # On same rank
+        if abs(d_rank) < abs(d_file):
+            d_file_norm = d_file // abs(d_file)
+            return cls.dir_offsets.index(d_file_norm),
+            
+        return cls.dir_offsets.index(d_rank // abs(d_rank) * 9), cls.dir_offsets.index(d_file // abs(d_file))
+
+    @staticmethod
+    def get_slope(d_1, d_2):
+        """
+        NOTE: Not used right now
+        """
+        return d_2 / d_1
+
+
+    @classmethod
     def generate_king_moves(cls) -> None:
         current_square = cls.moving_king
 
-        target_squares = cls.king_move_map[cls.board.moving_side][current_square]
+        target_squares = cls.king_mm[cls.board.moving_side][current_square]
         for target_square in target_squares:
             target_piece = cls.board.squares[target_square]
             if Piece.is_color(target_piece, cls.board.moving_color):
@@ -103,9 +179,9 @@ class LegalMoveGenerator:
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
 
-            rook_move_map = cls.orthogonal_move_map[current_square]
+            rook_mm = cls.orthogonal_mm[current_square]
             # Going through chosen direction indices
-            for dir_idx, squares_in_dir in rook_move_map.items():
+            for dir_idx, squares_in_dir in rook_mm.items():
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
                     continue
                 target_piece = False
@@ -150,7 +226,7 @@ class LegalMoveGenerator:
             if cls.checks and is_pinned:
                 break
             avoids_cannon_check = current_square == cls.cause_cannon_defect
-            target_squares = cls.pawn_move_map[cls.board.moving_side][current_square]
+            target_squares = cls.pawn_mm[cls.board.moving_side][current_square]
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
@@ -195,7 +271,7 @@ class LegalMoveGenerator:
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
             
-            for target_square in cls.elephant_move_map[cls.board.moving_side][current_square]:
+            for target_square in cls.elephant_mm[cls.board.moving_side][current_square]:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
@@ -228,7 +304,7 @@ class LegalMoveGenerator:
             if cls.is_pinned(current_square):
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
-            target_squares = cls.advisor_move_map[cls.board.moving_side][current_square]
+            target_squares = cls.advisor_mm[cls.board.moving_side][current_square]
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
@@ -267,7 +343,7 @@ class LegalMoveGenerator:
         for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.horse]:
             if cls.is_pinned(current_square):
                 continue
-            horse_moves = cls.horse_move_map[current_square]
+            horse_moves = cls.horse_mm[current_square]
 
             # legal_moves = list(filter(lambda move: move in illegal_moves, legal_moves))
             for move in horse_moves:
@@ -300,7 +376,7 @@ class LegalMoveGenerator:
             if cls.checks and is_pinned:
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
-            cannon_attack_map = cls.orthogonal_move_map[current_square]
+            cannon_attack_map = cls.orthogonal_mm[current_square]
             is_double_screen = current_square in cls.double_screens
             for dir_idx, targets_in_dir in cannon_attack_map.items():
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
@@ -355,76 +431,6 @@ class LegalMoveGenerator:
                         break
 
 
-    @classmethod
-    def blocks_all_checks(cls, current_square, target_square, confusion_value=0):
-        # If the piece is a screen for opponent cannon and moves out of the way,
-        # it prevents the cannon check, thus counting as a blocked check
-        disables_cannon = current_square == cls.cause_cannon_defect
-        num_checks_blocked = cls.block_check_hash.get(target_square, 0) + disables_cannon
-        captures_other_double_screen = current_square in cls.double_screens and target_square in cls.double_screens
-        return num_checks_blocked == cls.checks + confusion_value and not captures_other_double_screen
-
-
-    @classmethod
-    def is_pinned(cls, square):
-        return square in cls.pinned_squares
-    
-
-    @classmethod
-    def moves_along_ray(cls, king_square: int, current_square: int, dir_idx: int):
-        """
-        :return: bool if move keeps a piece along the ray between two squares \n
-        only to be used for orthogonally moving pieces.
-        """
-        target_square = current_square + cls.dir_offsets[dir_idx]
-        pin_ray_delta_dist = abs(current_square - king_square) % 9
-        move_ray_delta_dist = abs(target_square - king_square) % 9
-
-        return pin_ray_delta_dist == move_ray_delta_dist
-
-
-    @classmethod
-    def get_orth_dir_idx(cls, square_1, square_2):
-        """
-        :return: precise direction index 0 to 4 between two squares from square_1's perspective
-        """
-        file_1, rank_1 = cls.board.get_file_and_rank(square_1)
-        file_2, rank_2 = cls.board.get_file_and_rank(square_2)
-        d_file = file_2 - file_1
-        d_rank = rank_2 - rank_1
-        if d_file and d_rank or not d_file and not d_rank:
-            return None
-        # On same file
-        if not d_file and d_rank:
-            d_rank_norm = d_rank // abs(d_rank)
-            return cls.dir_offsets.index(d_rank_norm * 9)
-        # On same rank
-        d_file_norm = d_file // abs(d_file)
-        return cls.dir_offsets.index(d_file_norm)
-
-    @classmethod
-    def estimate_dir_idx(cls, square_1, square_2):
-        """
-        :return: roughly estimated direction index 0 to 4 between two squares from square_1's perspective
-        """
-        file_1, rank_1 = cls.board.get_file_and_rank(square_1)
-        file_2, rank_2 = cls.board.get_file_and_rank(square_2)
-        d_file = file_2 - file_1
-        d_rank = rank_2 - rank_1
-        # On same file
-        if abs(d_file) < abs(d_rank):
-            d_rank_norm = d_rank // abs(d_rank)
-            return cls.dir_offsets.index(d_rank_norm * 9),
-        # On same rank
-        if abs(d_rank) < abs(d_file):
-            d_file_norm = d_file // abs(d_file)
-            return cls.dir_offsets.index(d_file_norm),
-            
-        return cls.dir_offsets.index(d_rank // abs(d_rank) * 9), cls.dir_offsets.index(d_file // abs(d_file))
-
-    @staticmethod
-    def get_slope(d_1, d_2):
-        return d_2 / d_1
 
 #-------------------------------------------------------------------------------
 #-------The part below is for calculating pins, checks, double cheks etc.-------
@@ -530,7 +536,7 @@ class LegalMoveGenerator:
         for square in opponent_horses:
             if cls.board.get_manhattan_dist(square, cls.moving_king) > 4:
                 continue
-            for move in cls.horse_move_map[square]:
+            for move in cls.horse_mm[square]:
                 target_square = move[1]
                
                 # --------------------------------MISTAKE DOCUMENTATION-----------------------------------
@@ -560,13 +566,13 @@ class LegalMoveGenerator:
 
     @classmethod
     def exclude_king_moves(cls):
-        king_move_map = cls.king_move_map[cls.board.moving_side][cls.moving_king]
+        king_mm = cls.king_mm[cls.board.moving_side][cls.moving_king]
         # Filtering out squares occupied by friendly pieces
-        king_move_map = list(filter(lambda target: not Piece.is_color(cls.board.squares[target], cls.board.moving_color), king_move_map))
+        king_mm = list(filter(lambda target: not Piece.is_color(cls.board.squares[target], cls.board.moving_color), king_mm))
         if not cls.generate_quiets:
-            king_move_map = list(filter(lambda target: cls.board.squares[target], king_move_map))
+            king_mm = list(filter(lambda target: cls.board.squares[target], king_mm))
         # Looping over possible king moves
-        for target_square in king_move_map:
+        for target_square in king_mm:
             if target_square in cls.attack_map:
                 continue
             for rook in cls.board.piece_lists[cls.board.opponent_color][Piece.rook]:
@@ -575,8 +581,8 @@ class LegalMoveGenerator:
                 if attack_dir_idx != None:
                     cls.generate_rook_attack_ray(rook, attack_dir_idx)
 
-        king_move_map = list(filter(lambda target: target not in cls.attack_map, king_move_map))
-        for target_square in king_move_map:
+        king_mm = list(filter(lambda target: target not in cls.attack_map, king_mm))
+        for target_square in king_mm:
             if target_square in cls.attack_map:
                 continue
             # Looping over opponent cannons
@@ -586,7 +592,7 @@ class LegalMoveGenerator:
                 if attack_dir_idx != None:
                     cls.generate_cannon_attack_ray(cannon, attack_dir_idx)
 
-        cls.generate_pawn_attack_data(king_move_map)
+        cls.generate_pawn_attack_data(king_mm)
 
         # -----------------------------------MISTAKE DOCUMENTATION-------------------------------------------
         # for rook in cls.board.piece_lists[cls.board.opponent_color][Piece.rook]:
@@ -609,7 +615,7 @@ class LegalMoveGenerator:
             mhd = cls.board.get_manhattan_dist(pawn, cls.moving_king)
             if mhd > 2:
                 continue
-            for attacked_square in cls.pawn_move_map[cls.board.opponent_side][pawn]:
+            for attacked_square in cls.pawn_mm[cls.board.opponent_side][pawn]:
             # Pawn is posing a threat to friendly king
                 if attacked_square in king_moves:
                     cls.attack_map.add(attacked_square)
@@ -637,7 +643,7 @@ class LegalMoveGenerator:
         """
         generates attack map along ray of given direction from given square
         """
-        attack_ray = cls.orthogonal_move_map[square][dir_idx]
+        attack_ray = cls.orthogonal_mm[square][dir_idx]
         screen = False
         double_block = False
         for attacking_square in attack_ray:
@@ -659,7 +665,7 @@ class LegalMoveGenerator:
 
     @classmethod
     def generate_rook_attack_ray(cls, square, dir_idx) -> None:
-        attack_ray = cls.orthogonal_move_map[square][dir_idx]
+        attack_ray = cls.orthogonal_mm[square][dir_idx]
         for attacking_square in attack_ray:
             piece = cls.board.squares[attacking_square]
             cls.attack_map.add(attacking_square)
