@@ -53,9 +53,12 @@ class LegalMoveGenerator:
         Initializes data used for move generation
         """
         try:
-            cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_color][Piece.king]))
-            cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_color][Piece.king]))
+            # cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_color][Piece.king]))
+            # cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_color][Piece.king]))
+            cls.moving_king = cls.board.piece_lists[cls.board.moving_color][Piece.king][0]
+            cls.opponent_king = cls.board.piece_lists[cls.board.opponent_color][Piece.king][0]
         except StopIteration:
+            print("invalid move detected")
             print(cls.board.load_fen_from_board())
             cls.board.get_previous_configs(6)
         cls.moves = []
