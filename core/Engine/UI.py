@@ -65,7 +65,7 @@ class UI:
         
         # Circle diameters to mark moves and captures
         self.BIG_CIRCLE_D = unit * 1.1
-        self.SMALL_CIRCLE_D = unit // 7
+        self.SMALL_CIRCLE_D = unit // 6
 
         # All the images
         self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG, self.BTN_ACTIVATE_IMG, self.BTN_DEACTIVATE_IMG = imgs 
@@ -78,7 +78,7 @@ class UI:
 
         # Activate AI option
         self.AI_BUTTON_HEIGHT = self.BTN_ACTIVATE_IMG.get_height()
-        self.AI_BUTTON = Button(self.WIDTH // 20, self.HEIGHT // 2 - self.AI_BUTTON_HEIGHT // 2, self.BTN_ACTIVATE_IMG)
+        self.AI_BUTTON = Button(20, self.HEIGHT // 2 - self.AI_BUTTON_HEIGHT // 2, self.BTN_ACTIVATE_IMG)
         self.activate_ai = False
 
         self.ai_vs_ai = False
@@ -108,7 +108,7 @@ class UI:
         centers a rectangle coordinate to the circle center
         :param factor: -1 or 1 => subtract or add half of diameter
         """
-        return [pos + factor * self.unit // 2 for pos in rect_coord]
+        return [pos + factor * diameter // 2 for pos in rect_coord]
 
     def render_circle(self, upper_left_corner_pos, diameter, color):
         centered_coords = self.get_circle_center(upper_left_corner_pos, self.unit)
@@ -134,7 +134,7 @@ class UI:
 
     def render_remaining_time(self, player):
         rendered_text = Clock.ftime[player]
-        self.render_text(rendered_text, self.GREY, (self.TIMER_TEXT_X, self.TIMER_TEXT_Y[player]), True)
+        self.render_text(rendered_text, self.BLACK, (self.TIMER_TEXT_X, self.TIMER_TEXT_Y[player]), True)
     
     def render_game_state(self):
         if GameManager.checkmate:
@@ -196,7 +196,7 @@ class UI:
     def select_square(self, square):
         piece = self.board.squares[square]
         if not self.is_selection_valid(piece):
-            print("Can't pick up this piece")
+            print("Can't pick up opponent's piece")
             return
         self.reset_move_data()
         self.ui_board[square] = 0
@@ -241,7 +241,7 @@ class UI:
         for square in self.legal_targets:
             # If piece on target, it must be opponent's,  otherwise it would've been removed
             if self.board.squares[square]:
-                self.highlight_large(square, self.MOVE_HIGHLIGHT_COLOR)
+                self.highlight_large(square, self.RED)
                 continue
             self.highlight_small(square, self.MOVE_HIGHLIGHT_COLOR)
     
