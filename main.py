@@ -10,8 +10,8 @@ from core.Utils import init_imgs, get_perft_result
 from time import perf_counter
 
 FPS = 45
-WIDTH = 1400
-HEIGHT = 900
+WIDTH = 1200
+HEIGHT = 800
 UNIT = HEIGHT // 11
 BOARD_WIDTH = 9 * UNIT
 BOARD_HEIGHT = 10 * UNIT
@@ -37,9 +37,6 @@ pygame.font.init()
 INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
 INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
 
-search = None
-AI_SEARCH_DEPTH = 4
-
 def get_num_positions(depth, board):
     p_t = perf_counter()
     num_positions = get_perft_result(depth, board)
@@ -48,17 +45,16 @@ def get_num_positions(depth, board):
 
     
 def main():
-    only_display_mode = False
     play_as_red = True
     fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN
 
-    Clock.init(600, "MIKE", "OXLONG")
+    Clock.init(300, "MIKE", "OXLONG")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     ZobristHashing.init_table()
     board = Board(fen, play_as_red, red_moves_first=True)
-    if not only_display_mode:
-        LegalMoveGenerator.init_board(board)
-        LegalMoveGenerator.load_moves()
+
+    LegalMoveGenerator.init_board(board)
+    LegalMoveGenerator.load_moves()
 
     Evaluation.init(board)
     Dfs.init(board)
@@ -66,7 +62,7 @@ def main():
     ui = UI(WIN, (WIDTH, HEIGHT), board, (OFFSET_X, OFFSET_Y), UNIT, IMGS)
 
     # ------To run perft search------
-    # iterative = True
+    # iterative = False
     # depth = 4
     # depths = [depth]
     # if iterative:
@@ -77,13 +73,7 @@ def main():
 
     py_clock = pygame.time.Clock()
     run = True
-    while run:
-        if only_display_mode:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    run = False
-            ui.render()
-            continue    
+    while run:   
         ui.update()
         py_clock.tick(FPS)
 
