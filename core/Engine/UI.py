@@ -290,6 +290,8 @@ class UI:
 
     def make_AI_move(self):
         AI_move = AIPlayer.load_move()
+        if AI_move == None:
+            return
         self.update_move_str(AI_move)
         is_capture = self.board.make_move(AI_move)
         self.move_from, self.move_to = AI_move
