@@ -38,7 +38,7 @@ class Board:
         self.game_history = deque() # Stack(:previous square, :target square :captured piece)
         # To keep track of the pieces' indices (Piece-centric repr)
         # Piece list at index 0 keeps track of pieces at the top, index 1 for bottom
-        self.piece_lists = [[set() for _ in range(7)] for _ in range(2)]
+        self.piece_lists = [[[] for _ in range(7)] for _ in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
         self.load_board_from_fen(FEN)
         self.zobrist_key = ZobristHashing.get_zobrist_key(self.moving_color, self.piece_lists)
@@ -74,7 +74,7 @@ class Board:
                 color = int(char.isupper())
                 piece_type = Piece.letters.index(char.lower())
                 # If red is playing the top side, its pieces are stored in piece list index 0
-                self.piece_lists[color][piece_type].add(rank * 9 + file)
+                self.piece_lists[color][piece_type].append(rank * 9 + file)
                 # self.squares[rank * 9 + file] = (is_red + 1) * 8 + piece_type
                 self.squares[rank * 9 + file] = (color, piece_type)
                 file += 1
@@ -148,7 +148,7 @@ class Board:
         piece_type = Piece.get_type_no_check(moved_piece)
         # Updating piece lists
         self.piece_lists[self.moving_color][piece_type].remove(moved_from)
-        self.piece_lists[self.moving_color][piece_type].add(moved_to)
+        self.piece_lists[self.moving_color][piece_type].append(moved_to)
         
         captured_piece = self.squares[moved_to]
         if captured_piece:
@@ -181,11 +181,11 @@ class Board:
 
         # Reversing the move
         self.piece_lists[self.opponent_color][piece_type].remove(moved_to)  
-        self.piece_lists[self.opponent_color][piece_type].add(previous_square)
+        self.piece_lists[self.opponent_color][piece_type].append(previous_square)
 
         if captured_piece:
             captured_type = Piece.get_type_no_check(captured_piece)
-            self.piece_lists[self.moving_color][captured_type].add(moved_to)
+            self.piece_lists[self.moving_color][captured_type].append(moved_to)
 
         self.squares[previous_square] = moved_piece
         self.squares[moved_to] = captured_piece
