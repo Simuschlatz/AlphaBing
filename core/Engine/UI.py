@@ -133,7 +133,7 @@ class UI:
         self.window.blit(surface, pos)
 
     def render_remaining_time(self, player):
-        rendered_text = f"{Clock.r_min_tens[player]}{Clock.r_min_ones[player]}:{Clock.r_sec_tens[player]}{Clock.r_sec_ones[player]}"
+        rendered_text = Clock.ftime[player]
         self.render_text(rendered_text, self.GREY, (self.TIMER_TEXT_X, self.TIMER_TEXT_Y[player]), True)
     
     def render_game_state(self):
@@ -383,7 +383,7 @@ class UI:
         Clock.run(self.board.moving_color)  
         self.render()
         self.event_handler()
-        if GameManager.checkmate:
+        if GameManager.gameover:
             return
         if self.ai_vs_ai:
             self.make_AI_move()
