@@ -11,22 +11,33 @@ class Clock:
         cls.duration = [duration, duration]
         cls.player_one = player_one
         cls.player_two = player_two
-        cls.c_time = time.perf_counter()
         cls.p_time = time.perf_counter()
-        cls.r_min_tens = None
-        cls.r_min_ones = None
-        cls.r_sec_tens = None
-        cls.r_sec_ones = None
-        
+        # Formatted time strings
+        cls.ftime = [cls.get_ftime_string(duration) for _ in range(2)]
+
+    @staticmethod
+    def get_ftime_string(secs):
+        total_secs = round(secs)
+        mins = total_secs // 60
+        seconds = total_secs % 60
+
+        min_tens = mins // 10
+        min_ones = mins % 10
+        sec_tens = seconds // 10
+        sec_ones = seconds % 10
+
+        ftime = f"{min_tens}{min_ones}:{sec_tens}{sec_ones}"
+        return ftime
+
+    @classmethod
+    def update_ftime(cls, moving_side):
+        cls.ftime[moving_side] = cls.get_ftime_string(cls.duration[moving_side])
+
     @classmethod
     def run(cls, moving_side):
-        cls.c_time = time.perf_counter()
-        dt = cls.c_time - cls.p_time
+        c_time = time.perf_counter()
+        dt = c_time - cls.p_time
+        cls.p_time = c_time
         cls.duration[moving_side] = max(0, cls.duration[moving_side] - dt)
-        cls.p_time = cls.c_time
-
-        cls.r_min_tens = [(round(cls.duration[i]) // 60) // 10 for i in range(2)]
-        cls.r_min_ones = [(round(cls.duration[i]) // 60) % 10 for i in range(2)]
-        cls.r_sec_tens = [(round(cls.duration[i]) % 60) // 10 for i in range(2)]
-        cls.r_sec_ones = [round(cls.duration[i] % 60 % 10, 2) for i in range(2)]
+        cls.update_ftime(moving_side)
         # print(*cls.duration)
