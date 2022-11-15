@@ -1,4 +1,4 @@
-# CheapChess - Combining Algorithmic Powers With The Beauty of Machine Learning
+# CheapChess - Combining Algorithmic Powers With Machine Learning
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 
