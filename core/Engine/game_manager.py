@@ -10,18 +10,20 @@ class GameManager:
     """
     checkmate = False
     stalemate = False
+    gameover = False
     fifty_move_counter = 0
 
     @classmethod
     def reset_mate(cls):
         cls.checkmate = False
         cls.stalemate = False
-
+        cls.gameover = False
     @classmethod
     def check_game_state(cls):
         # Load moves for next player
         moves = LegalMoveGenerator.moves
         if not len(moves):
+            cls.gameover = True
             if LegalMoveGenerator.checks:
                 cls.checkmate = True
                 return
