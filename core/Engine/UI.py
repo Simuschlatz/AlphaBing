@@ -29,14 +29,14 @@ class Button:
 
 
 class UI:
-    MOVE_RESPONSE_COLOR = (217, 255, 255)
-    MOVE_HIGHLIGHT_COLOR = (100, 100, 240)
     BG_COLOR = (100, 100, 100)
     RED = (190, 63, 64)
     BLUE = (26, 57, 185)
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
     GREY = (40, 40, 40)
+    MOVE_RESPONSE_COLOR = (217, 255, 255)
+    MOVE_HIGHLIGHT_COLORS = ((100, 100, 240), RED)
 
     pygame.mixer.init()
     MOVE_SFX = pygame.mixer.Sound("assets/sfx/move.wav")
@@ -236,14 +236,17 @@ class UI:
         self.highlight_large(self.move_to, self.MOVE_RESPONSE_COLOR)
 
     def mark_moves(self):
-        if not self.select_square:
+        if not self.selected_piece:
             return
+        piece_color = Piece.get_color_no_check(self.selected_piece)
         for square in self.legal_targets:
-            # If piece on target, it must be opponent's,  otherwise it would've been removed
+            # If piece on target, it must be opponent's, otherwise it would either be invalid or empty
             if self.board.squares[square]:
-                self.highlight_large(square, self.RED)
+                # outline red pieces with blue and black pieces with red
+                self.highlight_large(square, self.MOVE_HIGHLIGHT_COLORS[piece_color])
                 continue
-            self.highlight_small(square, self.MOVE_HIGHLIGHT_COLOR)
+            # draw black's moves in red and red's moves in blue
+            self.highlight_small(square, self.MOVE_HIGHLIGHT_COLORS[1-piece_color])
     
     @staticmethod
     def audio_player(audiofile):
