@@ -49,7 +49,8 @@
 
 
 ## Screenshots
-<img src="./assets/screenshots/24.08.png" alt="screenshot" width="600"/>
+<img src="./assets/screenshots/15.11.jpeg" alt="screenshot" width="500"/>
+<img src="./assets/screenshots/15.11(2).jpeg" alt="screenshot" width="500"/>
 
 ## Dependencies
 **To run the current version of the app:**
