@@ -49,6 +49,15 @@ class Board:
         return square % 9, square // 9
     
     @staticmethod
+    def get_fr_d(square_1, square_2):
+        """
+        :return: distance between two squares in files and ranks 
+        from square_1's perspective
+        """
+        d = square_2 - square_1
+        return d % 9, d // 9
+    
+    @staticmethod
     def get_square(file, rank):
         return rank * 9 + file
 
