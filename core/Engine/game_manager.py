@@ -18,16 +18,15 @@ class GameManager:
         cls.checkmate = False
         cls.stalemate = False
         cls.gameover = False
+
     @classmethod
     def check_game_state(cls):
         # Load moves for next player
         moves = LegalMoveGenerator.moves
         if not len(moves):
             cls.gameover = True
-            if LegalMoveGenerator.checks:
-                cls.checkmate = True
-                return
-            cls.stalemate = True
+            cls.checkmate = bool(LegalMoveGenerator.checks)
+            cls.stalemate = not cls.checkmate
 
     @classmethod
     def increment_move_counter(cls):
