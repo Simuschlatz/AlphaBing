@@ -46,12 +46,14 @@ def get_num_positions(depth, board):
     
 def main():
     play_as_red = True
-    fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN
-
+    red_moves_first = False
+    fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN 
+    fen += (" w " if red_moves_first else " b ") + "- - 0 1"
+    print(fen)
     Clock.init(300, "MIKE", "OXLONG")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     ZobristHashing.init_table()
-    board = Board(fen, play_as_red, red_moves_first=True)
+    board = Board(fen, play_as_red)
 
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
