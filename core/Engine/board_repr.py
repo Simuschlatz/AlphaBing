@@ -19,28 +19,29 @@ class Board:
     rook = 100
     values = (0, elephant, advisor, cannon, pawn, rook, horse)
 
-    def __init__(self, FEN: str, play_as_red: int, red_moves_first=True) -> None:
-        # Look core/notes.md
-        self.moving_side = int(not(play_as_red != red_moves_first))
+    def __init__(self, FEN: str, play_as_red: int) -> None:
+
+        # Square-centric board repr
+        self.squares = list(np.zeros(90, dtype=np.int8))
+        # To keep track of the pieces' indices (Piece-centric repr)
+        # Piece list at index 0 keeps track of pieces at the top, index 1 for bottom
+        self.piece_lists = [[[] for _ in range(7)] for _ in range(2)]
+        # which color moves first - boolean "is_red_first" or "is_red" can be used interchangeably 
+        # with int "color_to_start" or "color" because the colors are represented as ints in [0, 1]
+        is_red_first = self.load_config_from_fen(FEN)
+        self.moving_side = int(not(play_as_red != is_red_first))
         self.opponent_side = 1 - self.moving_side
-        self.moving_color = int(red_moves_first)
+        self.moving_color = int(is_red_first)
         self.opponent_color = 1 - self.moving_color
         # If we don't play as red, the pieces are at the top, 
         self.is_red_up = not play_as_red
         # moving color is 16 if red moves first or 8 when white moves first
         # self.moving_color = (1 + red_moves_first) * 8
         # self.opponent_color = (2 - red_moves_first) * 8
-
-        # Square-centric board repr
-        self.squares = list(np.zeros(90, dtype=np.int8))
         # This keeps track of all game states in history, 
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
         self.game_history = deque() # Stack(:previous square, :target square :captured piece)
-        # To keep track of the pieces' indices (Piece-centric repr)
-        # Piece list at index 0 keeps track of pieces at the top, index 1 for bottom
-        self.piece_lists = [[[] for _ in range(7)] for _ in range(2)]
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
-        self.load_board_from_fen(FEN)
         self.zobrist_key = ZobristHashing.get_zobrist_key(self.moving_color, self.piece_lists)
         self.repetition_history = {self.zobrist_key}
 
@@ -67,7 +68,7 @@ class Board:
         self.opponent_side = self.moving_side
         self.moving_side = 1 - self.moving_side
 
-    def load_board_from_fen(self, FEN: str) -> None:
+    def load_config_from_fen(self, FEN: str) -> None:
         """
         Loads a board from Forsyth-Edwards-Notation (FEN)
         Black: upper case
@@ -75,7 +76,9 @@ class Board:
         King:K, Advisor:A, Elephant:E, Rook:R, Cannon:C, Horse:H, Pawn:P
         """
         file, rank = 0, 0
-        for char in FEN:
+        board_config, color, *_, plies, fullmoves = FEN.split()
+        moving_color = color == "w"
+        for char in board_config:
             if char == "/":
                 rank += 1
                 file = 0
@@ -89,6 +92,7 @@ class Board:
                 file += 1
             if char.isdigit():
                 file += int(char)
+        return moving_color
 
     def load_fen_from_board(self) -> str:
         """
