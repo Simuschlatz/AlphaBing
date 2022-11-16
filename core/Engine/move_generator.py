@@ -53,19 +53,16 @@ class LegalMoveGenerator:
         Initializes data used for move generation
         """
         try:
-            # cls.moving_king = next(iter(cls.board.piece_lists[cls.board.moving_color][Piece.king]))
-            # cls.opponent_king = next(iter(cls.board.piece_lists[cls.board.opponent_color][Piece.king]))
             cls.moving_king = cls.board.piece_lists[cls.board.moving_color][Piece.king][0]
             cls.opponent_king = cls.board.piece_lists[cls.board.opponent_color][Piece.king][0]
-        except StopIteration:
-            print("invalid move detected")
+        except IndexError:
+            print("---- invalid move detected: King was captured ----")
             print(cls.board.load_fen_from_board())
             cls.board.get_previous_configs(6)
-        cls.moves = []
 
+        cls.moves = []
         cls.attack_map = set()
-        
-        # Swquares that would serve as screen for a threatening cannon
+        # Squares that would serve as screen for a threatening cannon
         cls.illegal_squares = set()
         cls.pinned_squares = set()
         # Number of checks
@@ -150,11 +147,13 @@ class LegalMoveGenerator:
         return cls.dir_offsets.index(d_rank // abs(d_rank) * 9), cls.dir_offsets.index(d_file // abs(d_file))
 
     @staticmethod
-    def get_slope(d_1, d_2):
+    def get_slope(cls, square_1, square_2):
         """
         NOTE: Not used right now
         """
-        return d_2 / d_1
+        file_1, rank_1 = cls.board.get_file_and_rank(square_1)
+        file_2, rank_2 = cls.board.get_file_and_rank(square_2)
+        return (file_2 - file_1) / (rank_2 - rank_1)
 
 
     @classmethod
@@ -541,7 +540,7 @@ class LegalMoveGenerator:
                 continue
             for move in cls.horse_mm[square]:
                 target_square = move[1]
-               
+                
                 # --------------------------------MISTAKE DOCUMENTATION-----------------------------------
                 # Not adding squares to the attack map if they're occupied by an opponent piece allows 
                 # the king to make pseudo-legal capture to squares that can be attacked by opponent pieces
