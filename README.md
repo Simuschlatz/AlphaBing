@@ -1,7 +1,8 @@
-# CheapChess - Combining Algorithmic Powers With Machine Learning
+# CheapChess - The Fastest Python Chess-AI
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 
+> Combining Algorithmic Powers With The Beauty of Machine Learning
 ## Table of Contents
   - [Features](#features)
   - [How To Play](#how-to-play)
