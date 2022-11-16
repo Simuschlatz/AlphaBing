@@ -10,7 +10,9 @@ class PrecomputingMoves:
         # Orthogonal and diagonal offsets of board represented in one dimension
         cls.dir_offsets = [-9, 1, 9, -1, -8, 10, 8, -10]
         cls.dist_to_edge = cls.precompute_dists()
-        cls.append_horse_offsets()
+        # Horse / knight offsets, also appended to direction offsets
+        cls.horse_offsets = cls.append_horse_offsets()
+        print(cls.horse_offsets)
 
     @staticmethod
     def precompute_dists() -> list:
@@ -42,8 +44,8 @@ class PrecomputingMoves:
     def append_horse_offsets(cls) -> list:
         """
         :return: a list of integers representing the offsets of a horse jump,
-        ordered in a way where precompute_horse_moves() can use them to exclude
-        illegal moves blocked by a piece
+        ordered in a way where move_generator.generate_horse_moves() can use
+        them to exclude illegal moves blocked by a piece
         """
         horse_offsets = []
         dir_offsets = cls.dir_offsets[:4] + [-9]
@@ -56,6 +58,7 @@ class PrecomputingMoves:
                 second_dir_steps = 1 + steps
                 new_offset = dir_offsets[dir_index] * first_dir_steps + dir_offsets[second_dir_idx] * second_dir_steps
                 horse_offsets.append(new_offset)
+
         cls.dir_offsets.extend(horse_offsets)
         return horse_offsets
 
