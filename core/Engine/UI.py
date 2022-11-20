@@ -4,8 +4,9 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import BoardUtility, Piece, LegalMoveGenerator, GameManager, Clock, ZobristHashing, GameManager
+from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board
 from core.Engine.AI import AIPlayer, TrainingDataCollector
+from core.Utils import init_imgs, BoardUtility
 
 class Button:
     def __init__(self, x, y, image):
@@ -38,37 +39,47 @@ class UI:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
     MOVE_HIGHLIGHT_COLORS = ((100, 100, 240), RED)
 
+    WIDTH = 1200
+    HEIGHT = 800
+    UNIT = HEIGHT // 11
+    BOARD_WIDTH = 9 * UNIT
+    BOARD_HEIGHT = 10 * UNIT
+    BUTTON_DIMS = (UNIT * 2.2, UNIT * .83)
+    OFFSET_X = (WIDTH - BOARD_WIDTH) // 2
+    OFFSET_Y = (HEIGHT - BOARD_HEIGHT) // 2
+    OFFSETS = (OFFSET_X, OFFSET_Y)
+
+    # Style of piece images
+    piece_style_western = True
     pygame.mixer.init()
+    IMGS = init_imgs(UNIT, (WIDTH, HEIGHT), (BOARD_WIDTH, BOARD_HEIGHT), BUTTON_DIMS, piece_style_western)
+    # SFX
     MOVE_SFX = pygame.mixer.Sound("assets/sfx/move.wav")
     CAPTURE_SFX = pygame.mixer.Sound("assets/sfx/capture.wav")
+    # Font stuff
+    FONT_SIZE_LARGE = UNIT // 2
+    FONT_SIZE_SMALL = UNIT // 3
+    FONT_WIDTH_SMALL = FONT_SIZE_SMALL * 0.55
 
-    def __init__(self, window, dimensions, board, offsets, unit, imgs):
-        self.window = window
-        self.WIDTH, self.HEIGHT = dimensions
+    def __init__(self, board:Board):
+        self.window = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.RESIZABLE)
         self.board = board
         # This board is created solely for UI purposes, so that the visual board can be modified
         # without crating interdependencies with the internal board representation
         self.ui_board = board.squares[:]
 
-        self.offsets = offsets
-        self.off_x, self.off_y = offsets
-        self.unit = unit
 
-        # Font stuff
-        self.FONT_SIZE_LARGE = unit // 2
-        self.FONT_SIZE_SMALL = unit // 3
-        self.FONT_WIDTH_SMALL = self.FONT_SIZE_SMALL * 0.55
-        self.GAME_STATE_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_LARGE)
-        self.DISPLAY_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_SMALL)
-        self.TIMER_TEXT_X, self.TIMER_TEXT_Y = self.off_x + unit * 9.5, [self.HEIGHT / 2 - (1 - player) * self.FONT_SIZE_LARGE for player in range(2)]
+        self.LARGE_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_LARGE)
+        self.SMALL_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_SMALL)
+        self.TIMER_TEXT_X, self.TIMER_TEXT_Y = self.OFFSET_X + self.UNIT * 9.5, [self.HEIGHT / 2 - (1 - side) * self.FONT_SIZE_LARGE for side in range(2)]
         self.MOVE_STR_POS = (self.WIDTH // 20, self.WIDTH // 20)
         
         # Circle diameters to mark moves and captures
-        self.BIG_CIRCLE_D = unit * 1.1
-        self.SMALL_CIRCLE_D = unit // 6
+        self.BIG_CIRCLE_D = self.UNIT * 1.1
+        self.SMALL_CIRCLE_D = self.UNIT // 6
 
         # All the images
-        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG, self.BTN_ACTIVATE_IMG, self.BTN_DEACTIVATE_IMG = imgs 
+        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG, self.BTN_ACTIVATE_IMG, self.BTN_DEACTIVATE_IMG = self.IMGS 
 
         # Move logics
         self.move_from = None
@@ -98,8 +109,8 @@ class UI:
         for square, piece in enumerate(self.ui_board):
             if not piece:
                 continue
-            file, rank = BoardUtility.get_file_and_rank(square)
-            pos = BoardUtility.get_display_coords(file, rank, self.unit, *self.offsets)
+            file, rank = self.board.get_file_and_rank(square)
+            pos = BoardUtility.get_display_coords(file, rank, self.UNIT, *self.OFFSETS)
             color, piece_type = piece
             self.render_piece(color, piece_type, pos)
 
@@ -111,25 +122,21 @@ class UI:
         return [pos + factor * diameter // 2 for pos in rect_coord]
 
     def render_circle(self, upper_left_corner_pos, diameter, color):
-        centered_coords = self.get_circle_center(upper_left_corner_pos, self.unit)
+        centered_coords = self.get_circle_center(upper_left_corner_pos, self.UNIT)
         x, y = (pos - diameter // 2 for pos in centered_coords)
         pygame.draw.ellipse(self.window, color, (x, y, diameter, diameter))
     
-    def highlight_large(self, square, color):
-        file, rank = BoardUtility.get_file_and_rank(square)
-        coordinates = BoardUtility.get_display_coords(file, rank, self.unit, *self.offsets)
-        self.render_circle(coordinates, self.BIG_CIRCLE_D, color)
-    
-    def highlight_small(self, square, color):
-        file, rank = BoardUtility.get_file_and_rank(square)
-        coordinates = BoardUtility.get_display_coords(file, rank, self.unit, *self.offsets)
-        self.render_circle(coordinates, self.SMALL_CIRCLE_D, color)
+    def highlight_move(self, square, color, large: bool):
+        file, rank = self.board.get_file_and_rank(square)
+        coordinates = BoardUtility.get_display_coords(file, rank, self.UNIT, *self.OFFSETS)
+        d = self.BIG_CIRCLE_D if large else self.SMALL_CIRCLE_D
+        self.render_circle(coordinates, d, color)
 
     def render_text(self, text: str, color: tuple, pos: tuple, large_font):
         if large_font:
-            surface = self.GAME_STATE_FONT.render(text, False, color)
+            surface = self.LARGE_FONT.render(text, False, color)
         else:
-            surface = self.DISPLAY_FONT.render(text, False, color)
+            surface = self.SMALL_FONT.render(text, False, color)
         self.window.blit(surface, pos)
 
     def render_remaining_time(self, player):
@@ -223,17 +230,17 @@ class UI:
         if not self.selected_piece:
             return
         mouse_pos = pygame.mouse.get_pos()
-        piece_pos = self.get_circle_center(mouse_pos, self.unit, factor=-1)
+        piece_pos = self.get_circle_center(mouse_pos, self.UNIT, factor=-1)
         color, piece_type = self.selected_piece
         self.render_piece(color, piece_type, piece_pos)
 
     def move_responsiveness(self):
         if self.move_from == None:
             return
-        self.highlight_small(self.move_from, self.MOVE_RESPONSE_COLOR)
+        self.highlight_move(self.move_from, self.MOVE_RESPONSE_COLOR, False)
         if self.move_to == None:
             return
-        self.highlight_large(self.move_to, self.MOVE_RESPONSE_COLOR)
+        self.highlight_move(self.move_to, self.MOVE_RESPONSE_COLOR, True)
 
     def mark_moves(self):
         if not self.selected_piece:
@@ -243,10 +250,10 @@ class UI:
             # If piece on target, it must be opponent's, otherwise it would either be invalid or empty
             if self.board.squares[square]:
                 # outline red pieces with blue and black pieces with red
-                self.highlight_large(square, self.MOVE_HIGHLIGHT_COLORS[piece_color])
+                self.highlight_move(square, self.MOVE_HIGHLIGHT_COLORS[piece_color], True)
                 continue
             # draw black's moves in red and red's moves in blue
-            self.highlight_small(square, self.MOVE_HIGHLIGHT_COLORS[1-piece_color])
+            self.highlight_move(square, self.MOVE_HIGHLIGHT_COLORS[1-piece_color], False)
     
     @staticmethod
     def audio_player(audiofile):
@@ -262,14 +269,14 @@ class UI:
             self.audio_player(self.MOVE_SFX)
 
     def selection(self, mouse_pos):
-        # Account for the offsets the board's (0,0) coordinate is replaced by on the window
-        file, rank = BoardUtility.get_board_pos(mouse_pos, self.unit, *self.offsets)
-        current_square = BoardUtility.get_square(file, rank)
+        # Account for the OFFSETS the board's (0,0) coordinate is replaced by on the window
+        file, rank = BoardUtility.get_board_pos(mouse_pos, self.UNIT, *self.OFFSETS)
+        current_square = self.board.get_square(file, rank)
         self.select_square(current_square)
 
     def make_human_move(self):
         mouse_pos = pygame.mouse.get_pos()
-        file, rank = BoardUtility.get_board_pos(mouse_pos, self.unit, *self.offsets)
+        file, rank = BoardUtility.get_board_pos(mouse_pos, self.UNIT, *self.OFFSETS)
         target_square = rank * 9 + file
 
         is_capture = self.drop_piece(target_square)
@@ -363,7 +370,7 @@ class UI:
         Does all the rendering work on the window
         """
         self.window.fill(self.BG_COLOR)
-        self.window.blit(self.BOARD_IMG, self.offsets)
+        self.window.blit(self.BOARD_IMG, self.OFFSETS)
 
         self.move_responsiveness()
 
