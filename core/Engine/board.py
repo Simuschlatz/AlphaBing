@@ -9,16 +9,6 @@ import numpy as np
 from collections import deque
 
 class Board:
-    # Piece's values
-    king = float("inf")
-    pawn = 10
-    advisor = 20
-    elephant = 20
-    horse = 40
-    cannon = 45
-    rook = 100
-    values = (0, elephant, advisor, cannon, pawn, rook, horse)
-
     def __init__(self, FEN: str, play_as_red: int) -> None:
 
         # Square-centric board repr
