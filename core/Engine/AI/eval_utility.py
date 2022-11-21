@@ -6,6 +6,15 @@ under the terms of the GNU General Public License
 from core.Engine.AI.piece_square_tables import PieceSquareTable
 
 class Evaluation:
+    # Piece's values
+    king = float("inf")
+    pawn = 10
+    advisor = 20
+    elephant = 20
+    horse = 40
+    cannon = 45
+    rook = 100
+    values = (0, elephant, advisor, cannon, pawn, rook, horse)
 
     @classmethod
     def init(cls, board):
@@ -27,7 +36,7 @@ class Evaluation:
     def static_material_eval(cls, moving_color):
         mat = 0
         for piece_id in range(1, 7):
-            mat += len(cls.board.piece_lists[moving_color][piece_id]) * cls.board.values[piece_id]
+            mat += len(cls.board.piece_lists[moving_color][piece_id]) * cls.values[piece_id]
         return mat
 
     @classmethod
