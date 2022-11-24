@@ -3,14 +3,15 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 - All Rights Reserved. You may use, distribute and modify this code
 under the terms of the GNU General Public License
 """
-from core.Engine.piece import Piece
-from core.Engine.zobrist_hashing import ZobristHashing
+from core.Engine import Piece, ZobristHashing, LegalMoveGenerator
 import numpy as np
 from collections import deque
 
 class Board:
     def __init__(self, FEN: str, play_as_red: int) -> None:
-
+        """
+        :param FEN: Forsyth-Edwards-Notation, a concise string version to represent a state of game
+        """
         # Square-centric board repr
         self.squares = list(np.zeros(90, dtype=np.int8))
         # To keep track of the pieces' indices (Piece-centric repr)
@@ -28,6 +29,8 @@ class Board:
         # moving color is 16 if red moves first or 8 when white moves first
         # self.moving_color = (1 + red_moves_first) * 8
         # self.opponent_color = (2 - red_moves_first) * 8
+        
+        self.fullmoves, self.halfmoves = 0, 0
         # This keeps track of all game states in history, 
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
         self.game_history = deque() # Stack(:previous square, :target square :captured piece)
@@ -67,6 +70,8 @@ class Board:
         """
         file, rank = 0, 0
         board_config, color, *_, plies, fullmoves = FEN.split()
+        self.halfmoves, self.fullmoves = map(int, (plies, fullmoves))
+        print(self.halfmoves, self.fullmoves)
         moving_color = color == "w"
         for char in board_config:
             if char == "/":
@@ -101,11 +106,11 @@ class Board:
                 letter = Piece.letters[color * 7 + piece_type]
                 fen += letter
             file, rank = self.get_file_and_rank(i)
-            if rank < 9 and file == 8 and empty_files_in_rank != 9:
-                fen += "/"
+            if empty_files_in_rank == 9:
+                fen += "9"
                 empty_files_in_rank = 0
-            elif empty_files_in_rank == 9:
-                fen += "9/"
+            if rank < 9 and file == 8:
+                fen += "/"
                 empty_files_in_rank = 0
         return fen
 
@@ -114,6 +119,12 @@ class Board:
     
     def is_capture(self, square):
         return self.squares[square]
+
+    def is_terminal(self):
+        """
+        :return: if current position is a terminal state
+        """
+        return not len(LegalMoveGenerator.load_moves())
 
     @staticmethod
     def get_manhattan_dist(square_1, square_2):
@@ -158,6 +169,9 @@ class Board:
             captured_type = Piece.get_type_no_check(captured_piece)
             self.piece_lists[self.opponent_color][captured_type].remove(moved_to)
 
+        if self.moving_color == Piece.black: self.fullmoves += 1
+        self.halfmoves = 0 if piece_type == Piece.pawn else self.halfmoves + 1
+        print(self.fullmoves, self.halfmoves)
         # Adding current game state to history
         current_game_state = (*move, captured_piece)
         self.game_history.append(current_game_state)
@@ -189,6 +203,9 @@ class Board:
         if captured_piece:
             captured_type = Piece.get_type_no_check(captured_piece)
             self.piece_lists[self.moving_color][captured_type].append(moved_to)
+
+        if self.moving_color == Piece.black:
+            self.fullmoves -= 1
 
         self.squares[previous_square] = moved_piece
         self.squares[moved_to] = captured_piece
