@@ -93,27 +93,27 @@ class Board:
         """
         :return: a Forsyth-Edwards-Notation (FEN) string from the current board
         """
-        fen = ""
+        config = ""
         empty_files_in_rank = 0
         for i, piece in enumerate(self.squares):
             if not piece:
                 empty_files_in_rank += 1
             else:
                 if empty_files_in_rank:
-                    fen += str(empty_files_in_rank)
+                    config += str(empty_files_in_rank)
                     empty_files_in_rank = 0
                 color, piece_type = piece
                 letter = Piece.letters[color * 7 + piece_type]
-                fen += letter
+                config += letter
             file, rank = self.get_file_and_rank(i)
             if empty_files_in_rank == 9:
-                fen += "9"
+                config += "9"
                 empty_files_in_rank = 0
             if rank < 9 and file == 8:
-                fen += "/"
+                config += "/"
                 empty_files_in_rank = 0
         color = Piece.colors[self.moving_color]
-        fen = " ".join([fen, color, "- -", str(self.halfmoves), str(self.fullmoves)])
+        fen = " ".join([config, color, "- -", str(self.halfmoves), str(self.fullmoves)])
         return fen
 
     def get_piece_list(self, color, piece_type: int):
