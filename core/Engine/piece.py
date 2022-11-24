@@ -16,7 +16,7 @@ class Piece:
     black = 0
     red = 1
     letters = "keacprhKEACPRH"
-
+    colors = "bw"
     @staticmethod
     def get_color(piece):
         if not piece:

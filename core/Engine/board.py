@@ -112,6 +112,8 @@ class Board:
             if rank < 9 and file == 8:
                 fen += "/"
                 empty_files_in_rank = 0
+        color = Piece.colors[self.moving_color]
+        fen = " ".join([fen, color, "- -", str(self.halfmoves), str(self.fullmoves)])
         return fen
 
     def get_piece_list(self, color, piece_type: int):
