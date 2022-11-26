@@ -1,14 +1,12 @@
 """
-Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> 
-- All Rights Reserved. You may use, distribute and modify this code
-under the terms of the GNU General Public License
+Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
+You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 import os
 
 copyright_text = '''"""
-Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> 
-- All Rights Reserved. You may use, distribute and modify this code
-under the terms of the GNU General Public License
+Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
+You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 '''
 msg_lines = len(copyright_text.split("\n"))
