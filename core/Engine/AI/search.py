@@ -3,17 +3,20 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 from core.Engine.move_generator import LegalMoveGenerator
+from core.Engine.board import Board
 from core.Engine.AI.eval_utility import Evaluation
-from core.Engine.AI.move_ordering import order_moves, order_moves_pst
-from core.Engine.AI.AI_diagnostics import Diagnostics
+from core.Engine.AI import order_moves, order_moves_pst, Diagnostics
+from core.Engine.piece import Piece
+
 
 class Dfs:
     checkmate_value = 9999
+    draw = 0
     positive_infinity = float("inf")
     negative_infinity = -positive_infinity
 
     @classmethod
-    def init(cls, board) -> None:
+    def init(cls, board: Board) -> None:
         cls.board = board
         cls.evaluated_positions = 0
         cls.cutoffs = 0
@@ -65,11 +68,11 @@ class Dfs:
     def alpha_beta_opt(cls, depth, plies, alpha, beta):
         if not depth:
             Diagnostics.evaluated_nodes += 1
-            return Evaluation.pst_shef()
+            return cls.quiescene(alpha, beta)
 
-        if plies > 0:
-            if cls.board.is_repetition():
-                return 0
+        # if plies > 0:
+        #     if cls.board.is_repetition():
+        #         return 0
             # alpha = max(alpha, -cls.checkmate_value + plies)
             # beta = min(beta, cls.checkmate_value - plies)
             # if alpha >= beta:
@@ -78,15 +81,15 @@ class Dfs:
         moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
-        if not moves:
-            # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
-            # checkmates, as the checkmate value still is better than the initial beta of -infinity
-            # print(cls.board.load_fen_from_board())
-            # if plies % 2:
-            #     cls.mate_found = True
-            Diagnostics.best_eval = cls.checkmate_value
-            # cls.board.get_previous_configs(10)s
-            return -cls.checkmate_value
+        if cls.board.is_terminal_state():
+            status = cls.board.get_status()
+            if status:
+                # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
+                # checkmates, as the checkmate value still is better than the initial beta of -infinity
+                Diagnostics.best_eval = cls.checkmate_value
+                return -cls.checkmate_value
+            if status == 0: 
+                return cls.draw
 
         for move in moves:
             # traversing down the tree
@@ -122,6 +125,16 @@ class Dfs:
         alpha = max(eval, alpha)
 
         moves = order_moves_pst(LegalMoveGenerator.load_moves(generate_quiets=False), cls.board)
+        # Check- or Stalemate, meaning game is lost
+        # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
+        if cls.board.is_terminal_state():
+            status = cls.board.get_status()
+            if status:
+                Diagnostics.best_eval = cls.checkmate_value
+                return -cls.checkmate_value
+            if status == 0: 
+                return cls.draw
+
         for move in moves:
             cls.board.make_move(move)
             evaluation = -cls.quiescene(-beta, -alpha)
