@@ -7,12 +7,6 @@ import csv
 import os
 from core.Engine.AI import Dfs
 import pandas as pd
-"""
-1. write into csv file --
-2. writes board list and eval of board to csv file --
-3. check for redundant storing of identical lists --
-4. ai vs ai for random boards
-"""
 
 class TrainingDataCollector:
     dir_path = "core/Engine/AI/SLEF"
@@ -75,7 +69,7 @@ class TrainingDataCollector:
         row = list(board_config)
         best_eval = Dfs.get_best_eval(self.num_plies_ahead)
         # We don't want the model to learn evaluate checkmates, as it is much too complex to recognise.
-        if best_eval == Dfs.checkmate_value:
+        if abs(best_eval) == Dfs.checkmate_value:
             return
         row.append(best_eval)
         # num_rows, _ = self.training_data.shape
