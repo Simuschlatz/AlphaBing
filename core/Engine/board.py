@@ -19,18 +19,20 @@ class Board:
         self.piece_lists = [[[] for _ in range(7)] for _ in range(2)]
         # which color moves first - boolean "is_red_first" or "is_red" can be used interchangeably 
         # with int "color_to_start" or "color" because the colors are represented as ints in [0, 1]
+        self.fullmoves, self.plies = 0, 0
         is_red_first = self.load_config_from_fen(FEN)
-        self.moving_side = int(not(play_as_red != is_red_first))
+        self.moving_side = int(play_as_red == is_red_first)
         self.opponent_side = 1 - self.moving_side
         self.moving_color = int(is_red_first)
         self.opponent_color = 1 - self.moving_color
+        print(self.moving_color)
         # If we don't play as red, the pieces are at the top, 
         self.is_red_up = not play_as_red
         # moving color is 16 if red moves first or 8 when white moves first
         # self.moving_color = (1 + red_moves_first) * 8
         # self.opponent_color = (2 - red_moves_first) * 8
-        
-        self.fullmoves, self.halfmoves = 0, 0
+        # int is added each time a pawn is moved to know the previous ply count when reversing a move
+        self.plies_history = deque()
         # This keeps track of all game states in history, 
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
         self.game_history = deque() # Stack(:previous square, :target square :captured piece)
@@ -70,8 +72,8 @@ class Board:
         """
         file, rank = 0, 0
         board_config, color, *_, plies, fullmoves = FEN.split()
-        self.halfmoves, self.fullmoves = map(int, (plies, fullmoves))
-        print(self.halfmoves, self.fullmoves)
+        self.plies, self.fullmoves = map(int, (plies, fullmoves))
+        print("plies: ", self.plies, "fullmoves: ", self.fullmoves)
         moving_color = color == "w"
         for char in board_config:
             if char == "/":
@@ -113,7 +115,7 @@ class Board:
                 config += "/"
                 empty_files_in_rank = 0
         color = Piece.colors[self.moving_color]
-        fen = " ".join([config, color, "- -", str(self.halfmoves), str(self.fullmoves)])
+        fen = " ".join([config, color, "- -", str(self.plies), str(self.fullmoves)])
         return fen
 
     def get_piece_list(self, color, piece_type: int):
@@ -171,9 +173,13 @@ class Board:
             captured_type = Piece.get_type_no_check(captured_piece)
             self.piece_lists[self.opponent_color][captured_type].remove(moved_to)
 
-        if self.moving_color == Piece.black: self.fullmoves += 1
-        self.halfmoves = 0 if piece_type == Piece.pawn else self.halfmoves + 1
-        print(self.fullmoves, self.halfmoves)
+        if self.moving_color == Piece.black:
+            self.fullmoves += 1
+        if piece_type == Piece.pawn:
+            self.plies_history.append(self.plies)
+            self.plies = 0
+        else: self.plies += 1
+
         # Adding current game state to history
         current_game_state = (*move, captured_piece)
         self.game_history.append(current_game_state)
@@ -206,14 +212,16 @@ class Board:
             captured_type = Piece.get_type_no_check(captured_piece)
             self.piece_lists[self.moving_color][captured_type].append(moved_to)
 
-        if self.moving_color == Piece.black:
-            self.fullmoves -= 1
-
         self.squares[previous_square] = moved_piece
         self.squares[moved_to] = captured_piece
 
         # Switch back to previous moving color
         self.switch_moving_color()
+        if self.moving_color == Piece.black: self.fullmoves -= 1
+        if piece_type == Piece.pawn:
+            self.plies = self.plies_history.pop()
+        else: self.plies -= 1
+
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
         self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
         if not search_state:
