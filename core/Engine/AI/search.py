@@ -4,9 +4,10 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz>
 under the terms of the GNU General Public License
 """
 from core.Engine.move_generator import LegalMoveGenerator
-from core.Engine.AI.move_ordering import order_moves, order_moves_pst
 from core.Engine.AI.eval_utility import Evaluation
+from core.Engine.AI.move_ordering import order_moves, order_moves_pst
 from core.Engine.AI.AI_diagnostics import Diagnostics
+
 class Dfs:
     checkmate_value = 9999
     positive_infinity = float("inf")
@@ -39,8 +40,8 @@ class Dfs:
             if evaluation > best_eval:
                 best_eval = evaluation
                 best_move = move
-            if cls.mate_found:
-                return best_move
+            # if cls.mate_found:
+            #     return best_move
         return best_move
     
     @classmethod
@@ -82,8 +83,8 @@ class Dfs:
             # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
             # checkmates, as the checkmate value still is better than the initial beta of -infinity
             # print(cls.board.load_fen_from_board())
-            if plies % 2:
-                cls.mate_found = True
+            # if plies % 2:
+            #     cls.mate_found = True
             Diagnostics.best_eval = cls.checkmate_value
             # cls.board.get_previous_configs(10)s
             return -cls.checkmate_value
@@ -98,7 +99,7 @@ class Dfs:
             # opponent won't choose this move anyway so PRUNE YESSIR
             if evaluation >= beta:
                 cls.cutoffs += 1
-                return beta # Return -alpha of opponent, which will be turned to alpha in depth + 1
+                return beta # Return -alpha of opponent, which will be turned to alpha in depth - 1
             # Keep track of best move for moving color
             alpha = max(evaluation, alpha)
 
