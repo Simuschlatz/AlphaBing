@@ -7,7 +7,7 @@ import numpy as np
 from collections import deque
 
 class Board:
-    def __init__(self, FEN: str, play_as_red: int) -> None:
+    def __init__(self, FEN: str, play_as_red=True) -> None:
         """
         :param FEN: Forsyth-Edwards-Notation, a concise string version to represent a state of game
         """
@@ -19,7 +19,8 @@ class Board:
         # which color moves first - boolean "is_red_first" or "is_red" can be used interchangeably 
         # with int "color_to_start" or "color" because the colors are represented as ints in [0, 1]
         self.fullmoves, self.plies = 0, 0
-        is_red_first = self.load_config_from_fen(FEN)
+
+        is_red_first = self.load_board_from_fen(FEN)
         self.moving_side = int(play_as_red == is_red_first)
         self.opponent_side = 1 - self.moving_side
         self.moving_color = int(is_red_first)
@@ -62,7 +63,7 @@ class Board:
         self.opponent_side = self.moving_side
         self.moving_side = 1 - self.moving_side
 
-    def load_config_from_fen(self, FEN: str) -> None:
+    def load_board_from_fen(self, FEN: str) -> None:
         """
         Loads a board from Forsyth-Edwards-Notation (FEN)
         Black: upper case
@@ -123,11 +124,23 @@ class Board:
     def is_capture(self, square):
         return self.squares[square]
 
-    def is_terminal(self):
+    def is_terminal_state(self):
         """
         :return: if current position is a terminal state
         """
-        return not len(LegalMoveGenerator.load_moves())
+        return not len(LegalMoveGenerator.moves) or self.plies >= 60
+
+    def get_status(self) -> int:
+        # sixty move counter
+        if self.plies >= 60:
+            return 0
+        # Check- or stalemate
+        if not LegalMoveGenerator.moves:
+            return -1
+        return None
+
+    def load_moves(self):
+        return LegalMoveGenerator.load_moves()
 
     @staticmethod
     def get_manhattan_dist(square_1, square_2):
