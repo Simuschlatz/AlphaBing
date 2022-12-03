@@ -7,6 +7,8 @@ import numpy as np
 from collections import deque
 
 class Board:
+    max_plies = 60
+
     def __init__(self, FEN: str, play_as_red=True) -> None:
         """
         :param FEN: Forsyth-Edwards-Notation, a concise string version to represent a state of game
@@ -128,16 +130,21 @@ class Board:
         """
         :return: if current position is a terminal state
         """
-        return not len(LegalMoveGenerator.moves) or self.plies >= 60
+        return not LegalMoveGenerator.moves or self.plies >= self.max_plies
 
     def get_status(self) -> int:
+        """
+        returns integer [-1, 1)
+        -1: lose
+        0: draw
+        Optimally used after terminal state is determined (see Board.is_terminal_state)
+        """
         # sixty move counter
         if self.plies >= 60:
             return 0
         # Check- or stalemate
         if not LegalMoveGenerator.moves:
             return -1
-        return None
 
     def load_moves(self):
         return LegalMoveGenerator.load_moves()
