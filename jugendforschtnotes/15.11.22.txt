@@ -3,3 +3,5 @@ combinatorial game theory
 state-space complexity as log to base 10: Xiangqi: 40
 search-tree complexity as log to base 10: Xiangqi: 150 Chess: 123
 Avg game length: 95 plies
+
+--> minimax method 

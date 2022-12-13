@@ -3,7 +3,9 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 class PrecomputingMoves:
-
+    """
+    precomputes all pseudo-legal moves for all pieces at all possible positions
+    """
     @classmethod
     def init_constants(cls):
         # Orthogonal and diagonal offsets of board represented in one dimension

@@ -192,7 +192,7 @@ class UI:
         self.fen = self.board.load_fen_from_board()
         print(self.fen)
         self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
-
+        
     def drop_update(self):
         self.update_info()
 

@@ -6,7 +6,7 @@ from core.Engine.move_generator import LegalMoveGenerator
 from core.Engine.board import Board
 from core.Engine.AI.eval_utility import Evaluation
 from core.Engine.AI import order_moves, order_moves_pst, Diagnostics
-from core.Engine.piece import Piece
+import multiprocessing
 
 
 class Dfs:
@@ -45,7 +45,7 @@ class Dfs:
             # if cls.mate_found:
             #     return best_move
         return best_move
-    
+
     @classmethod
     def get_best_eval(cls, depth):
         Diagnostics.init()

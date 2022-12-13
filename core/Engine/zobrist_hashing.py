@@ -6,8 +6,8 @@ import numpy as np
 
 class ZobristHashing:
     """
-    A neat way to generate numbers for a given state of a game, showing that sometimes 
-    benefits of speed outweigh imperfection
+    A neat way to generate n-bit binaries for a given position, 
+    showing that sometimes benefits of speed outweigh imperfection (rare hash collisions)
     """
     table = []
     lowest_value = 0

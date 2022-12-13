@@ -1,0 +1,6 @@
+Board:
+is_terminal_state
+
+action space
+rook: 90 x 18
+horse: 90 * 8

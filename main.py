@@ -5,7 +5,7 @@ You may use, distribute and modify this code under the terms of the GNU General 
 import pygame
 from core.Engine import Board, LegalMoveGenerator, Clock, UI, ZobristHashing
 from core.Engine.AI import Dfs, Evaluation
-from core.Utils import init_imgs, get_perft_result
+from core.Utils import get_perft_result
 from time import perf_counter
 
 
@@ -29,10 +29,9 @@ def get_num_positions(depth, board):
     
 def main():
     play_as_red = True
-    red_moves_first = False
+    red_moves_first = True
     fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN 
     fen += (" w " if red_moves_first else " b ") + "- - 0 1"
-    print(fen)
     Clock.init(300, "MIKE", "OXLONG")
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     ZobristHashing.init_table()
