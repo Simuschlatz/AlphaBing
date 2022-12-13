@@ -298,7 +298,7 @@ class UI:
         LegalMoveGenerator.load_moves()
 
     def make_AI_move(self):
-        AI_move = AIPlayer.load_move()
+        AI_move = AIPlayer.load_move(self.board)
         if AI_move == None:
             return
         self.update_move_str(AI_move)

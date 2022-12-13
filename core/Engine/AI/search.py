@@ -2,17 +2,18 @@
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
+import copy
 from core.Engine.move_generator import LegalMoveGenerator
 from core.Engine.board import Board
 from core.Engine.AI.eval_utility import Evaluation
 from core.Engine.AI import order_moves, order_moves_pst, Diagnostics
-import multiprocessing
+import multiprocessing as mp
 
 
 class Dfs:
-    checkmate_value = 9999
+    checkmate_value = 9998
     draw = 0
-    positive_infinity = float("inf")
+    positive_infinity = 9999
     negative_infinity = -positive_infinity
 
     @classmethod
@@ -20,6 +21,33 @@ class Dfs:
         cls.board = board
         cls.evaluated_positions = 0
         cls.cutoffs = 0
+
+    @classmethod
+    def multiprocess_search(cls, depth, board):
+        best_move = None
+        move_evals = mp.Manager().dict()
+        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
+        jobs = []
+        for move in current_pos_moves:
+            p = mp.Process(target=cls.search_for_move, args=(move, move_evals, 4, board))
+            jobs.append(p)
+            p.start()
+        for process in jobs:
+            process.join()
+        best_move = sorted(move_evals, key=lambda move: move_evals[move]).pop()
+        print(move_evals)
+        return best_move
+
+    @classmethod
+    def search_for_move(cls, move, move_evals, depth, b):
+        alpha = cls.positive_infinity
+        beta = cls.negative_infinity
+        board = copy.deepcopy(b)
+        # use copy of board
+        board.make_move(move)
+        evaluation = -cls.alpha_beta_opt(board, depth-1, 1, beta, alpha)
+        board.reverse_move()
+        move_evals[move] = evaluation
 
     @classmethod
     def search(cls, depth):
@@ -42,8 +70,9 @@ class Dfs:
             if evaluation > best_eval:
                 best_eval = evaluation
                 best_move = move
-            # if cls.mate_found:
-            #     return best_move
+            if cls.mate_found:
+                return best_move
+        
         return best_move
 
     @classmethod
@@ -65,10 +94,11 @@ class Dfs:
             
 
     @classmethod
-    def alpha_beta_opt(cls, depth, plies, alpha, beta):
+    def alpha_beta_opt(cls, board: Board, depth, plies, alpha, beta):
         if not depth:
-            Diagnostics.evaluated_nodes += 1
-            return cls.quiescene(alpha, beta)
+            # Diagnostics.evaluated_nodes += 1
+            # return cls.quiescene(alpha, beta)
+            return Evaluation.pst_shef(board)
 
         # if plies > 0:
         #     if cls.board.is_repetition():
@@ -78,29 +108,29 @@ class Dfs:
             # if alpha >= beta:
             #     return alpha
 
-        moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
+        moves = order_moves(LegalMoveGenerator.load_moves(board), board)
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
-        if cls.board.is_terminal_state():
-            status = cls.board.get_status()
+        if board.is_terminal_state():
+            status = board.get_status()
             if status:
                 # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
                 # checkmates, as the checkmate value still is better than the initial beta of -infinity
-                Diagnostics.best_eval = cls.checkmate_value
+                # Diagnostics.best_eval = cls.checkmate_value
                 return -cls.checkmate_value
             if status == 0: 
                 return cls.draw
 
         for move in moves:
             # traversing down the tree
-            cls.board.make_move(move)
-            evaluation = -cls.alpha_beta_opt(depth - 1, plies + 1, -beta, -alpha)
-            cls.board.reverse_move()
+            board.make_move(move)
+            evaluation = -cls.alpha_beta_opt(board, depth - 1, plies + 1, -beta, -alpha)
+            board.reverse_move()
 
             # Move is even better than best eval before,
             # opponent won't choose this move anyway so PRUNE YESSIR
             if evaluation >= beta:
-                cls.cutoffs += 1
+                # cls.cutoffs += 1
                 return beta # Return -alpha of opponent, which will be turned to alpha in depth - 1
             # Keep track of best move for moving color
             alpha = max(evaluation, alpha)
@@ -117,7 +147,7 @@ class Dfs:
         """ 
         # Evaluate current position before doing any moves, so a potentially good state for non-capture moves
         # isn't ruined by bad captures
-        cls.evaluated_positions += 1
+        # cls.evaluated_positions += 1
         eval = Evaluation.pst_shef()
         # Typical alpha beta operations
         if eval >= beta:

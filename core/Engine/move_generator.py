@@ -29,10 +29,11 @@ class LegalMoveGenerator:
         cls.board = board
 
     @classmethod
-    def load_moves(cls, generate_quiets=True) -> list:
+    def load_moves(cls, board=None, generate_quiets=True) -> list:
         """
         :return: a list of tuples containing the start and end indices of all possible moves
         """
+        cls.board = board or cls.board
         cls.generate_quiets = generate_quiets
         cls.moves = []
         cls.init()

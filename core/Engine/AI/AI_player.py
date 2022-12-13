@@ -5,10 +5,10 @@ You may use, distribute and modify this code under the terms of the GNU General 
 from core.Engine.AI import Dfs
 
 class AIPlayer:
-    SEARCH_DEPTH = 4
+    SEARCH_DEPTH = 6
     @classmethod
-    def load_move(cls):
-        move = Dfs.search(cls.SEARCH_DEPTH)
+    def load_move(cls, board):
+        move = Dfs.multiprocess_search(cls.SEARCH_DEPTH, board)
         return move
 
     @classmethod

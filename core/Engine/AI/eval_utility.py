@@ -39,23 +39,23 @@ class Evaluation:
         return mat
 
     @classmethod
-    def pst_shef(cls):
+    def pst_shef(cls, board):
         """
         Advanced Standard Heuristic Evaluation Function \n
         :return: a heuristic piece-square-table-based evaluation of current material on board relative to moving color.
         """
-        friendly_eval = cls.pst_material_eval(cls.board.moving_color)
-        opponent_eval = cls.pst_material_eval(cls.board.opponent_color)
+        friendly_eval = cls.pst_material_eval(board.moving_color, board)
+        opponent_eval = cls.pst_material_eval(board.opponent_color, board)
         return friendly_eval - opponent_eval
 
     @classmethod  
-    def pst_material_eval(cls, moving_side):
+    def pst_material_eval(cls, moving_side, board):
         """
         :return: Piece-square-table-based evaluation of moving side's material
         """
         mat = 0
         for piece_id in range(1, 7):
-            for square in cls.board.piece_lists[moving_side][piece_id]:
+            for square in board.piece_lists[moving_side][piece_id]:
                 mat += PieceSquareTable.get_pst_value(piece_id, square, moving_side)
         return mat
 

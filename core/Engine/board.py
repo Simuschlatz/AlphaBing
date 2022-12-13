@@ -206,9 +206,9 @@ class Board:
         self.squares[moved_to] = moved_piece
         self.squares[moved_from] = 0
         # Update zobrist key
-        self.update_zobrist(piece_type, captured_piece, *move)
-        if not search_state:
-            self.repetition_history.add(self.zobrist_key)
+        # self.update_zobrist(piece_type, captured_piece, *move)
+        # if not search_state:
+        #     self.repetition_history.add(self.zobrist_key)
         # print(self.zobrist_key)
         self.switch_moving_color()
         # Used for quiescene search
@@ -242,10 +242,10 @@ class Board:
         else: self.plies -= 1
 
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
-        self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
-        if not search_state:
-            self.repetition_history.pop()
-            return 
+        # self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
+        # if not search_state:
+        #     self.repetition_history.pop()
+        #     return 
         # print(self.zobrist_key)
 
     def get_previous_configs(self, depth):
