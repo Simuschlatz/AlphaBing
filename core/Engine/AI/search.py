@@ -15,37 +15,51 @@ class Dfs:
     draw = 0
     positive_infinity = 9999
     negative_infinity = -positive_infinity
+    search_depth = 5
+
+    @staticmethod
+    def batch(iterable, batch_size):
+        for ndx in range(0, len(iterable), batch_size):
+            yield iterable[ndx:min(len(iterable), ndx+batch_size)]
 
     @classmethod
-    def init(cls, board: Board) -> None:
-        cls.board = board
-        cls.evaluated_positions = 0
-        cls.cutoffs = 0
-
-    @classmethod
-    def multiprocess_search(cls, depth, board):
+    def multiprocess_search(cls, board, batch: bool=True) -> tuple:
+        """
+        Runs a search for board position leveraging multiple processors.
+        :return: best move from current position
+        :param batch: determines if all cpu cores are leveraged"""
         best_move = None
+        # shared dict
         move_evals = mp.Manager().dict()
-        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
-        jobs = []
-        for move in current_pos_moves:
-            p = mp.Process(target=cls.search_for_move, args=(move, move_evals, 4, board))
-            jobs.append(p)
-            p.start()
-        for process in jobs:
-            process.join()
+        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), board)
+        if batch:
+            jobs = [mp.Process(target=cls.search_for_move, args=(move, move_evals, cls.search_depth, board)) for move in current_pos_moves]
+            max_processes = mp.cpu_count() - 1
+            for processes in cls.batch(jobs, max_processes):
+                for p in processes: p.start()
+                for p in processes: p.join()
+        else:
+            jobs = []
+            for move in current_pos_moves:
+                p = mp.Process(target=cls.search_for_move, args=(move, move_evals, cls.search_depth, board))
+                jobs.append(p)
+                p.start()
+            for process in jobs: process.join()
+        # print(sorted(move_evals, key=lambda move: move_evals[move]))
+
         best_move = sorted(move_evals, key=lambda move: move_evals[move]).pop()
-        print(move_evals)
         return best_move
 
     @classmethod
-    def search_for_move(cls, move, move_evals, depth, b):
-        alpha = cls.positive_infinity
-        beta = cls.negative_infinity
-        board = copy.deepcopy(b)
-        # use copy of board
+    def search_for_move(cls, move, move_evals, depth, board):
+        """
+        :return: best eval from current position for current player
+        :param move_evals: dict shared between child processes
+        """
+        # make independent copy of board so attributes eg. board history don't get messed up
+        board = copy.deepcopy(board)
         board.make_move(move)
-        evaluation = -cls.alpha_beta_opt(board, depth-1, 1, beta, alpha)
+        evaluation = -cls.alpha_beta_opt(board, depth-1, 1, cls.negative_infinity, cls.positive_infinity)
         board.reverse_move()
         move_evals[move] = evaluation
 

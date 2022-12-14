@@ -40,8 +40,7 @@ def main():
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
 
-    Evaluation.init(board)
-    Dfs.init(board)
+    # Dfs.init(board)
 
     ui = UI(board)
 

@@ -3,6 +3,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 from core.Engine.AI.piece_square_tables import PieceSquareTable
+from core.Engine.board import Board
 
 class Evaluation:
     # Piece's values
@@ -16,40 +17,36 @@ class Evaluation:
     values = (0, elephant, advisor, cannon, pawn, rook, horse)
 
     @classmethod
-    def init(cls, board):
-        cls.board = board
-
-    @classmethod
-    def shef(cls):
+    def shef(cls, board: Board):
         """
         Standard Heuristic Evaluation Function \n
         :return: a heuristic evaluation of current material on board relative to moving color.
         positive: good
         negative: bad
         """
-        friendly_eval = cls.static_material_eval(cls.board.moving_color)
-        opponent_eval = cls.static_material_eval(cls.board.opponent_color)
+        friendly_eval = cls.static_material_eval(board)
+        opponent_eval = cls.static_material_eval(board)
         return friendly_eval - opponent_eval
 
-    @classmethod
-    def static_material_eval(cls, moving_color):
+    @staticmethod
+    def static_material_eval(board: Board):
         mat = 0
         for piece_id in range(1, 7):
-            mat += len(cls.board.piece_lists[moving_color][piece_id]) * cls.values[piece_id]
+            mat += len(board.piece_lists[board.moving_color][piece_id]) * Evaluation.values[piece_id]
         return mat
 
-    @classmethod
-    def pst_shef(cls, board):
+    @staticmethod
+    def pst_shef(board: Board):
         """
         Advanced Standard Heuristic Evaluation Function \n
         :return: a heuristic piece-square-table-based evaluation of current material on board relative to moving color.
         """
-        friendly_eval = cls.pst_material_eval(board.moving_color, board)
-        opponent_eval = cls.pst_material_eval(board.opponent_color, board)
+        friendly_eval = Evaluation.pst_material_eval(board.moving_color, board)
+        opponent_eval = Evaluation.pst_material_eval(board.opponent_color, board)
         return friendly_eval - opponent_eval
 
-    @classmethod  
-    def pst_material_eval(cls, moving_side, board):
+    @staticmethod  
+    def pst_material_eval(moving_side, board):
         """
         :return: Piece-square-table-based evaluation of moving side's material
         """
