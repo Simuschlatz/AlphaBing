@@ -4,7 +4,7 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 import pygame
 from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board
-from core.Engine.AI import AIPlayer, TrainingDataCollector
+from core.Engine.AI import TrainingDataCollector, Dfs
 from core.Utils import init_imgs, BoardUtility
 
 class Button:
@@ -298,7 +298,7 @@ class UI:
         LegalMoveGenerator.load_moves()
 
     def make_AI_move(self):
-        AI_move = AIPlayer.load_move(self.board)
+        AI_move = Dfs.multiprocess_search(self.board)
         if AI_move == None:
             return
         self.update_move_str(AI_move)
