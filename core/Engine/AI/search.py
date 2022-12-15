@@ -64,7 +64,7 @@ class Dfs:
         move_evals[move] = evaluation
 
     @classmethod
-    def search(cls, depth):
+    def search(cls, board: Board):
         """
         Starts traversal of board's possible configurations
         :return: best move possible
@@ -74,13 +74,13 @@ class Dfs:
         alpha = cls.positive_infinity
         beta = cls.negative_infinity
         best_eval = beta
-        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
+        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(board), board)
         cls.mate_found = False
         Diagnostics.depth = 0
         for move in current_pos_moves:
-            cls.board.make_move(move)
-            evaluation = -cls.alpha_beta_opt(depth - 1, 0, beta, alpha)
-            cls.board.reverse_move()
+            board.make_move(move)
+            evaluation = -cls.alpha_beta_opt(board, cls.search_depth - 1, 0, beta, alpha)
+            board.reverse_move()
             if evaluation > best_eval:
                 best_eval = evaluation
                 best_move = move
@@ -89,26 +89,9 @@ class Dfs:
         
         return best_move
 
-    @classmethod
-    def get_best_eval(cls, depth):
-        Diagnostics.init()
-        alpha = cls.positive_infinity
-        beta = cls.negative_infinity
-        best_eval = beta
-        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
-        cls.abort_search = False
-        for move in current_pos_moves:
-            if cls.abort_search:
-                return best_eval
-            cls.board.make_move(move)
-            evaluation = -cls.alpha_beta_opt(depth - 1, 0, beta, alpha)
-            cls.board.reverse_move()
-            best_eval = max(evaluation, best_eval)
-        return best_eval
-            
 
     @classmethod
-    def alpha_beta_opt(cls, board: Board, depth, plies, alpha, beta):
+    def alpha_beta_opt(cls, board: Board, depth: int, plies: int, alpha: int, beta: int):
         """
         Optimized alpha-beta search with more elaborate optimizations
         TODO: Transposition tables"""
@@ -154,6 +137,23 @@ class Dfs:
 
         return alpha
 
+    @classmethod
+    def get_best_eval(cls, board: Board, depth):
+        Diagnostics.init()
+        alpha = cls.positive_infinity
+        beta = cls.negative_infinity
+        best_eval = beta
+        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
+        cls.abort_search = False
+        for move in current_pos_moves:
+            if cls.abort_search:
+                return best_eval
+            board.make_move(move)
+            evaluation = -cls.alpha_beta_opt(depth - 1, 0, beta, alpha)
+            board.reverse_move()
+            best_eval = max(evaluation, best_eval)
+        return best_eval
+            
         
     @classmethod
     def quiescene(cls, alpha, beta):

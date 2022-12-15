@@ -66,7 +66,7 @@ class TrainingDataCollector:
             return
         self.boards_hash[self.board.moving_side].add(board_config)
         row = list(board_config)
-        best_eval = Dfs.get_best_eval(self.num_plies_ahead)
+        best_eval = Dfs.get_best_eval(self.board, self.num_plies_ahead)
         # We don't want the model to learn evaluate checkmates, as it is much too complex to recognise.
         if abs(best_eval) == Dfs.checkmate_value:
             return
