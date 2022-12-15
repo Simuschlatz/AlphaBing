@@ -109,6 +109,9 @@ class Dfs:
 
     @classmethod
     def alpha_beta_opt(cls, board: Board, depth, plies, alpha, beta):
+        """
+        Optimized alpha-beta search with more elaborate optimizations
+        TODO: Transposition tables"""
         if not depth:
             # Diagnostics.evaluated_nodes += 1
             # return cls.quiescene(alpha, beta)
@@ -224,6 +227,9 @@ class Dfs:
     
     @classmethod
     def alpha_beta(cls, depth, alpha, beta):
+        """
+        Minimax with alpha-beta pruning
+        """
         if not depth:
             return cls.board.shef()
 
