@@ -21,7 +21,7 @@ class Board:
         # which color moves first - boolean "is_red_first" or "is_red" can be used interchangeably 
         # with int "color_to_start" or "color" because the colors are represented as ints in [0, 1]
         self.fullmoves, self.plies = 0, 0
-
+        # basic setup
         is_red_first = self.load_board_from_fen(FEN)
         self.moving_side = int(play_as_red == is_red_first)
         self.opponent_side = 1 - self.moving_side
@@ -205,18 +205,18 @@ class Board:
         # Updating the board
         self.squares[moved_to] = moved_piece
         self.squares[moved_from] = 0
+
         # Update zobrist key
         # self.update_zobrist(piece_type, captured_piece, *move)
         # if not search_state:
         #     self.repetition_history.add(self.zobrist_key)
         # print(self.zobrist_key)
+
         self.switch_moving_color()
         # Used for quiescene search
         return bool(captured_piece)
         
     def reverse_move(self, search_state=True):
-        # if not self.game_history:
-        #     return
         # Accessing the previous game state data
         previous_square, moved_to, captured_piece = self.game_history.pop()
 
@@ -237,15 +237,13 @@ class Board:
         # Switch back to previous moving color
         self.switch_moving_color()
         if self.moving_color == Piece.black: self.fullmoves -= 1
-        if piece_type == Piece.pawn:
-            self.plies = self.plies_history.pop()
-        else: self.plies -= 1
+        self.plies = self.plies_history.pop() if piece_type == Piece.pawn else self.plies - 1
 
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
         # self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
-        # if not search_state:
-        #     self.repetition_history.pop()
-        #     return 
+        if not search_state:
+            self.repetition_history.pop()
+            return 
         # print(self.zobrist_key)
 
     def get_previous_configs(self, depth):
@@ -275,4 +273,4 @@ class Board:
         piece = self.squares[former_square]
         color, piece_type = piece
         letter = Piece.letters[color * 7 + piece_type]
-        return (f"{letter}({former_rank}{former_file})-{new_rank}{new_file}")
+        return f"{letter}({former_rank}{former_file})-{new_rank}{new_file}"
