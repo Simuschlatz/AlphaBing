@@ -45,8 +45,12 @@ def main():
     ui = UI(board)
 
     # ------To run perft search------
+    # depth = str()
+    # while not depth.isdigit():
+    #     depth = input("Enter search depth: ")
+    # print("starting perft search... This might take some time")
+    # depth = int(depth)
     # iterative = False
-    # depth = 4
     # depths = [depth]
     # if iterative:
     #     depths = range(1, depth + 1)
