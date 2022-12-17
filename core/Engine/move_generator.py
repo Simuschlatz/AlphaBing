@@ -4,7 +4,6 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 from core.Engine.piece import Piece
 from core.Engine.precomputed_move_maps import PrecomputingMoves
-from typing import Iterable
 
 # The code doesn't look well designed as there seem to be lots of repetitions, but reusing the same code is difficult, 
 # as the order of operations for maximum performance vary from every piece's behavior
@@ -12,7 +11,6 @@ class LegalMoveGenerator:
     """
     Generates legal moves from pseudo-legal-move-maps \n
     call load_moves() to receive a list of all legal moves for the current state of the game.
-    TODO: Defaultdict, fix rook check generation
     """
     PrecomputingMoves.init_constants()
     dir_offsets = PrecomputingMoves.dir_offsets
@@ -99,17 +97,14 @@ class LegalMoveGenerator:
     def moves_along_ray(cls, king_square: int, current_square: int, dir_idx: int):
         """
         :return: bool if move keeps a piece along the ray between two squares \n
-        NOTE: only to be used for orthogonally moving pieces.
+        only to be used for orthogonally moving pieces.
         """
         target_square = current_square + cls.dir_offsets[dir_idx]
-        points = king_square, current_square, target_square
-        return cls.on_same_ray(points)
+        pin_ray_delta_dist = abs(current_square - king_square) % 9
+        move_ray_delta_dist = abs(target_square - king_square) % 9
 
-    @staticmethod
-    def on_same_ray(points: Iterable):
-        cols = map(lambda p: p % 9, points)
-        rows = map(lambda p: p // 9, points)
-        return len(set(cols)) == 1 or len(set(rows)) == 1
+        return pin_ray_delta_dist == move_ray_delta_dist
+
 
     @classmethod
     def get_orth_dir_idx(cls, square_1, square_2):
@@ -190,7 +185,6 @@ class LegalMoveGenerator:
             # Going through chosen direction indices
             for dir_idx, squares_in_dir in rook_mm.items():
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
-                    # print("AINT MOVIN", current_square)
                     continue
                 target_piece = False
                 # "Walking" in direction using direction offsets
@@ -234,8 +228,9 @@ class LegalMoveGenerator:
             if cls.checks and is_pinned:
                 break
             avoids_cannon_check = current_square == cls.cause_cannon_defect
+            target_squares = cls.pawn_mm[cls.board.moving_side][current_square]
 
-            for target_square in cls.pawn_mm[cls.board.moving_side][current_square]:
+            for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
