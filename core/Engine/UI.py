@@ -320,6 +320,16 @@ class UI:
         self.activate_ai = not self.activate_ai
         self.AI_BUTTON.change_image(self.get_button_img())
 
+    def command_response(self):
+        """
+        Handles response to verbal commands
+        """
+        start_search = VerbalCommandHandler.listen_for_activation()
+        if start_search:
+            self.activate_ai = True
+            self.make_AI_move()
+            self.activate_ai = False
+            
     def event_handler(self):
         """
         Handles Human events
@@ -356,11 +366,14 @@ class UI:
 
             if event.type == pygame.KEYDOWN:
                 # Move reverse
-                if event.key == pygame.K_SPACE:
+                key = event.key
+                if key == pygame.K_SPACE:
                     self.unmake_move()
-                if event.key == pygame.K_a:
+                if key == pygame.K_a:
                     self.ai_vs_ai = not self.ai_vs_ai
-                if event.key == pygame.K_RETURN:
+                if key == pygame.K_c:
+                    self.command_response()
+                if key == pygame.K_RETURN:
                     print("ENTER")
                     self.training_data_generator.store_training_data()
                     
