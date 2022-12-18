@@ -8,11 +8,11 @@ from typing import Iterable
 
 # The code doesn't look well designed as there seem to be lots of repetitions, but reusing the same code is difficult, 
 # as the order of operations for maximum performance vary from every piece's behavior
+# Also, no defaultdicts were used because it significantly reduces performance
 class LegalMoveGenerator:
     """
     Generates legal moves from pseudo-legal-move-maps \n
     call load_moves() to receive a list of all legal moves for the current state of the game.
-    TODO: Defaultdict, fix rook check generation
     """
     PrecomputingMoves.init_constants()
     dir_offsets = PrecomputingMoves.dir_offsets
