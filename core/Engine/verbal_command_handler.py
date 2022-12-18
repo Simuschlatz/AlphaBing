@@ -39,7 +39,7 @@ class VerbalCommandHandler:
     Handles speech-to-text and determines whether user is calling for AI to overtake the thinking
     """
 
-    activation_keywords = {"difficult", "position", "think", "let", "clueless", "I", "don't know", "I am", "I'm", "desperate", "uncertain"}
+    activation_keywords = {"difficult", "position", "think", "let", "clueless", "i", "don't know", "i am", "i'm", "desperate", "uncertain", "god", "help"}
     
     @classmethod
     def init(cls, keywords: list | tuple=None, activation_threshold=2):
@@ -74,8 +74,10 @@ class VerbalCommandHandler:
     @classmethod
     def listen_for_activation(cls):
         commands = cls.speech_to_text()
+        commands = commands.lower()
+        print(commands)
         keyword_counter = 0
-        for cmd in set(commands.split()):
-            if cmd in cls.activation_keywords:
+        for kw in cls.activation_keywords:
+            if kw in commands:
                 keyword_counter += 1
         return keyword_counter >= cls.activation_threshold
