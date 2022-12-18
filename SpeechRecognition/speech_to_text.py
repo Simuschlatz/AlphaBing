@@ -2,19 +2,24 @@ import http.client as httplib
 try:
     import speech_recognition as sr
 except ImportError as e:
-    print('ERROR: Cannot find module "speech_recognition." Speech activation command utitlity will be deactivated.')
+    print("ERROR: Cannot find module 'speech_recognition.' Speech activation command utitlity will be deactivated.")
     print("Try run `pip install pyaudio` and `pip install SpeechRecognition`")
 
 
-def is_internet_connected() -> bool:
-    connection = httplib.HTTPSConnection("8.8.8.8", timeout=5)
-    try:
-        connection.request("HEAD", "/")
-        return True
-    except Exception:
-        return False
-    finally:
-        connection.close()
+def is_internet_connected(ip_adresses: tuple=("8.8.8.8", "8.8.4.4")) -> bool:
+    """
+    :param ip_adresses: Goggle's public DNS servers. Helps avoiding DNS resolution, 
+    application layer connections and calls to external utilities from Python.
+    """
+    for ip in ip_adresses:
+        connection = httplib.HTTPSConnection(ip, timeout=5)
+        try:
+            connection.request("HEAD", "/")
+            return True
+        except Exception:
+            continue
+        finally:
+            connection.close()
 
 def get_speech_command():
     try:
