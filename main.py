@@ -41,11 +41,11 @@ def main():
     start_search(board)
     # -------------------------------
 
-    py_clock = pygame.time.Clock()
-    run = True
-    while run:   
-        ui.update()
-        py_clock.tick(FPS)
+    # py_clock = pygame.time.Clock()
+    # run = True
+    # while run:   
+    #     ui.update()
+    #     py_clock.tick(FPS)
 
 if __name__ == "__main__":
     main()

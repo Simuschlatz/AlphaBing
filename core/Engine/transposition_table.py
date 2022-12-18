@@ -7,7 +7,6 @@ from core.Engine import ZobristHashing, TtEntry
 class TranspositionTable:
     """
     TODO: repetition
-    
     """
     invalid = None
     exact_eval = 0
