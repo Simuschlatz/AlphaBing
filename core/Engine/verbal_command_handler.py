@@ -79,6 +79,3 @@ class VerbalCommandHandler:
             if cmd in cls.activation_keywords:
                 keyword_counter += 1
         return keyword_counter >= cls.activation_threshold
-
-VerbalCommandHandler.init()
-print(VerbalCommandHandler.listen_for_activation())

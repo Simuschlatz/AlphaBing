@@ -3,7 +3,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Board, LegalMoveGenerator, Clock, UI, ZobristHashing
+from core.Engine import Board, LegalMoveGenerator, Clock, VerbalCommandHandler, UI, ZobristHashing
 from core.Engine.AI import Dfs, Evaluation
 from core.Utils import start_search
 
@@ -33,7 +33,7 @@ def main():
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
 
-    # Dfs.init(board)
+    VerbalCommandHandler.init()
 
     ui = UI(board)
 
@@ -41,11 +41,11 @@ def main():
     start_search(board)
     # -------------------------------
 
-    # py_clock = pygame.time.Clock()
-    # run = True
-    # while run:   
-    #     ui.update()
-    #     py_clock.tick(FPS)
+    py_clock = pygame.time.Clock()
+    run = True
+    while run:   
+        ui.update()
+        py_clock.tick(FPS)
 
 if __name__ == "__main__":
     main()

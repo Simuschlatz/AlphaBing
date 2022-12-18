@@ -5,4 +5,5 @@ from .game_manager import GameManager
 from .board import Board
 from .clock import Clock
 from .tt_entry import TtEntry
+from .verbal_command_handler import VerbalCommandHandler
 from .UI import UI

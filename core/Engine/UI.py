@@ -3,9 +3,10 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board
+from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board, VerbalCommandHandler
 from core.Engine.AI import TrainingDataCollector, Dfs
 from core.Utils import init_imgs, BoardUtility
+
 
 class Button:
     def __init__(self, x, y, image):
@@ -298,7 +299,7 @@ class UI:
         LegalMoveGenerator.load_moves()
 
     def make_AI_move(self):
-        AI_move = Dfs.multiprocess_search(self.board)
+        AI_move = Dfs.search(self.board)
         if AI_move == None:
             return
         self.update_move_str(AI_move)
