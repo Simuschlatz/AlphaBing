@@ -66,4 +66,4 @@ Project is: _in progress_
 
 ## Acknowledgements
 * Inspiration: [@SebLague](https://github.com/SebLague)
-* Research done at [chessprogramming wiki](https://www.chessprogramming.org/)
+* Research done at [chessprogramming wiki](https://www.chessprogramming.org/), [Deepmind](https://www.deepmind.com/)
