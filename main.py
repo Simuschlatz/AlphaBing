@@ -5,8 +5,7 @@ You may use, distribute and modify this code under the terms of the GNU General 
 import pygame
 from core.Engine import Board, LegalMoveGenerator, Clock, UI, ZobristHashing
 from core.Engine.AI import Dfs, Evaluation
-from core.Utils import get_perft_result
-from time import perf_counter
+from core.Utils import start_search
 
 
 
@@ -20,13 +19,7 @@ pygame.font.init()
 INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
 INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
 
-def get_num_positions(depth, board):
-    p_t = perf_counter()
-    num_positions = get_perft_result(depth, board)
-    time = perf_counter() - p_t
-    print(f"depth: {depth} || nodes searched: {num_positions} || time: {round(time, 2)}")
 
-    
 def main():
     play_as_red = True
     red_moves_first = True
@@ -45,17 +38,7 @@ def main():
     ui = UI(board)
 
     # ------To run perft search------
-    # depth = str()
-    # while not depth.isdigit():
-    #     depth = input("Enter search depth: ")
-    # print("starting perft search... This might take some time")
-    # depth = int(depth)
-    # iterative = False
-    # depths = [depth]
-    # if iterative:
-    #     depths = range(1, depth + 1)
-    # for d in depths:
-    #     get_num_positions(d, board)
+    start_search(board)
     # -------------------------------
 
     py_clock = pygame.time.Clock()

@@ -1,3 +1,3 @@
 from .data_init import init_imgs
-from .perft_utility import get_perft_result
+from .perft_utility import start_search
 from .board_utils import BoardUtility
