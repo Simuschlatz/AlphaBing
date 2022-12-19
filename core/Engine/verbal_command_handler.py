@@ -1,3 +1,7 @@
+"""
+Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
+You may use, distribute and modify this code under the terms of the GNU General Public License
+"""
 import http.client as httplib
 from contextlib import contextmanager
 import sys, os
@@ -39,7 +43,7 @@ class VerbalCommandHandler:
     Handles speech-to-text and determines whether user is calling for AI to overtake the thinking
     """
 
-    activation_keywords = {"difficult", "position", "think", "let", "clueless", "i", "don't know", "i am", "i'm", "desperate", "uncertain", "god", "help"}
+    activation_keywords = {"difficult", "position", "think", "let", "clueless", "i", "don't know", "i am", "i'm", "what", "do", "desperate", "uncertain", "god", "help"}
     
     @classmethod
     def init(cls, keywords: list | tuple=None, activation_threshold=2):
@@ -51,12 +55,13 @@ class VerbalCommandHandler:
         except Exception as e:
             print("ERROR:", e, "You might have to install missing modules. Make sure all requirements are met")
         else:
-            cls.recognizer.pause_threshold = .5
+            cls.recognizer.pause_threshold = 0.5
         cls.activation_keywords = keywords or cls.activation_keywords
         cls.activation_threshold = activation_threshold
 
     @classmethod
-    def speech_to_text(cls) -> str | None:
+    def speech_to_text(cls) -> str:
+        text = ""
         try:
             # Using standard mic input
             with sr.Microphone() as source:
@@ -67,17 +72,14 @@ class VerbalCommandHandler:
             with silence_function(): # This is to suppress the internal console outputs of recognize_google
                 # Where the magic happens
                 text = cls.recognizer.recognize_google(audio)
-            return text
         except Exception as e:
             print("ERROR:", str(e))
+        return text
 
     @classmethod
-    def listen_for_activation(cls):
+    def listen_for_activation(cls) -> bool:
         commands = cls.speech_to_text()
         commands = commands.lower()
         print(commands)
-        keyword_counter = 0
-        for kw in cls.activation_keywords:
-            if kw in commands:
-                keyword_counter += 1
+        keyword_counter = len(list(filter(lambda kw: kw in commands, cls.activation_keywords)))
         return keyword_counter >= cls.activation_threshold
