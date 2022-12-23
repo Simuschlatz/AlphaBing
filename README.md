@@ -4,14 +4,12 @@
 
 > Combining Algorithmic Powers With The Beauty of Machine Learning
 ## Table of Contents
-- [CheapChess - The Fastest Python Chess-AI](#cheapchess---the-fastest-python-chess-ai)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [HOW TO PLAY](#how-to-play)
-  - [Screenshots](#screenshots)
-  - [Dependencies](#dependencies)
-  - [Project-Status](#project-status)
-  - [Acknowledgements](#acknowledgements)
+- [Features](#features)
+- [HOW TO PLAY](#how-to-play)
+- [Screenshots](#screenshots)
+- [Dependencies](#dependencies)
+- [Project-Status](#project-status)
+- [Acknowledgements](#acknowledgements)
 
 ## Features
 **Move Generation**
