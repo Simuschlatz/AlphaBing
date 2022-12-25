@@ -6,16 +6,15 @@ import copy
 from core.Engine.move_generator import LegalMoveGenerator
 from core.Engine.board import Board
 from core.Engine.AI.eval_utility import Evaluation
-from core.Engine.AI import order_moves, order_moves_pst, Diagnostics
+from core.Engine.AI import order_moves, order_moves_pst
 import multiprocessing as mp
-
 
 class Dfs:
     checkmate_value = 9998
     draw = 0
     positive_infinity = 9999
     negative_infinity = -positive_infinity
-    search_depth = 5
+    search_depth = 4
 
     @staticmethod
     def batch(iterable, batch_size):
@@ -27,7 +26,8 @@ class Dfs:
         """
         Runs a search for board position leveraging multiple processors.
         :return: best move from current position
-        :param batch: determines if all cpu cores are leveraged"""
+        :param batch: determines if all cpu cores are leveraged
+        """
         best_move = None
         # shared dict
         move_evals = mp.Manager().dict()
@@ -69,14 +69,12 @@ class Dfs:
         Starts traversal of board's possible configurations
         :return: best move possible
         """
-        Diagnostics.init()
         best_move = None
         alpha = cls.positive_infinity
         beta = cls.negative_infinity
         best_eval = beta
         current_pos_moves = order_moves(LegalMoveGenerator.load_moves(board), board)
         cls.mate_found = False
-        Diagnostics.depth = 0
         for move in current_pos_moves:
             board.make_move(move)
             evaluation = -cls.alpha_beta_opt(board, cls.search_depth - 1, 0, beta, alpha)
@@ -94,9 +92,9 @@ class Dfs:
     def alpha_beta_opt(cls, board: Board, depth: int, plies: int, alpha: int, beta: int):
         """
         Optimized alpha-beta search with more elaborate optimizations
-        TODO: Transposition tables"""
+        TODO: Transposition tables
+        """
         if not depth:
-            # Diagnostics.evaluated_nodes += 1
             # return cls.quiescene(alpha, beta)
             return Evaluation.pst_shef(board)
 
@@ -116,7 +114,6 @@ class Dfs:
             if status:
                 # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
                 # checkmates, as the checkmate value still is better than the initial beta of -infinity
-                # Diagnostics.best_eval = cls.checkmate_value
                 return -cls.checkmate_value
             if status == 0: 
                 return cls.draw
@@ -136,24 +133,6 @@ class Dfs:
             alpha = max(evaluation, alpha)
 
         return alpha
-
-    @classmethod
-    def get_best_eval(cls, board: Board, depth):
-        Diagnostics.init()
-        alpha = cls.positive_infinity
-        beta = cls.negative_infinity
-        best_eval = beta
-        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), cls.board)
-        cls.abort_search = False
-        for move in current_pos_moves:
-            if cls.abort_search:
-                return best_eval
-            board.make_move(move)
-            evaluation = -cls.alpha_beta_opt(depth - 1, 0, beta, alpha)
-            board.reverse_move()
-            best_eval = max(evaluation, best_eval)
-        return best_eval
-            
         
     @classmethod
     def quiescene(cls, alpha, beta):
@@ -177,7 +156,6 @@ class Dfs:
         if cls.board.is_terminal_state():
             status = cls.board.get_status()
             if status:
-                Diagnostics.best_eval = cls.checkmate_value
                 return -cls.checkmate_value
             if status == 0: 
                 return cls.draw
@@ -251,3 +229,19 @@ class Dfs:
             alpha = max(evaluation, alpha)
         return alpha
 
+    @classmethod
+    def get_best_eval(cls, board: Board, depth):
+        alpha = cls.positive_infinity
+        beta = cls.negative_infinity
+        best_eval = beta
+        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), board)
+        cls.abort_search = False
+        for move in current_pos_moves:
+            if cls.abort_search:
+                return best_eval
+            board.make_move(move)
+            evaluation = -cls.alpha_beta_opt(board, depth - 1, 0, beta, alpha)
+            board.reverse_move()
+            best_eval = max(evaluation, best_eval)
+        return best_eval
+            
