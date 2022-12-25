@@ -38,9 +38,9 @@ def silence_function():
         try: yield
         finally: sys.stdout = initial
 
-class VerbalCommandHandler:
+class NLPCommandHandler:
     """
-    Handles speech-to-text and determines whether user is calling for AI to overtake the thinking
+    Handles Natural Language Processing and determines whether user is calling for AI to overtake the thinking
     """
 
     activation_keywords = {"difficult", "position", "think", "let", "clueless", "i", "don't know", "i am", "i'm", "what", "do", "desperate", "uncertain", "god", "help"}

@@ -3,10 +3,10 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board, VerbalCommandHandler
+from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board, NLPCommandHandler
 from core.Engine.AI import TrainingDataCollector, Dfs
-from core.Utils import init_imgs, BoardUtility
-
+from core.Utils import BoardUtility
+from core.Config.game import UIConfig
 
 class Button:
     def __init__(self, x, y, image):
@@ -30,56 +30,15 @@ class Button:
 
 
 class UI:
-    BG_COLOR = (100, 100, 100)
-    RED = (190, 63, 64)
-    BLUE = (26, 57, 185)
-    BLACK = (0, 0, 0)
-    WHITE = (255, 255, 255)
-    GREY = (40, 40, 40)
-    MOVE_RESPONSE_COLOR = (217, 255, 255)
-    MOVE_HIGHLIGHT_COLORS = ((100, 100, 240), RED)
-
-    WIDTH = 1200
-    HEIGHT = 800
-    UNIT = HEIGHT // 11
-    BOARD_WIDTH = 9 * UNIT
-    BOARD_HEIGHT = 10 * UNIT
-    BUTTON_DIMS = (UNIT * 2.2, UNIT * .83)
-    OFFSET_X = (WIDTH - BOARD_WIDTH) // 2
-    OFFSET_Y = (HEIGHT - BOARD_HEIGHT) // 2
-    OFFSETS = (OFFSET_X, OFFSET_Y)
-
-    # Style of piece images
-    piece_style_western = True
-    pygame.mixer.init()
-    IMGS = init_imgs(UNIT, (WIDTH, HEIGHT), (BOARD_WIDTH, BOARD_HEIGHT), BUTTON_DIMS, piece_style_western)
-    # SFX
-    MOVE_SFX = pygame.mixer.Sound("assets/sfx/move.wav")
-    CAPTURE_SFX = pygame.mixer.Sound("assets/sfx/capture.wav")
-    # Font stuff
-    FONT_SIZE_LARGE = UNIT // 2
-    FONT_SIZE_SMALL = UNIT // 3
-    FONT_WIDTH_SMALL = FONT_SIZE_SMALL * 0.55
-
     def __init__(self, board:Board):
-        self.window = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.RESIZABLE)
+        self.window = pygame.display.set_mode((UIConfig.WIDTH, UIConfig.HEIGHT), pygame.RESIZABLE)
         self.board = board
         # This board is created solely for UI purposes, so that the visual board can be modified
         # without crating interdependencies with the internal board representation
         self.ui_board = board.squares[:]
 
-
-        self.LARGE_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_LARGE)
-        self.SMALL_FONT = pygame.font.Font("freesansbold.ttf", self.FONT_SIZE_SMALL)
-        self.TIMER_TEXT_X, self.TIMER_TEXT_Y = self.OFFSET_X + self.UNIT * 9.5, [self.HEIGHT / 2 - (1 - side) * self.FONT_SIZE_LARGE for side in range(2)]
-        self.MOVE_STR_POS = (self.WIDTH // 20, self.WIDTH // 20)
-        
-        # Circle diameters to mark moves and captures
-        self.BIG_CIRCLE_D = self.UNIT * 1.1
-        self.SMALL_CIRCLE_D = self.UNIT // 6
-
         # All the images
-        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG, self.BTN_ACTIVATE_IMG, self.BTN_DEACTIVATE_IMG = self.IMGS 
+        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG, self.BTN_ACTIVATE_IMG, self.BTN_DEACTIVATE_IMG = UIConfig.IMGS 
 
         # Move logics
         self.move_from = None
@@ -89,14 +48,14 @@ class UI:
 
         # Activate AI option
         self.AI_BUTTON_HEIGHT = self.BTN_ACTIVATE_IMG.get_height()
-        self.AI_BUTTON = Button(20, self.HEIGHT // 2 - self.AI_BUTTON_HEIGHT // 2, self.BTN_ACTIVATE_IMG)
+        self.AI_BUTTON = Button(20, UIConfig.HEIGHT // 2 - self.AI_BUTTON_HEIGHT // 2, self.BTN_ACTIVATE_IMG)
         self.activate_ai = False
 
         self.ai_vs_ai = False
 
         # Analytics
         self.fen = board.load_fen_from_board()
-        self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
+        self.zobrist_off = (UIConfig.WIDTH - len(bin(self.board.zobrist_key)) * UIConfig.FONT_WIDTH_SMALL) / 2
         self.move_str = ""
 
         # Data collector for Self-Learning-Evaluation-Function (SLEF)
@@ -110,7 +69,7 @@ class UI:
             if not piece:
                 continue
             file, rank = self.board.get_file_and_rank(square)
-            pos = BoardUtility.get_display_coords(file, rank, self.UNIT, *self.OFFSETS)
+            pos = BoardUtility.get_display_coords(file, rank, UIConfig.UNIT, *UIConfig.OFFSETS)
             color, piece_type = piece
             self.render_piece(color, piece_type, pos)
 
@@ -122,50 +81,50 @@ class UI:
         return [pos + factor * diameter // 2 for pos in rect_coord]
 
     def render_circle(self, upper_left_corner_pos, diameter, color):
-        centered_coords = self.get_circle_center(upper_left_corner_pos, self.UNIT)
+        centered_coords = self.get_circle_center(upper_left_corner_pos, UIConfig.UNIT)
         x, y = (pos - diameter // 2 for pos in centered_coords)
         pygame.draw.ellipse(self.window, color, (x, y, diameter, diameter))
     
     def highlight_move(self, square, color, large: bool):
         file, rank = self.board.get_file_and_rank(square)
-        coordinates = BoardUtility.get_display_coords(file, rank, self.UNIT, *self.OFFSETS)
-        d = self.BIG_CIRCLE_D if large else self.SMALL_CIRCLE_D
+        coordinates = BoardUtility.get_display_coords(file, rank, UIConfig.UNIT, *UIConfig.OFFSETS)
+        d = UIConfig.BIG_CIRCLE_D if large else UIConfig.SMALL_CIRCLE_D
         self.render_circle(coordinates, d, color)
 
     def render_text(self, text: str, color: tuple, pos: tuple, large_font):
         if large_font:
-            surface = self.LARGE_FONT.render(text, False, color)
+            surface =UIConfig.LARGE_FONT.render(text, False, color)
         else:
-            surface = self.SMALL_FONT.render(text, False, color)
+            surface = UIConfig.SMALL_FONT.render(text, False, color)
         self.window.blit(surface, pos)
 
     def render_remaining_time(self, player):
         rendered_text = Clock.ftime[player]
-        self.render_text(rendered_text, self.BLACK, (self.TIMER_TEXT_X, self.TIMER_TEXT_Y[player]), True)
+        self.render_text(rendered_text, UIConfig.BLACK, (UIConfig.TIMER_TEXT_X, UIConfig.TIMER_TEXT_Y[player]), True)
     
     def render_game_state(self):
         if GameManager.checkmate:
-            self.render_text("checkmate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+            self.render_text("checkmate!", UIConfig.GREY, (UIConfig.TIMER_TEXT_X, UIConfig.HEIGHT // 2 - UIConfig.FONT_SIZE_LARGE // 2), True)
         elif GameManager.stalemate:
-            self.render_text("stalemate!", self.GREY, (self.TIMER_TEXT_X, self.HEIGHT // 2 - self.FONT_SIZE_LARGE // 2), True)
+            self.render_text("stalemate!", UIConfig.GREY, (UIConfig.TIMER_TEXT_X, UIConfig.HEIGHT // 2 - UIConfig.FONT_SIZE_LARGE // 2), True)
         else:
             for player in range(2):
                 self.render_remaining_time(player)
 
     def render_move_str(self):
-        self.render_text(self.move_str, self.GREY, self.MOVE_STR_POS, True)
+        self.render_text(self.move_str, UIConfig.GREY, UIConfig.MOVE_STR_POS, True)
 
     def render_zobrist(self):
         for i, char in enumerate(bin(self.board.zobrist_key)):  
             if not char.isdigit():
-                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+                self.render_text(char, UIConfig.BLUE, (self.zobrist_off + i * UIConfig.FONT_WIDTH_SMALL, 10), False)
                 continue
             # 1 is blue
             if int(char):
-                self.render_text(char, self.BLUE, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+                self.render_text(char, UIConfig.BLUE, (self.zobrist_off + i * UIConfig.FONT_WIDTH_SMALL, 10), False)
                 continue
             # 0 is red
-            self.render_text(char, self.RED, (self.zobrist_off + i * self.FONT_WIDTH_SMALL, 10), False)
+            self.render_text(char, UIConfig.RED, (self.zobrist_off + i * UIConfig.FONT_WIDTH_SMALL, 10), False)
 
     def is_selection_valid(self, piece):
         return Piece.is_color(piece, self.board.moving_color)
@@ -192,7 +151,7 @@ class UI:
     def update_info(self):
         self.fen = self.board.load_fen_from_board()
         print(self.fen)
-        self.zobrist_off = (self.WIDTH - len(bin(self.board.zobrist_key)) * self.FONT_WIDTH_SMALL) / 2
+        self.zobrist_off = (UIConfig.WIDTH - len(bin(self.board.zobrist_key)) * UIConfig.FONT_WIDTH_SMALL) / 2
         
     def drop_update(self):
         self.update_info()
@@ -230,17 +189,17 @@ class UI:
         if not self.selected_piece:
             return
         mouse_pos = pygame.mouse.get_pos()
-        piece_pos = self.get_circle_center(mouse_pos, self.UNIT, factor=-1)
+        piece_pos = self.get_circle_center(mouse_pos, UIConfig.UNIT, factor=-1)
         color, piece_type = self.selected_piece
         self.render_piece(color, piece_type, piece_pos)
 
     def move_responsiveness(self):
         if self.move_from == None:
             return
-        self.highlight_move(self.move_from, self.MOVE_RESPONSE_COLOR, False)
+        self.highlight_move(self.move_from, UIConfig.MOVE_RESPONSE_COLOR, False)
         if self.move_to == None:
             return
-        self.highlight_move(self.move_to, self.MOVE_RESPONSE_COLOR, True)
+        self.highlight_move(self.move_to, UIConfig.MOVE_RESPONSE_COLOR, True)
 
     def mark_moves(self):
         if not self.selected_piece:
@@ -250,10 +209,10 @@ class UI:
             # If piece on target, it must be opponent's, otherwise it would either be invalid or empty
             if self.board.squares[square]:
                 # outline red pieces with blue and black pieces with red
-                self.highlight_move(square, self.MOVE_HIGHLIGHT_COLORS[piece_color], True)
+                self.highlight_move(square, UIConfig.MOVE_HIGHLIGHT_COLORS[piece_color], True)
                 continue
             # draw black's moves in red and red's moves in blue
-            self.highlight_move(square, self.MOVE_HIGHLIGHT_COLORS[1-piece_color], False)
+            self.highlight_move(square, UIConfig.MOVE_HIGHLIGHT_COLORS[1-piece_color], False)
     
     @staticmethod
     def audio_player(audiofile):
@@ -264,19 +223,19 @@ class UI:
 
     def play_sfx(self, is_capture):
         if is_capture:
-            self.audio_player(self.CAPTURE_SFX)
+            self.audio_player(UIConfig.CAPTURE_SFX)
         else:
-            self.audio_player(self.MOVE_SFX)
+            self.audio_player(UIConfig.MOVE_SFX)
 
     def selection(self, mouse_pos):
         # Account for the OFFSETS the board's (0,0) coordinate is replaced by on the window
-        file, rank = BoardUtility.get_board_pos(mouse_pos, self.UNIT, *self.OFFSETS)
+        file, rank = BoardUtility.get_board_pos(mouse_pos, UIConfig.UNIT, *UIConfig.OFFSETS)
         current_square = self.board.get_square(file, rank)
         self.select_square(current_square)
 
     def make_human_move(self):
         mouse_pos = pygame.mouse.get_pos()
-        file, rank = BoardUtility.get_board_pos(mouse_pos, self.UNIT, *self.OFFSETS)
+        file, rank = BoardUtility.get_board_pos(mouse_pos, UIConfig.UNIT, *UIConfig.OFFSETS)
         target_square = rank * 9 + file
 
         is_capture = self.drop_piece(target_square)
@@ -324,7 +283,7 @@ class UI:
         """
         Handles response to verbal commands
         """
-        start_search = VerbalCommandHandler.listen_for_activation()
+        start_search = NLPCommandHandler.listen_for_activation()
         if start_search:
             self.activate_ai = True
             self.make_AI_move()
@@ -382,8 +341,8 @@ class UI:
         """
         Does all the rendering work on the window
         """
-        self.window.fill(self.BG_COLOR)
-        self.window.blit(self.BOARD_IMG, self.OFFSETS)
+        self.window.fill(UIConfig.BG_COLOR)
+        self.window.blit(self.BOARD_IMG, UIConfig.OFFSETS)
 
         self.move_responsiveness()
 
