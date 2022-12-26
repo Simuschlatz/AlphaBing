@@ -6,7 +6,7 @@ import pygame
 from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board, NLPCommandHandler
 from core.Engine.AI import TrainingDataCollector, Dfs
 from core.Utils import BoardUtility
-from core.Config.game import UIConfig
+from core.Engine.config import UIConfig
 
 class Button:
     def __init__(self, x, y, image):

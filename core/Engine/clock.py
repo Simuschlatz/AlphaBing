@@ -6,10 +6,8 @@ import time
 
 class Clock:
     @classmethod
-    def init(cls, duration, player_one, player_two) -> None:
+    def init(cls, duration) -> None:
         cls.duration = [duration, duration]
-        cls.player_one = player_one
-        cls.player_two = player_two
         cls.p_time = time.perf_counter()
         # Formatted time strings
         cls.ftime = [cls.get_ftime_string(duration) for _ in range(2)]

@@ -39,7 +39,7 @@ class Board:
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
         self.game_history = deque() # Stack(:previous square, :target square :captured piece)
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
-        self.zobrist_key = ZobristHashing.get_zobrist_key(self.moving_color, self.piece_lists)
+        self.zobrist_key = ZobristHashing.digest(self.moving_color, self.piece_lists)
         self.repetition_history = {self.zobrist_key}
 
     @staticmethod
