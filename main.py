@@ -3,7 +3,8 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Board, LegalMoveGenerator, Clock, VerbalCommandHandler, UI, ZobristHashing
+pygame.init()
+from core.Engine import Board, LegalMoveGenerator, Clock, NLPCommandHandler, UI, ZobristHashing
 from core.Engine.AI import Dfs, Evaluation
 from core.Utils import start_search
 
@@ -25,20 +26,20 @@ def main():
     red_moves_first = True
     fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN 
     fen += (" w " if red_moves_first else " b ") + "- - 0 1"
-    Clock.init(300, "MIKE", "OXLONG")
+    Clock.init(300)
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     ZobristHashing.init_table()
     board = Board(fen, play_as_red)
 
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
+    NLPCommandHandler.init()
 
-    VerbalCommandHandler.init()
 
     ui = UI(board)
 
     # ------To run perft search------
-    start_search(board)
+    # start_search(board)
     # -------------------------------
 
     py_clock = pygame.time.Clock()
