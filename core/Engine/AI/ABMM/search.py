@@ -5,7 +5,7 @@ You may use, distribute and modify this code under the terms of the GNU General 
 import copy
 from core.Engine.move_generator import LegalMoveGenerator
 from core.Engine.board import Board
-from core.Engine.AI.eval_utility import Evaluation
+from core.Engine.AI.ABMM.eval_utility import Evaluation
 from core.Engine.AI import order_moves, order_moves_pst
 import multiprocessing as mp
 
