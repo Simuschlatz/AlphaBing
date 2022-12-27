@@ -2,11 +2,11 @@ from multiprocessing import cpu_count
 
 class ModelConfifg:
     input_shape = (14, 10, 9)
-    input_filter_size = 5
-    filter_size = 3
+    input_kernel_size = 5
+    kernel_size = 3
     num_filters = 256
-    num_hidden_layers = 7
-    l2_regularization = 1e-4
+    num_res_layers = 7
+    l2_reg_const = 1e-4
     value_fc_size = 256
     distributed = False
     input_depth = 14
