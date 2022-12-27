@@ -34,10 +34,13 @@
   * iterative deepening
 
 **AlphaZero based approach**
+* _IN PROGRESS:_
+  * Convolutional RNN Model
+  * Bitboard utility
 * _TO-DO:_
-  * reinforcement learning by self-play
+  * self-play
   * Monte Carlo Tree Search (MCTS)
-  * Domain knowledge: game rules, position, legal moves → no domain-specific adaptations
+  * AI vs Human
 
 ## HOW TO PLAY
 * clone this repo ```git clone https://github.com/Simuschlatz/CheapChess.git```
