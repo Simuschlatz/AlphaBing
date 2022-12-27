@@ -47,6 +47,7 @@
     |---|--------|
     |space|unmake previous move|
     |a|watch ai play against itself|
+    |c|listen for speech commands|
 
 
 ## Screenshots
@@ -60,6 +61,7 @@
 * pandas
 * tensorflow
 * pygame
+
 **For speech-to-text commands:**
 * Pyaudio
 * SpeechRecognition
