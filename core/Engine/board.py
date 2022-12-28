@@ -23,11 +23,12 @@ class Board:
         self.fullmoves, self.plies = 0, 0
         # basic setup
         is_red_first = self.load_board_from_fen(FEN)
+        # Bitboards 2x7x10x9 (each side, number of pieces, board dims)
         self.moving_side = int(play_as_red == is_red_first)
         self.opponent_side = 1 - self.moving_side
         self.moving_color = int(is_red_first)
         self.opponent_color = 1 - self.moving_color
-        print(self.moving_color)
+        self.bitboards = self.piecelist_to_bitboard(adjust_perspective=True)
         # If we don't play as red, the pieces are at the top, 
         self.is_red_up = not play_as_red
         # moving color is 16 if red moves first or 8 when white moves first
@@ -176,6 +177,26 @@ class Board:
         self.zobrist_key ^= self.opponent_color
         self.zobrist_key ^= self.moving_side
 
+    def piecelist_to_bitboard(self, adjust_perspective: bool=False):
+        """
+        :param adjust_perspective: if True, bitboards will be adjusted to perspective of players
+        :return: bitboard of squares generated from piece lists
+        """
+        bitboards = np.zeros((2, 7, 90), dtype=np.ubyte)
+
+        for side, piece_lists in enumerate(self.piece_lists):
+            flip = side and adjust_perspective
+            for piece_type, squares in enumerate(piece_lists):
+                # adjust the squares to current side's perspective
+                # if flip: squares = list(map(lambda square: 90 - square, squares))
+                if flip: squares = [89 - square for square in squares]
+                np.put(bitboards[side][piece_type], [squares], 1)
+
+        # put the moving side's board first (only needs adjustment if lower side is moving)
+        if self.moving_side: bitboards = np.flipud(bitboards)
+        print(bitboards[:, :1])
+        return bitboards
+
     def is_repetition(self):
         return self.zobrist_key in self.repetition_history
     
@@ -213,6 +234,7 @@ class Board:
         # print(self.zobrist_key)
 
         self.switch_moving_color()
+        self.piecelist_to_bitboard(adjust_perspective=True)
         # Used for quiescene search
         return bool(captured_piece)
         
