@@ -109,8 +109,9 @@ class Dfs:
         moves = order_moves(LegalMoveGenerator.load_moves(board), board)
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
-        if board.is_terminal_state():
-            status = board.get_status()
+        num_moves = len(moves)
+        if board.is_terminal_state(num_moves):
+            status = board.get_status(num_moves)
             if status:
                 # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
                 # checkmates, as the checkmate value still is better than the initial beta of -infinity

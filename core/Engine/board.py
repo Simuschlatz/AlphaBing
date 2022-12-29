@@ -2,7 +2,9 @@
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
-from core.Engine import Piece, ZobristHashing, LegalMoveGenerator
+from core.Engine.piece import Piece 
+from core.Engine.zobrist_hashing import ZobristHashing
+# from core.Engine.move_generator import LegalMoveGenerator
 import numpy as np
 from collections import deque
 
@@ -127,13 +129,13 @@ class Board:
     def is_capture(self, square):
         return self.squares[square]
 
-    def is_terminal_state(self):
+    def is_terminal_state(self, num_moves: int):
         """
         :return: if current position is a terminal state
         """
-        return not LegalMoveGenerator.moves or self.plies >= self.max_plies
+        return not num_moves or self.plies >= self.max_plies
 
-    def get_status(self) -> int:
+    def get_status(self, num_moves: int) -> int:
         """
         returns integer [-1, 1)
         -1: lose
@@ -144,16 +146,13 @@ class Board:
         if self.plies >= 60:
             return 0
         # Check- or stalemate
-        if not LegalMoveGenerator.moves:
+        if not num_moves:
             return -1
-
-    def load_moves(self):
-        return LegalMoveGenerator.load_moves()
 
     @staticmethod
     def get_manhattan_dist(square_1, square_2):
         """
-        :return: manhattan distance between two squares on a collapsed 9 x 10 grid
+        :return: manhattan distance between two squares in each axis (dcolumns, drows)
         """
         dist_x = abs(square_1 % 9 - square_2 % 9)
         dist_y = abs(square_1 // 9 - square_2 // 9)
@@ -162,7 +161,7 @@ class Board:
     @staticmethod
     def get_dists(square_1, square_2):
         """
-        :return: x- and y-distance between two squares on a collapsed 9 x 10 grid
+        :return: x- and y-distance between two squares in each axis (dcolumns, drows)
         """
         dist_x = int(square_1 % 9 - square_2 % 9)
         dist_y = square_1 // 9 - square_2 // 9
