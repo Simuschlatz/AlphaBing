@@ -1,15 +1,15 @@
 from multiprocessing import cpu_count
 
 class ModelConfifg:
-    input_shape = (14, 10, 9)
+    input_depth = 14
+    input_shape = (input_depth, 10, 9)
     input_kernel_size = 5
     kernel_size = 3
     num_filters = 256
     num_res_layers = 7
     l2_reg_const = 1e-4
-    value_fc_size = 256
+    value_fc_layer_size = 256
     distributed = False
-    input_depth = 14
 
 class PlayConfig:
     max_processes = cpu_count()

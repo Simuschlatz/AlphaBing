@@ -50,7 +50,7 @@ class Model:
         x = Activation("relu", name=name+"_relu2")(x)
         return x
 
-    def value_head(self, input):
+    def _value_head(self, input):
         """
         :return: the value head of the AlphaZero model 
         The value head consists of one convolutional filter, BatchNorm, ReLu, 
@@ -74,5 +74,7 @@ class Model:
         # Residual Layers
         for i in range(self.config.num_res_layers):
             x = self._residual_block(x, i+1)
+        
+        value_head = self._value_head(x)
         
         
