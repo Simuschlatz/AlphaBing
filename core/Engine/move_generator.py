@@ -3,7 +3,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 from core.Engine.piece import Piece
-from core.Engine.precomputed_move_maps import PrecomputingMoves
+from core.Engine.precomputed_move_data import PrecomputingMoves
 from typing import Iterable
 
 # The code doesn't look well designed as there seem to be lots of repetitions, but reusing the same code is difficult, 
@@ -14,18 +14,10 @@ class LegalMoveGenerator:
     Generates legal moves from pseudo-legal-move-maps \n
     call load_moves() to receive a list of all legal moves for the current state of the game.
     """
-    PrecomputingMoves.init_constants()
+    PrecomputingMoves.init()
     dir_offsets = PrecomputingMoves.dir_offsets
     dist_to_edge = PrecomputingMoves.dist_to_edge
-
-    # Precalculating move maps
-    king_mm = PrecomputingMoves.precompute_king_moves()
-    orthogonal_mm = PrecomputingMoves.precompute_orthogonal_moves()
-    horse_mm = PrecomputingMoves.precompute_horse_moves()
-    advisor_mm = PrecomputingMoves.precompute_advisor_moves()
-    elephant_mm = PrecomputingMoves.precompute_elephant_moves()
-    pawn_mm = PrecomputingMoves.precompute_pawn_moves()
-
+    
     @classmethod
     def init_board(cls, board):
         cls.board = board
@@ -165,7 +157,7 @@ class LegalMoveGenerator:
     def generate_king_moves(cls) -> None:
         current_square = cls.moving_king
 
-        target_squares = cls.king_mm[cls.board.moving_side][current_square]
+        target_squares = PrecomputingMoves.king_mm[cls.board.moving_side][current_square]
         for target_square in target_squares:
             target_piece = cls.board.squares[target_square]
             if Piece.is_color(target_piece, cls.board.moving_color):
@@ -186,7 +178,7 @@ class LegalMoveGenerator:
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
 
-            rook_mm = cls.orthogonal_mm[current_square]
+            rook_mm = PrecomputingMoves.orthogonal_mm[current_square]
             # Going through chosen direction indices
             for dir_idx, squares_in_dir in rook_mm.items():
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
@@ -235,7 +227,7 @@ class LegalMoveGenerator:
                 break
             avoids_cannon_check = current_square == cls.cause_cannon_defect
 
-            for target_square in cls.pawn_mm[cls.board.moving_side][current_square]:
+            for target_square in PrecomputingMoves.pawn_mm[cls.board.moving_side][current_square]:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
@@ -278,7 +270,7 @@ class LegalMoveGenerator:
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
             
-            for target_square in cls.elephant_mm[cls.board.moving_side][current_square]:
+            for target_square in PrecomputingMoves.elephant_mm[cls.board.moving_side][current_square]:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
@@ -311,7 +303,7 @@ class LegalMoveGenerator:
             if cls.is_pinned(current_square):
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
-            target_squares = cls.advisor_mm[cls.board.moving_side][current_square]
+            target_squares = PrecomputingMoves.advisor_mm[cls.board.moving_side][current_square]
 
             for target_square in target_squares:
                 target_piece = cls.board.squares[target_square]
@@ -350,11 +342,9 @@ class LegalMoveGenerator:
         for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.horse]:
             if cls.is_pinned(current_square):
                 continue
-            horse_moves = cls.horse_mm[current_square]
 
             # legal_moves = list(filter(lambda move: move in illegal_moves, legal_moves))
-            for move in horse_moves:
-                target_square = move[1]
+            for target_square in PrecomputingMoves.horse_mm[current_square]:
                 target_piece = cls.board.squares[target_square]
                 # If it's quiescene search and move isn't a capture, continue
                 if Piece.is_color(target_piece, cls.board.moving_color):
@@ -383,7 +373,7 @@ class LegalMoveGenerator:
             if cls.checks and is_pinned:
                 continue
             avoids_cannon_check = current_square == cls.cause_cannon_defect
-            cannon_attack_map = cls.orthogonal_mm[current_square]
+            cannon_attack_map = PrecomputingMoves.orthogonal_mm[current_square]
             is_double_screen = current_square in cls.double_screens
             for dir_idx, targets_in_dir in cannon_attack_map.items():
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
@@ -543,8 +533,7 @@ class LegalMoveGenerator:
         for square in opponent_horses:
             if cls.board.get_manhattan_dist(square, cls.moving_king) > 4:
                 continue
-            for move in cls.horse_mm[square]:
-                target_square = move[1]
+            for target_square in PrecomputingMoves.horse_mm[square]:
                 
                 # --------------------------------MISTAKE DOCUMENTATION-----------------------------------
                 # Not adding squares to the attack map if they're occupied by an opponent piece allows 
@@ -573,7 +562,7 @@ class LegalMoveGenerator:
 
     @classmethod
     def exclude_king_moves(cls):
-        king_mm = cls.king_mm[cls.board.moving_side][cls.moving_king]
+        king_mm = PrecomputingMoves.king_mm[cls.board.moving_side][cls.moving_king]
         # Filtering out squares occupied by friendly pieces
         king_mm = list(filter(lambda target: not Piece.is_color(cls.board.squares[target], cls.board.moving_color), king_mm))
         if not cls.generate_quiets:
@@ -622,7 +611,7 @@ class LegalMoveGenerator:
             mhd = cls.board.get_manhattan_dist(pawn, cls.moving_king)
             if mhd > 2:
                 continue
-            for attacked_square in cls.pawn_mm[cls.board.opponent_side][pawn]:
+            for attacked_square in PrecomputingMoves.pawn_mm[cls.board.opponent_side][pawn]:
             # Pawn is posing a threat to friendly king
                 if attacked_square in king_moves:
                     cls.attack_map.add(attacked_square)
@@ -650,7 +639,7 @@ class LegalMoveGenerator:
         """
         generates attack map along ray of given direction from given square
         """
-        attack_ray = cls.orthogonal_mm[square][dir_idx]
+        attack_ray = PrecomputingMoves.orthogonal_mm[square][dir_idx]
         screen = False
         double_block = False
         for attacking_square in attack_ray:
@@ -672,7 +661,7 @@ class LegalMoveGenerator:
 
     @classmethod
     def generate_rook_attack_ray(cls, square, dir_idx) -> None:
-        attack_ray = cls.orthogonal_mm[square][dir_idx]
+        attack_ray = PrecomputingMoves.orthogonal_mm[square][dir_idx]
         for attacking_square in attack_ray:
             piece = cls.board.squares[attacking_square]
             cls.attack_map.add(attacking_square)
