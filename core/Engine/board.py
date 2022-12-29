@@ -190,7 +190,7 @@ class Board:
                 # adjust the squares to current side's perspective
                 # if flip: squares = list(map(lambda square: 90 - square, squares))
                 if flip: squares = [89 - square for square in squares]
-                np.put(bitboards[side][piece_type], [squares], 1)
+                np.put(bitboards[side][piece_type], squares, 1)
 
         # put the moving side's board first (only needs adjustment if lower side is moving)
         if self.moving_side: bitboards = np.flipud(bitboards)
@@ -234,7 +234,7 @@ class Board:
         # print(self.zobrist_key)
 
         self.switch_moving_color()
-        self.piecelist_to_bitboard(adjust_perspective=True)
+        # self.piecelist_to_bitboard(adjust_perspective=True)
         # Used for quiescene search
         return bool(captured_piece)
         
