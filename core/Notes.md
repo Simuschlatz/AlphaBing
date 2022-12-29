@@ -8,4 +8,4 @@ for each color:
 * cannon
 * pawn / soldier
 
----> 2*7*9*10
+---> 2x7x9x10
