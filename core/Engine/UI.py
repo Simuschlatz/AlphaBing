@@ -126,6 +126,14 @@ class UI:
             # 0 is red
             self.render_text(char, UIConfig.RED, (self.zobrist_off + i * UIConfig.FONT_WIDTH_SMALL, 10), False)
 
+    def show_square_ids(self):
+        for i in range(9):
+            for j in range(10):
+                x = i * UIConfig.UNIT + UIConfig.OFFSET_X + UIConfig.UNIT // 2
+                y = j * UIConfig.UNIT + UIConfig.OFFSET_Y + UIConfig.UNIT // 2
+                square_id = str(j * 9 + i)
+                self.render_text(square_id, UIConfig.RED, (x, y), False)
+
     def is_selection_valid(self, piece):
         return Piece.is_color(piece, self.board.moving_color)
 
@@ -343,7 +351,7 @@ class UI:
         """
         self.window.fill(UIConfig.BG_COLOR)
         self.window.blit(self.BOARD_IMG, UIConfig.OFFSETS)
-
+        self.show_square_ids()
         self.move_responsiveness()
 
         self.render_game_state()
