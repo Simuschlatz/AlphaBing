@@ -19,12 +19,12 @@ class PrecomputingMoves:
         cls.move_vector = []
         
         # Precalculating move maps
-        cls.king_mm = cls.precompute_king_moves()
-        cls.orthogonal_mm = cls.precompute_orthogonal_moves()
-        cls.horse_mm = cls.precompute_horse_moves()
-        cls.advisor_mm = cls.precompute_advisor_moves()
+        cls.king_mm = cls.get_king_move_map()
+        cls.orthogonal_mm = cls.get_orthogonal_move_map()
+        cls.horse_mm = cls.get_horse_move_map()
+        cls.advisor_mm = cls.get_advisor_move_map()
         cls.elephant_mm = cls.get_elephant_move_map()
-        cls.pawn_mm = cls.precompute_pawn_moves()
+        cls.pawn_mm = cls.get_pawn_move_map()
         print(len(cls.move_vector))
         # exit(0)
 
@@ -77,7 +77,7 @@ class PrecomputingMoves:
         return horse_offsets
 
     @staticmethod
-    def precompute_king_moves() -> list:
+    def get_king_move_map() -> list:
         """
         :return: a list of one hash map for each side of the board, containing 
         all start indices as keys and the possible targets of those positions as value\n
@@ -116,7 +116,7 @@ class PrecomputingMoves:
         return king_moves
 
     @classmethod
-    def precompute_orthogonal_moves(cls) -> list:
+    def get_orthogonal_move_map(cls) -> list:
         """
         :return: a list of hash tables containing the direction index as key \n 
         and lists of the according target indices as values
@@ -135,7 +135,7 @@ class PrecomputingMoves:
         return target_squares
 
     @classmethod
-    def precompute_horse_moves(cls) -> list:
+    def get_horse_move_map(cls) -> list:
         """
         :return: a list of tuples containing the start and end indices of all possible horse moves
         """
@@ -146,22 +146,19 @@ class PrecomputingMoves:
         for square in range(90):
             horse_moves.append([])
             for dir_index in range(8):
-                # board is a 1d array, so if jump is outside of file (illegal), it will just jump to new rank
-                # fix to illegal jumps perceived as legal by computer 
                 target_square = square + horse_offsets[dir_index]
-                target_rank = target_square // 9
-                target_file = target_square - target_rank * 9
-                current_rank = square // 9
-                current_file = square - current_rank * 9
-                max_dist = max(abs(current_rank - target_rank), abs(current_file - target_file))
-                if max_dist > 2 or not -1 < target_square < 90:
+                if not -1 < target_square < 90:
+                    continue
+                # board is a 1d array, so if jump is outside of file (illegal), it will just jump to new rank
+                # This part fixes the problem
+                if Board.get_manhattan_dist(square, target_square) > 3:
                     continue
                 horse_moves[square].append( target_square)
                 cls.move_vector.append((square, target_square))
         return horse_moves
 
     @classmethod
-    def precompute_advisor_moves(cls) -> list:
+    def get_advisor_move_map(cls) -> list:
         """
         :return: a list of one hash map for each side of the board, containing 
         all start indices as keys and the possible targets of those positions as value\n
@@ -186,10 +183,6 @@ class PrecomputingMoves:
 
                 # All of the target squares' only move is back to the 
                 # palace_middle_square, so add move to target_square and back
-                # moves = [((middle_square, target_square), (target_square, middle_square))]
-                # cls.move_vector.extend(moves)
-                # for move in moves:
-                #     advisor_moves[side][move[0]] = advisor_moves[side].get(move[0], []) + [move[1]]
                 advisor_moves[side][middle_square] = advisor_moves[side].get(middle_square, []) + [target_square]
                 advisor_moves[side][target_square] = advisor_moves[side].get(target_square, []) + [middle_square]
                 if not side: 
@@ -198,7 +191,7 @@ class PrecomputingMoves:
         return advisor_moves
 
     @classmethod
-    def precompute_pawn_moves(cls) -> list:
+    def get_pawn_move_map(cls) -> list:
         """
         :return: a list of one hash map for each side of the board, containing 
         all start indices as keys and the possible targets of those positions as value\n
@@ -223,10 +216,10 @@ class PrecomputingMoves:
                         if cls.dist_to_edge[square][dir_idx] < 1:
                             continue
                         offset = cls.dir_offsets[dir_idx]
-                        pawn_moves[side][square] = pawn_moves[side].get(square, set()) | {square + offset}
+                        pawn_moves[side][square] = pawn_moves[side].get(square, []) + [square + offset]
                 if foward_move:
                     offset = offset_push_move[side]
-                    pawn_moves[side][square] = pawn_moves[side].get(square, set()) | {square + offset}
+                    pawn_moves[side][square] = pawn_moves[side].get(square, []) + [square + offset]
         return pawn_moves
 
 
