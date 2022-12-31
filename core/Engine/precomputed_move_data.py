@@ -2,6 +2,8 @@
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
+from collections import defaultdict
+from core.Engine import Board
 class PrecomputingMoves:
     """
     precomputes all pseudo-legal moves for all pieces at all possible positions
@@ -21,10 +23,11 @@ class PrecomputingMoves:
         cls.orthogonal_mm = cls.precompute_orthogonal_moves()
         cls.horse_mm = cls.precompute_horse_moves()
         cls.advisor_mm = cls.precompute_advisor_moves()
-        cls.elephant_mm = cls.precompute_elephant_moves()
+        cls.elephant_mm = cls.get_elephant_move_map()
         cls.pawn_mm = cls.precompute_pawn_moves()
         print(len(cls.move_vector))
         # exit(0)
+
     @staticmethod
     def precompute_dists() -> list:
         """
@@ -267,12 +270,44 @@ class PrecomputingMoves:
                         if move_crosses_river:
                             continue
                         
-                        target_file = target_square % 9
-                        # Avoiding moves out of bounds, see "precompute_horse_moves()"
-                        max_dist = max(abs(target_rank - rank), abs(target_file - file))
-                        if max_dist > 2:
+                        if max(Board.get_abs_dist(square, target_square)) > 2:
                             continue
                         elephant_moves[side][square] = elephant_moves[side].get(square, []) + [target_square]
                         if not side: cls.move_vector.append((square, target_square))
         print(len(cls.move_vector) - num_moves_before)
         return elephant_moves
+
+    @classmethod
+    def get_elephant_move_map(cls) -> list:
+        elephant_moves = []
+        offsets = cls.dir_offsets[4:8]
+        # Used to determine whether move or current position crosses river (in which case it's illegal)
+        is_river_crossed = (lambda square: square > 44, lambda square: square < 45)
+
+        for side in range(2):
+            start_square = [87 if side else 2]
+            elephant_moves.append(defaultdict(list))
+            while start_square:
+                print(len(start_square))
+                if len(start_square) > 100:
+                    print(start_square)
+                    exit(0)
+                square = start_square.pop(0)
+                target_squares = elephant_moves[side][square]
+                _hash = set(target_squares)
+                for off in offsets:
+                    target_square = square + 2 * off
+                    if not -1 < target_square < 90:
+                        continue
+                    if target_square in _hash:
+                        continue
+                    move_crosses_river = is_river_crossed[side](target_square)
+                    if move_crosses_river:
+                        continue
+                    # Avoiding moves out of bounds, see "precompute_horse_moves()"
+                    if Board.get_manhattan_dist(square, target_square) > 4:
+                        continue
+                    target_squares.append(target_square)
+                    start_square.append(target_square)
+                    if not side: cls.move_vector.append((square, target_square))
+        return list(map(lambda dd: dict(dd), elephant_moves))
