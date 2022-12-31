@@ -3,15 +3,12 @@
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 
 > Combining Algorithmic Powers With The Beauty of Machine Learning
-## Table of Contents
-- [CheapChess - The Fastest Python Chess-AI](#cheapchess---the-fastest-python-chess-ai)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [HOW TO PLAY](#how-to-play)
-  - [Screenshots](#screenshots)
-  - [Dependencies](#dependencies)
-  - [Project-Status](#project-status)
-  - [Acknowledgements](#acknowledgements)
+
+
+- [Features](#features)
+- [HOW TO PLAY](#how-to-play)
+- [Screenshots](#screenshots)
+- [Dependencies](#dependencies)
 
 ## Features
 **Move Generation**
@@ -73,10 +70,3 @@
 * SpeechRecognition
 
 _requirements file will be added soon_
-
-## Project-Status
-Project is: _in progress_
-
-## Acknowledgements
-* Inspiration: [@SebLague](https://github.com/SebLague)
-* Research done at [chessprogramming wiki](https://www.chessprogramming.org/), [Deepmind](https://www.deepmind.com/)
