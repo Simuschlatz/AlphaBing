@@ -1,4 +1,4 @@
-# CheapChess - The Fastest Python Chess-AI
+# CheapChess - making complex software accessible for everyone
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 
