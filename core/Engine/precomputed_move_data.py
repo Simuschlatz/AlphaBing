@@ -234,10 +234,8 @@ class PrecomputingMoves:
             start_square = [87 if side else 2]
             elephant_moves.append(defaultdict(list))
             while start_square:
-                print(len(start_square))
-                if len(start_square) > 100:
-                    print(start_square)
-                    exit(0)
+                # iteratively (could do this recursively as well though) 
+                # dfsing the path of elephant, adding all moves on the way
                 square = start_square.pop(0)
                 target_squares = elephant_moves[side][square]
                 _hash = set(target_squares)
@@ -245,8 +243,10 @@ class PrecomputingMoves:
                     target_square = square + 2 * off
                     if not -1 < target_square < 90:
                         continue
+                    # Avoiding perpetual "stepping" between two squares by excluding squares already visited
                     if target_square in _hash:
                         continue
+                    # Elephant can't cross river
                     move_crosses_river = is_river_crossed[side](target_square)
                     if move_crosses_river:
                         continue
