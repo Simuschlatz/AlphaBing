@@ -64,6 +64,7 @@
 * python 3
 * numpy
 * pandas
+* tensorflow
 * keras
 * pygame
 
