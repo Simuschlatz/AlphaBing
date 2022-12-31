@@ -1,23 +1,28 @@
+import os
 from core.Engine.AI.AlphaZero.config import ModelConfifg
 
 import tensorflow as tf
+
 from keras.models import Sequential, load_model, Model
 from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, Activation, LeakyReLU, Add
 from keras.optimizers import SGD
 from keras.regularizers import l2
+from tensorflow.keras.utils import plot_model
 
-class Model:
-    def __init__(self, config: ModelConfifg):
-        self.config = config
+import datetime
+
+class AlphaZeroModel:
+    def __init__(self):
+        self.config = ModelConfifg
         self.model = None
 
-    def _conv_layer(self, input, num_filters, kernel_size, name=None):
+    def _conv_layer(self, input, num_filters, kernel_size, name=None, index=None):
         """
         builds a convolutional layer with given parameters. Applies BatchNorm and ReLu Activation.
         :param index: (0, ∞]
         """
         if name is None:
-            name = "conv_layer"
+            name = "conv_layer" + str(index) if index != None else "conv_layer"
 
         x = Conv2D(
             filters=num_filters, 
@@ -35,7 +40,7 @@ class Model:
     def _residual_block(self, input, index):
         name = "Res" + str(index)
 
-        x = self._conv_layer(input, self.config.num_filters, self.config.kernel_size)
+        x = self._conv_layer(input, self.config.num_filters, self.config.kernel_size, index=index)
 
         x = Conv2D(
             filters=self.config.num_filters, 
@@ -78,7 +83,10 @@ class Model:
             name="policy_head")(x)
         return x
 
-    def build(self):
+    def _build(self):
+        """
+        builds the AlphaZero model
+        """
         in_x = Input(self.config.input_shape, name="input_layer")
         x = self._conv_layer(in_x, self.config.num_filters, self.config.input_kernel_size, name="input_conv")
         # Residual Layers
@@ -91,4 +99,7 @@ class Model:
         self.model = Model(in_x, [policy_head, value_head], name="alphazero_model")
         
         
-        
+    def visualize(self, filepath="assets/imgs/ML"):
+        filepath = os.path.join(filepath, "model" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png")
+        plot_model(self.model, filepath, show_shapes=True, show_layer_names=True)
+
