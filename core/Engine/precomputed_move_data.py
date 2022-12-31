@@ -229,6 +229,46 @@ class PrecomputingMoves:
                     pawn_moves[side][square] = pawn_moves[side].get(square, set()) | {square + offset}
         return pawn_moves
 
+
+    @classmethod
+    def get_elephant_move_map(cls) -> list:
+        elephant_moves = []
+        offsets = cls.dir_offsets[4:8]
+        # Used to determine whether move or current position crosses river (in which case it's illegal)
+        is_river_crossed = (lambda square: square > 44, lambda square: square < 45)
+
+        for side in range(2):
+            start_square = [87 if side else 2]
+            elephant_moves.append(defaultdict(list))
+            while start_square:
+                print(len(start_square))
+                if len(start_square) > 100:
+                    print(start_square)
+                    exit(0)
+                square = start_square.pop(0)
+                target_squares = elephant_moves[side][square]
+                _hash = set(target_squares)
+                for off in offsets:
+                    target_square = square + 2 * off
+                    if not -1 < target_square < 90:
+                        continue
+                    if target_square in _hash:
+                        continue
+                    move_crosses_river = is_river_crossed[side](target_square)
+                    if move_crosses_river:
+                        continue
+                    # Avoiding moves out of bounds, see "precompute_horse_moves()"
+                    if Board.get_manhattan_dist(square, target_square) > 4:
+                        continue
+                    target_squares.append(target_square)
+                    start_square.append(target_square)
+                    if not side: cls.move_vector.append((square, target_square))
+        return list(map(lambda dd: dict(dd), elephant_moves))
+
+    # This is the version prior to the one above. Here the problem wasn't that the method wasn't working, but rather the
+    # unnecessary amount of computations it took. It returned a move map for squares where the elephant couldn't even go
+    # and hence, also messed up the move vector used to label the ML model
+    '''
     @classmethod
     def precompute_elephant_moves(cls) -> list:
         """
@@ -276,38 +316,4 @@ class PrecomputingMoves:
                         if not side: cls.move_vector.append((square, target_square))
         print(len(cls.move_vector) - num_moves_before)
         return elephant_moves
-
-    @classmethod
-    def get_elephant_move_map(cls) -> list:
-        elephant_moves = []
-        offsets = cls.dir_offsets[4:8]
-        # Used to determine whether move or current position crosses river (in which case it's illegal)
-        is_river_crossed = (lambda square: square > 44, lambda square: square < 45)
-
-        for side in range(2):
-            start_square = [87 if side else 2]
-            elephant_moves.append(defaultdict(list))
-            while start_square:
-                print(len(start_square))
-                if len(start_square) > 100:
-                    print(start_square)
-                    exit(0)
-                square = start_square.pop(0)
-                target_squares = elephant_moves[side][square]
-                _hash = set(target_squares)
-                for off in offsets:
-                    target_square = square + 2 * off
-                    if not -1 < target_square < 90:
-                        continue
-                    if target_square in _hash:
-                        continue
-                    move_crosses_river = is_river_crossed[side](target_square)
-                    if move_crosses_river:
-                        continue
-                    # Avoiding moves out of bounds, see "precompute_horse_moves()"
-                    if Board.get_manhattan_dist(square, target_square) > 4:
-                        continue
-                    target_squares.append(target_square)
-                    start_square.append(target_square)
-                    if not side: cls.move_vector.append((square, target_square))
-        return list(map(lambda dd: dict(dd), elephant_moves))
+        '''
