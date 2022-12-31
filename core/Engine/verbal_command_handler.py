@@ -4,7 +4,7 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 import http.client as httplib
 from contextlib import contextmanager
-import sys, os
+import sys, os, warnings
 try:
     import speech_recognition as sr
 except ImportError as e:
@@ -23,7 +23,7 @@ def is_internet_connected(ip_adresses: tuple=("8.8.8.8", "8.8.4.4")) -> bool:
             connection.request("HEAD", "/")
             return True
         except Exception:
-            continue
+            return False
         finally:
             connection.close()
 
@@ -68,7 +68,7 @@ class NLPCommandHandler:
                 print("Listening...")
                 audio = cls.recognizer.listen(source)
             if not is_internet_connected():
-                raise ConnectionError("status code 404. Not Found. Please connect to internet for using speech-to-text.")
+                warnings.warn("status code 404. Not Found. Please connect to internet for using speech-to-text.")
             with silence_function(): # This is to suppress the internal console outputs of recognize_google
                 # Where the magic happens
                 text = cls.recognizer.recognize_google(audio)
