@@ -5,10 +5,11 @@
 > Combining Algorithmic Powers With The Beauty of Machine Learning
 
 
-- [Features](#features)
-- [HOW TO PLAY](#how-to-play)
-- [Screenshots](#screenshots)
-- [Dependencies](#dependencies)
+- [CheapChess - The Fastest Python Chess-AI](#cheapchess---the-fastest-python-chess-ai)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Gameplay](#gameplay)
+  - [Dependencies](#dependencies)
 
 ## Features
 **Move Generation**
@@ -41,7 +42,7 @@
   * Monte Carlo Tree Search (MCTS)
   * AI vs Human
 
-## HOW TO PLAY
+## Installation
 * clone this repo ```git clone https://github.com/Simuschlatz/CheapChess.git```
 * run main file ```python3 main.py``` or ```python main.py```
 
@@ -51,10 +52,8 @@
     |a|watch ai play against itself|
     |c|listen for speech commands|
 
-
-## Screenshots
-<img src="./assets/screenshots/15.11.jpeg" alt="screenshot" width="500"/>
-<img src="./assets/screenshots/15.11(2).jpeg" alt="screenshot" width="500"/>
+## Gameplay
+![Gameplay](https://im.ezgif.com/tmp/ezgif-1-e9bcb94746.gif)
 
 ## Dependencies
 **To run the current version of the app:**
