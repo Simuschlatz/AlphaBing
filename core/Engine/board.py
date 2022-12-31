@@ -4,7 +4,6 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 from core.Engine.piece import Piece 
 from core.Engine.zobrist_hashing import ZobristHashing
-# from core.Engine.move_generator import LegalMoveGenerator
 import numpy as np
 from collections import deque
 
@@ -148,6 +147,14 @@ class Board:
         # Check- or stalemate
         if not num_moves:
             return -1
+    @staticmethod
+    def get_abs_dist(square_1, square_2):
+        """
+        :return: absolute distance between two squares in each axis (dcolumns, drows)
+        """
+        dist_x = abs(square_1 % 9 - square_2 % 9)
+        dist_y = abs(square_1 // 9 - square_2 // 9)
+        return dist_x, dist_y
 
     @staticmethod
     def get_manhattan_dist(square_1, square_2):
@@ -193,7 +200,6 @@ class Board:
 
         # put the moving side's board first (only needs adjustment if lower side is moving)
         if self.moving_side: bitboards = np.flipud(bitboards)
-        print(bitboards[:, :1])
         return bitboards
 
     def is_repetition(self):

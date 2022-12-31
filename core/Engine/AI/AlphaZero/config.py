@@ -1,4 +1,5 @@
 from multiprocessing import cpu_count
+from core.Engine import PrecomputingMoves
 
 class ModelConfifg:
     input_depth = 14
@@ -7,6 +8,7 @@ class ModelConfifg:
     kernel_size = 3
     num_filters = 256
     num_res_layers = 7
+    policy_output_size = len(PrecomputingMoves.move_vector)
     l2_reg_const = 1e-4
     value_fc_layer_size = 256
     distributed = False

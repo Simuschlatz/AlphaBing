@@ -4,12 +4,14 @@
 
 > Combining Algorithmic Powers With The Beauty of Machine Learning
 ## Table of Contents
-- [Features](#features)
-- [HOW TO PLAY](#how-to-play)
-- [Screenshots](#screenshots)
-- [Dependencies](#dependencies)
-- [Project-Status](#project-status)
-- [Acknowledgements](#acknowledgements)
+- [CheapChess - The Fastest Python Chess-AI](#cheapchess---the-fastest-python-chess-ai)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [HOW TO PLAY](#how-to-play)
+  - [Screenshots](#screenshots)
+  - [Dependencies](#dependencies)
+  - [Project-Status](#project-status)
+  - [Acknowledgements](#acknowledgements)
 
 ## Features
 **Move Generation**
@@ -62,12 +64,14 @@
 * python 3
 * numpy
 * pandas
-* tensorflow
+* keras
 * pygame
 
 **For speech-to-text commands:**
 * Pyaudio
 * SpeechRecognition
+
+_requirements file will be added soon_
 
 ## Project-Status
 Project is: _in progress_

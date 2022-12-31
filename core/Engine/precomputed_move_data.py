@@ -25,7 +25,6 @@ class PrecomputingMoves:
         cls.advisor_mm = cls.get_advisor_move_map()
         cls.elephant_mm = cls.get_elephant_move_map()
         cls.pawn_mm = cls.get_pawn_move_map()
-        print(len(cls.move_vector))
         # exit(0)
 
     @staticmethod
