@@ -5,7 +5,7 @@
 > Combining Algorithmic Powers With The Beauty of Machine Learning
 
 
-- [CheapChess - The Fastest Python Chess-AI](#cheapchess---the-fastest-python-chess-ai)
+- [CheapChess - making complex software accessible for everyone](#cheapchess---making-complex-software-accessible-for-everyone)
   - [Features](#features)
   - [Installation](#installation)
   - [Gameplay](#gameplay)
@@ -53,7 +53,7 @@
     |c|listen for speech commands|
 
 ## Gameplay
-![Gameplay](https://im.ezgif.com/tmp/ezgif-1-e9bcb94746.gif)
+![Gameplay](./assets/screenshots/gameplay.gif)
 
 ## Dependencies
 **To run the current version of the app:**
