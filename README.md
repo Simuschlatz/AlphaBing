@@ -34,13 +34,15 @@
   * iterative deepening
 
 **AlphaZero based approach**
-* _IN PROGRESS:_
+* _FINISHED:_
   * Convolutional RNN Model
+    * Labels, action space
   * Bitboard utility
-* _TO-DO:_
+* _IN PROGRESS:_
   * self-play
   * Monte Carlo Tree Search (MCTS)
-  * AI vs Human
+* _To-DO:_
+  * Alpha-Beta optimization for MCTS
 
 ## Installation
 * clone this repo ```git clone https://github.com/Simuschlatz/CheapChess.git```
