@@ -3,8 +3,10 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 from core.Engine.piece import Piece
+from core.Engine.board import Board
 from core.Engine.precomputed_move_data import PrecomputingMoves
 from typing import Iterable
+import numpy as np
 
 # The code doesn't look well designed as there seem to be lots of repetitions, but reusing the same code is difficult, 
 # as the order of operations for maximum performance vary from every piece's behavior
@@ -21,9 +23,9 @@ class LegalMoveGenerator:
     @classmethod
     def init_board(cls, board):
         cls.board = board
-
+        # PrecomputingMoves.mhd = board.get_man
     @classmethod
-    def load_moves(cls, board=None, generate_quiets=True) -> list:
+    def load_moves(cls, board: Board=None, generate_quiets=True) -> list:
         """
         :return: a list of tuples containing the start and end indices of all possible moves
         """
@@ -71,6 +73,22 @@ class LegalMoveGenerator:
         # Sqaure of friendly piece that serves as screen for a checking cannon, 
         # whose movement away from check-ray would resolve th check
         cls.cause_cannon_defect = None
+
+    @classmethod
+    def bitvector_legal_moves(cls, legal_moves=None, action_space_vector=PrecomputingMoves.action_space_vector):
+        """
+        :param moves: a list of tuples containing the start and end indices of all possible moves, if None,
+        cls.moves is used
+        :param action_space_vector: the action space vector
+        :return: an array of len(action_space_vector) bits representing whether the move at that index
+        in action_pace_vector is valid
+        """
+        legal_moves = legal_moves or cls.load_moves()
+        if cls.board.moving_side:
+            legal_moves = cls.board.flip_moves(legal_moves)
+            print(legal_moves)
+        legal_moves = set(legal_moves)
+        return np.array(list(map(lambda move: move in legal_moves, action_space_vector)))
 
     @classmethod
     def blocks_all_checks(cls, current_square, target_square, confusion_value=0):
