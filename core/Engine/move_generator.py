@@ -21,7 +21,7 @@ class LegalMoveGenerator:
     dist_to_edge = PrecomputingMoves.dist_to_edge
     
     @classmethod
-    def init_board(cls, board):
+    def init_board(cls, board: Board):
         cls.board = board
         # PrecomputingMoves.mhd = board.get_man
     @classmethod
@@ -84,11 +84,9 @@ class LegalMoveGenerator:
         in action_pace_vector is valid
         """
         legal_moves = legal_moves or cls.load_moves()
-        if cls.board.moving_side:
-            legal_moves = cls.board.flip_moves(legal_moves)
-            print(legal_moves)
+        if cls.board.moving_side: legal_moves = cls.board.flip_moves(legal_moves)
         legal_moves = set(legal_moves)
-        return np.array(list(map(lambda move: move in legal_moves, action_space_vector)))
+        return np.array([move in legal_moves for move in action_space_vector])
 
     @classmethod
     def blocks_all_checks(cls, current_square, target_square, confusion_value=0):
@@ -117,8 +115,10 @@ class LegalMoveGenerator:
 
     @staticmethod
     def on_same_ray(points: Iterable):
-        cols = map(lambda p: p % 9, points)
-        rows = map(lambda p: p // 9, points)
+        # cols = map(lambda p: p % 9, points)
+        # rows = map(lambda p: p // 9, points)
+        cols = [p % 9 for p in points]
+        rows = [p // 9 for p in points]
         return len(set(cols)) == 1 or len(set(rows)) == 1
 
     @classmethod
@@ -361,7 +361,6 @@ class LegalMoveGenerator:
             if cls.is_pinned(current_square):
                 continue
 
-            # legal_moves = list(filter(lambda move: move in illegal_moves, legal_moves))
             for target_square in PrecomputingMoves.horse_mm[current_square]:
                 target_piece = cls.board.squares[target_square]
                 # If it's quiescene search and move isn't a capture, continue
@@ -583,8 +582,10 @@ class LegalMoveGenerator:
         king_mm = PrecomputingMoves.king_mm[cls.board.moving_side][cls.moving_king]
         # Filtering out squares occupied by friendly pieces
         king_mm = list(filter(lambda target: not Piece.is_color(cls.board.squares[target], cls.board.moving_color), king_mm))
+        # king_mm = [not Piece.is_color(cls.board.squares[target], cls.board.moving_color) for target in king_mm]
         if not cls.generate_quiets:
             king_mm = list(filter(lambda target: cls.board.squares[target], king_mm))
+            # king_mm = [cls.board.squares[target] for target in king_mm]
         # Looping over possible king moves
         for target_square in king_mm:
             if target_square in cls.attack_map:
@@ -596,6 +597,7 @@ class LegalMoveGenerator:
                     cls.generate_rook_attack_ray(rook, attack_dir_idx)
 
         king_mm = list(filter(lambda target: target not in cls.attack_map, king_mm))
+        # king_mm = [target for target in king_mm if target not in cls.attack_map]
         for target_square in king_mm:
             if target_square in cls.attack_map:
                 continue
