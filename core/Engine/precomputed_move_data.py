@@ -2,7 +2,7 @@
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
-from collections import defaultdict
+from collections import defaultdict, deque
 from core.Engine import Board
 class PrecomputingMoves:
     """
@@ -230,12 +230,12 @@ class PrecomputingMoves:
         is_river_crossed = (lambda square: square > 44, lambda square: square < 45)
 
         for side in range(2):
-            start_square = [87 if side else 2]
+            start_square_stack = deque([87 if side else 2])
             elephant_moves.append(defaultdict(list))
-            while start_square:
+            while start_square_stack:
                 # iteratively (could do this recursively as well though) 
                 # dfsing the path of elephant, adding all moves on the way
-                square = start_square.pop(0)
+                square = start_square_stack.pop()
                 target_squares = elephant_moves[side][square]
                 _hash = set(target_squares)
                 for off in offsets:
@@ -253,7 +253,7 @@ class PrecomputingMoves:
                     if Board.get_manhattan_dist(square, target_square) > 4:
                         continue
                     target_squares.append(target_square)
-                    start_square.append(target_square)
+                    start_square_stack.append(target_square)
                     if not side: cls.action_space_vector.append((square, target_square))
         return list(map(lambda dd: dict(dd), elephant_moves))
 
