@@ -77,7 +77,7 @@ class Board:
         file, rank = 0, 0
         board_config, color, *_, plies, fullmoves = FEN.split()
         self.plies, self.fullmoves = map(int, (plies, fullmoves))
-        print("plies: ", self.plies, "fullmoves: ", self.fullmoves)
+        # print("plies: ", self.plies, "fullmoves: ", self.fullmoves)
         moving_color = color == "w"
         for char in board_config:
             if char == "/":
@@ -183,6 +183,10 @@ class Board:
         self.zobrist_key ^= self.opponent_color
         self.zobrist_key ^= self.moving_side
 
+    @staticmethod
+    def flip_moves(moves):
+        return [(89 - move[0], 89 - move[1]) for move in moves]
+
     def piecelist_to_bitboard(self, adjust_perspective: bool=False):
         """
         :param adjust_perspective: if True, bitboards will be adjusted to perspective of players
@@ -233,9 +237,9 @@ class Board:
         self.squares[moved_from] = 0
 
         # Update zobrist key
-        # self.update_zobrist(piece_type, captured_piece, *move)
-        # if not search_state:
-        #     self.repetition_history.add(self.zobrist_key)
+        self.update_zobrist(piece_type, captured_piece, *move)
+        if not search_state:
+            self.repetition_history.add(self.zobrist_key)
         # print(self.zobrist_key)
 
         self.switch_moving_color()
@@ -267,7 +271,7 @@ class Board:
         self.plies = self.plies_history.pop() if piece_type == Piece.pawn else self.plies - 1
 
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
-        # self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
+        self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
         if not search_state:
             self.repetition_history.pop()
             return 
