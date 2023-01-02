@@ -8,7 +8,7 @@ class ModelConfifg:
     kernel_size = 3
     num_filters = 256
     num_res_layers = 7
-    policy_output_size = len(PrecomputingMoves.move_vector)
+    policy_output_size = len(PrecomputingMoves.action_space_vector)
     l2_reg_const = 1e-4
     value_fc_layer_size = 256
     distributed = False

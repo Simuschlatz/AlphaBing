@@ -16,7 +16,7 @@ class PrecomputingMoves:
         # Horse / knight offsets, also appended to direction offsets
         cls.horse_offsets = cls.append_horse_offsets()
         # print(cls.horse_offsets)
-        cls.move_vector = []
+        cls.action_space_vector = []
         
         # Precalculating move maps
         cls.king_mm = cls.get_king_move_map()
@@ -130,7 +130,7 @@ class PrecomputingMoves:
                 for step in range(cls.dist_to_edge[square][dir_idx]):
                     target_square = square + offset * (step + 1)
                     target_squares[square][dir_idx] = target_squares[square].get(dir_idx, []) + [target_square]
-                    cls.move_vector.append((square, target_square))
+                    cls.action_space_vector.append((square, target_square))
         return target_squares
 
     @classmethod
@@ -153,7 +153,7 @@ class PrecomputingMoves:
                 if Board.get_manhattan_dist(square, target_square) > 3:
                     continue
                 horse_moves[square].append( target_square)
-                cls.move_vector.append((square, target_square))
+                cls.action_space_vector.append((square, target_square))
         return horse_moves
 
     @classmethod
@@ -186,7 +186,7 @@ class PrecomputingMoves:
                 advisor_moves[side][target_square] = advisor_moves[side].get(target_square, []) + [middle_square]
                 if not side: 
                     moves = (middle_square, target_square), (target_square, middle_square)
-                    cls.move_vector.extend(moves)    
+                    cls.action_space_vector.extend(moves)    
         return advisor_moves
 
     @classmethod
@@ -254,7 +254,7 @@ class PrecomputingMoves:
                         continue
                     target_squares.append(target_square)
                     start_square.append(target_square)
-                    if not side: cls.move_vector.append((square, target_square))
+                    if not side: cls.action_space_vector.append((square, target_square))
         return list(map(lambda dd: dict(dd), elephant_moves))
 
     # This is the version prior to the one above. Here the problem wasn't that the method wasn't working, but rather the
