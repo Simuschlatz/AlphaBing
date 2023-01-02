@@ -7,6 +7,28 @@ EPS = 1e-8
 
 log = logging.getLogger(__name__)
 
+'''
+- statically evaluate node, if terminal node: return -value
+- if leaf node:
+    1. get p & v from NN
+    2. mask illegal moves in p, normalize masked values
+    3. update Ns and legal Moves
+- else:
+    1. select move with highest Qsa + Usa
+    2. make move
+    3. MCTS for next position
+    4. get the value v of leaf node (when recursion base case is met)
+    5. update Qsa and Nsa
+        - if a was taken from s before:
+            1. N ++
+            2. Qsa = ((Nsa - 1) * Qsa + v) / Nsa)
+        - else:
+            1. Qsa = v
+            2. Nsa = 1]
+    
+    return - v
+'''
+
 
 class MCTS():
     """
