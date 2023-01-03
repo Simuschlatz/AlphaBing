@@ -48,7 +48,7 @@ class MCTS():
         self.Es = set()  # stores each state s where the terminal code has been evaluated
         self.Vs = {}  # stores legal moves for board s
 
-    def getActionProb(self, board: Board, temp=1):
+    def get_probability_vector(self, board: Board, temp=1):
         """
         This function performs numMCTSSims simulations of MCTS on ```board```.
         :return: probs: a policy vector where the probability of the ith action is proportional to 
@@ -96,7 +96,7 @@ class MCTS():
         # Check if position was already statically evaluated
         if s not in self.Es:
             num_moves = len(moves)
-            mate, draw = board.is_terminal_state(num_moves)
+            mate, draw = board.get_terminal_status(num_moves)
             self.Es[s] = mate or draw
             if draw: self.Es[s] = 0
             elif mate: self.Es[s] = 1

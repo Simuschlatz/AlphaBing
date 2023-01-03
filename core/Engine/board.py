@@ -134,19 +134,10 @@ class Board:
         """
         return not num_moves or self.plies >= self.max_plies
 
-    def get_status(self, num_moves: int) -> int:
-        """
-        returns integer [-1, 1)
-        -1: lose
-        0: draw
-        Optimally used after terminal state is determined (see Board.is_terminal_state)
-        """
-        # sixty move counter
-        if self.plies >= 60:
-            return 0
-        # Check- or stalemate
-        if not num_moves:
-            return -1
+
+    def get_terminal_status(self, num_moves: int):
+        return not num_moves, self.plies >= self.max_plies
+            
     @staticmethod
     def get_abs_dist(square_1, square_2):
         """
@@ -184,6 +175,10 @@ class Board:
         self.zobrist_key ^= self.moving_side
 
     @staticmethod
+    def flip_move(move):
+        return 89 - move[0], 89 - move[1]
+
+    @staticmethod
     def flip_moves(moves):
         return [(89 - move[0], 89 - move[1]) for move in moves]
 
@@ -192,18 +187,19 @@ class Board:
         :param adjust_perspective: if True, bitboards will be adjusted to perspective of players
         :return: bitboard of squares generated from piece lists
         """
-        bitboards = np.zeros((2, 7, 90), dtype=np.ubyte)
+        bitboards = np.zeros((2, 7, 90), dtype=np.float32)
 
+        # flip = self.moving_side and adjust_perspective
         for side, piece_lists in enumerate(self.piece_lists):
             flip = side and adjust_perspective
             for piece_type, squares in enumerate(piece_lists):
                 # adjust the squares to current side's perspective
-                # if flip: squares = list(map(lambda square: 90 - square, squares))
                 if flip: squares = [89 - square for square in squares]
                 np.put(bitboards[side][piece_type], squares, 1)
 
         # put the moving side's board first (only needs adjustment if lower side is moving)
-        if self.moving_side: bitboards = np.flipud(bitboards)
+        # if flip: bitboards = np.flipud(bitboards)
+        if self.moving_side and adjust_perspective: bitboards = np.flipud(bitboards)
         return bitboards
 
     def is_repetition(self):
@@ -237,9 +233,9 @@ class Board:
         self.squares[moved_from] = 0
 
         # Update zobrist key
-        self.update_zobrist(piece_type, captured_piece, *move)
-        if not search_state:
-            self.repetition_history.add(self.zobrist_key)
+        # self.update_zobrist(piece_type, captured_piece, *move)
+        # if not search_state:
+        #     self.repetition_history.add(self.zobrist_key)
         # print(self.zobrist_key)
 
         self.switch_moving_color()
@@ -271,7 +267,7 @@ class Board:
         self.plies = self.plies_history.pop() if piece_type == Piece.pawn else self.plies - 1
 
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
-        self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
+        # self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
         if not search_state:
             self.repetition_history.pop()
             return 
