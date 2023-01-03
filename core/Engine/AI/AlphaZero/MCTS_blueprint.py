@@ -38,13 +38,14 @@ class MCTS():
     def __init__(self, nnet, config):
         self.nnet = nnet
         self.config = config
+        # W Values aren't stored because they are only of temporary use in each interation
         self.Qsa = {}  # stores Q values for s,a (as defined in the paper)
         self.Nsa = {}  # stores #times edge s,a was visited
         self.Ns = {}  # stores #times board s was visited
         self.Ps = {}  # stores initial policy (returned by neural net)
 
-        self.Es = {}  # stores game.getGameEnded ended for board s
-        self.Vs = {}  # stores game.getValidMoves for board s
+        self.Es = set()  # stores each state s where the terminal code has been evaluated
+        self.Vs = {}  # stores legal moves for board s
 
     def getActionProb(self, board: Board, temp=1):
         """
@@ -63,7 +64,21 @@ class MCTS():
         value v for the state. In case the leaf node is a terminal state, the outcome is returned.
         The values are then backpropagated up the search path and the values of Ns, Nsa, Qsa of each node
         are updated.
+
+        The board states are represented as a 64-bit zobrist-hashed number of that board. Actions are 
+        determined by finding the move in the action space vector corresponding to the policy vector index
         """
-        pass
+
+        # NOTE: the term 'action' is synonymous with 'move' in this method for congruence with the paper
+        s = board.zobrist_key
+        moves = LegalMoveGenerator.load_moves(board)
+        # Check if position was already statically evaluated
+        if s not in self.Es:
+            self.Es.add(s)
+            num_moves = len(moves)
+            mate, draw = board.is_terminal_state(num_moves)
+            if draw: return 0
+            if mate: return -1
+                
 
         
