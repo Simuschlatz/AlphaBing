@@ -1,7 +1,8 @@
 import logging
 import math
 import numpy as np
-from core.Engine import Board, LegalMoveGenerator
+from core.Engine import Board, LegalMoveGenerator, PrecomputingMoves
+from core.Engine.AI.AlphaZero.config import PlayConfig
 
 EPS = 1e-8
 
@@ -35,7 +36,7 @@ class MCTS():
     This class handles the MCTS tree.
     """
 
-    def __init__(self, nnet, config):
+    def __init__(self, nnet, config: PlayConfig):
         self.nnet = nnet
         self.config = config
         # W Values aren't stored because they are only of temporary use in each interation
@@ -53,7 +54,27 @@ class MCTS():
         :return: probs: a policy vector where the probability of the ith action is proportional to 
         Nsa[(s,a)]**(1./temp)
         """
-        pass
+        for _ in range(self.config.simulation_num_per_move):
+            self.search(board)
+
+        s = board.zobrist_key
+        # Selcting valid moves from canonical board position
+        visit_counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)]
+
+        # Avoid division by zero
+        if temp == 0:
+            # choose a best move
+            bestAs = np.array(np.argwhere(visit_counts == np.max(visit_counts))).flatten()
+            bestA = np.random.choice(bestAs)
+            probs = [0] * len(visit_counts)
+            probs[bestA] = 1
+            return probs
+
+        visit_counts = [x ** (1. / temp) for x in visit_counts]
+        counts_sum = float(sum(visit_counts))
+        # normalize
+        probs = [x / counts_sum for x in visit_counts]
+        return probs
 
     def search(self, board: Board):
         """
