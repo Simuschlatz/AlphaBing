@@ -116,5 +116,42 @@ class MCTS():
             self.Ns[s] = 0
             return -v
                 
+        # No leaf node, traverse tree
+        valids = self.Vs[s]
+        cur_best = -float('inf')
+        best_act = -1
+
+        # pick the action with the highest upper confidence bound by running one bubble sort iteration
+        for a in range(self.game.getActionSize()):
+            if valids[a]:
+                # Calculate U value (as defined in paper)
+                if (s, a) in self.Qsa:
+                    u = self.Qsa[(s, a)] + self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (
+                            1 + self.Nsa[(s, a)])
+                else:
+                    u = self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + EPS)  # Q = 0
+
+                if u > cur_best:
+                    cur_best = u
+                    best_act = a
+
+        # TODO: board simplified for MCTS, only storing piece lists and zobrist key
+        a = best_act
+        move = PrecomputingMoves.action_space_vector[a]
+        if board.moving_side: board.flip_move(move)
+        board.make_move(move)
+        v = self.search(board)
+        board.reverse_move()
+
+        if (s, a) in self.Qsa:
+            self.Nsa[(s, a)] += 1
+            self.Qsa[(s, a)] = ((self.Nsa[(s, a)] - 1) * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)])
+
+        else:
+            self.Nsa[(s, a)] = 1
+            self.Qsa[(s, a)] = v
+
+        self.Ns[s] += 1
+        return -v
 
         
