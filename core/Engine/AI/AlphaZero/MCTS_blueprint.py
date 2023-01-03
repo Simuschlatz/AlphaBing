@@ -74,11 +74,47 @@ class MCTS():
         moves = LegalMoveGenerator.load_moves(board)
         # Check if position was already statically evaluated
         if s not in self.Es:
-            self.Es.add(s)
             num_moves = len(moves)
             mate, draw = board.is_terminal_state(num_moves)
-            if draw: return 0
-            if mate: return -1
+            self.Es[s] = mate or draw
+            if draw: self.Es[s] = 0
+            elif mate: self.Es[s] = 1
+            else: self.Es[s] = -1
+        # Terminal node
+        if self.Es[s] != -1:
+            return -self.Es[s]
+        
+
+        # Check if position was expanded
+        if s not in self.Ps:
+            state_planes = board.piecelist_to_bitboard(adjust_perspective=True)
+            # leaf node
+            self.Ps[s], v = self.nnet.predict(state_planes)
+            
+            # TODO: try without perspective dependence
+            valids = np.array(LegalMoveGenerator.bitvector_legal_moves()) # make this binary maybe?
+            # masking invalid moves
+            self.Ps[s] = self.Ps[s] * valids
+            sum_Ps_s = np.sum(self.Ps[s])
+            
+            # TODO: run benchmarks on this after finishing self-play
+            # move_index_hash = {move: index}
+            # legals = mg.load_moves()
+            # flip legals if board.moving_side == 1
+            # legals = set(legals)
+            # self.Ps[s] = [self.Ps[s][move_index_hash[a]] for a in action_space_vector if a in legals else 0]
+            
+            if sum_Ps_s:
+                self.Ps[s] /= sum_Ps_s  # renormalize
+            else:
+                # if all valid moves were masked make all valid moves equally probable
+                log.error("All valid moves were masked, doing a workaround. Please check your NN training process.")
+                self.Ps[s] = self.Ps[s] + valids
+                self.Ps[s] /= np.sum(self.Ps[s])
+
+            self.Vs[s] = valids
+            self.Ns[s] = 0
+            return -v
                 
 
         
