@@ -115,7 +115,6 @@ class MCTS():
             p, v = self.nnet.predict(state_planes)
             self.Ps[s] = p[0] # CNN output is two-dimensional
 
-            # TODO: try without perspective dependence
             valids = LegalMoveGenerator.bitvector_legal_moves(legal_moves=moves) # make this binary maybe?
             # masking invalid moves
             self.Ps[s] = self.Ps[s] * valids
