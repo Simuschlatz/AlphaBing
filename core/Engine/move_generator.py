@@ -87,6 +87,11 @@ class LegalMoveGenerator:
         if cls.board.moving_side: legal_moves = cls.board.flip_moves(legal_moves)
         legal_moves = set(legal_moves)
         return np.array([move in legal_moves for move in action_space_vector])
+        # ^^^ quicker than vvv
+        # legal_idx = [PrecomputingMoves.move_index_hash[move] for move in legal_moves]
+        # bitvector = np.zeros(shape=(PrecomputingMoves.action_space, ), dtype=np.int8)
+        # np.put(bitvector, legal_idx, 1)
+        # return bitvector
 
     @classmethod
     def blocks_all_checks(cls, current_square, target_square, confusion_value=0):

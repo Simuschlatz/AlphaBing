@@ -31,7 +31,7 @@ def main():
 
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
-    print(sum(LegalMoveGenerator.bitvector_legal_moves()))
+    # print(sum(LegalMoveGenerator.bitvector_legal_moves()))
     ui = UI(board)
     m = CNN()
     m._build()
@@ -39,8 +39,6 @@ def main():
     pi = mcts.get_probability_vector(board)
     # print(pi)
 
-    # bb = m.bitboard_to_input(board.piecelist_to_bitboard())
-    # pred = m.model.predict(bb)
     # ------To run perft search------
     # start_search(board)
     # -------------------------------

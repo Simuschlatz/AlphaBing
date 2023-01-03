@@ -114,18 +114,12 @@ class MCTS():
             # leaf node
             p, v = self.nnet.predict(state_planes)
             self.Ps[s] = p[0] # CNN output is two-dimensional
+
             # TODO: try without perspective dependence
-            valids = np.array(LegalMoveGenerator.bitvector_legal_moves()) # make this binary maybe?
+            valids = LegalMoveGenerator.bitvector_legal_moves(legal_moves=moves) # make this binary maybe?
             # masking invalid moves
             self.Ps[s] = self.Ps[s] * valids
             sum_Ps = np.sum(self.Ps[s])
-            
-            # TODO: run benchmarks on this after finishing self-play
-            # move_index_hash = {move: index}
-            # legals = mg.load_moves()
-            # flip legals if board.moving_side == 1
-            # legals = set(legals)
-            # self.Ps[s] = [self.Ps[s][move_index_hash[a]] for a in action_space_vector if a in legals else 0]
             
             if sum_Ps:
                 self.Ps[s] /= sum_Ps  # renormalize
@@ -134,6 +128,7 @@ class MCTS():
                 log.error("All valid moves were masked, doing a workaround. Please check your NN training process.")
                 self.Ps[s] = self.Ps[s] + valids
                 self.Ps[s] /= np.sum(self.Ps[s])
+
             self.Vs[s] = valids
             self.Ns[s] = 0
             return -v
