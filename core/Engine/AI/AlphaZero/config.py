@@ -3,7 +3,7 @@ from core.Engine import PrecomputingMoves
 
 class ModelConfifg:
     input_depth = 14
-    input_shape = (input_depth, 10, 9)
+    input_shape = (2, 7, 90)
     input_kernel_size = 5
     kernel_size = 3
     num_filters = 256
@@ -17,7 +17,7 @@ class PlayConfig:
     max_processes = cpu_count()
     search_threads = 30
     vram_frac = 1.0
-    simulation_num_per_move = 800
+    simulation_num_per_move = 100
     logging_thinking = False
     c_puct = 1.5
     noise_eps = 0.15
