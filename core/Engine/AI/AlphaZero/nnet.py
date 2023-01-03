@@ -1,5 +1,8 @@
 from .model import AlphaZeroModel
+
+import tensorflow as tf
 from keras.utils import plot_model
+
 import os, datetime
 
 class CNN(AlphaZeroModel):
@@ -32,3 +35,13 @@ class CNN(AlphaZeroModel):
     def visualize(self, filepath="assets/imgs/ML"):
         filepath = os.path.join(filepath, "model" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png")
         plot_model(self.model, filepath, show_shapes=True, show_layer_names=True)
+
+    @staticmethod
+    def bitboard_to_input(bitboard):
+        """
+        converts array-like object with shape CNN.config.input_shape to tensor, 
+        expands dimension along axis 0, making it suitable as input to model
+        :return: tensor of bitboard
+        """
+        return tf.expand_dims(bitboard, axis=0)
+    
