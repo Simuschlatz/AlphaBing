@@ -25,6 +25,8 @@ class PrecomputingMoves:
         cls.advisor_mm = cls.get_advisor_move_map()
         cls.elephant_mm = cls.get_elephant_move_map()
         cls.pawn_mm = cls.get_pawn_move_map()
+
+        cls.action_space = len(cls.action_space_vector)
         # exit(0)
 
     @staticmethod
