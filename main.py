@@ -4,11 +4,9 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 import pygame
 pygame.init()
-from core.Engine import Board, LegalMoveGenerator, Clock, NLPCommandHandler, UI, ZobristHashing
-from core.Engine.AI import Dfs, Evaluation
+from core.Engine import Board, LegalMoveGenerator, Clock, NLPCommandHandler, UI, ZobristHashing, PrecomputingMoves
 from core.Utils import start_search
-
-
+from core.Engine.AI.AlphaZero import CNN, MCTS
 
 FPS = 45
 
@@ -26,27 +24,32 @@ def main():
     red_moves_first = True
     fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN 
     fen += (" w " if red_moves_first else " b ") + "- - 0 1"
-    Clock.init(300)
+    Clock.init(600)
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     ZobristHashing.init_table()
     board = Board(fen, play_as_red)
 
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
-    NLPCommandHandler.init()
-
-
+    print(sum(LegalMoveGenerator.bitvector_legal_moves()))
     ui = UI(board)
+    m = CNN()
+    m._build()
+    mcts = MCTS(m)
+    pi = mcts.get_probability_vector(board)
+    # print(pi)
 
+    # bb = m.bitboard_to_input(board.piecelist_to_bitboard())
+    # pred = m.model.predict(bb)
     # ------To run perft search------
     # start_search(board)
     # -------------------------------
 
-    py_clock = pygame.time.Clock()
-    run = True
-    while run:   
-        ui.update()
-        py_clock.tick(FPS)
+    # py_clock = pygame.time.Clock()
+    # run = True
+    # while run:   
+    #     ui.update()
+    #     py_clock.tick(FPS)
 
 if __name__ == "__main__":
     main()

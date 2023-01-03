@@ -233,9 +233,9 @@ class Board:
         self.squares[moved_from] = 0
 
         # Update zobrist key
-        # self.update_zobrist(piece_type, captured_piece, *move)
-        # if not search_state:
-        #     self.repetition_history.add(self.zobrist_key)
+        self.update_zobrist(piece_type, captured_piece, *move)
+        if not search_state:
+            self.repetition_history.add(self.zobrist_key)
         # print(self.zobrist_key)
 
         self.switch_moving_color()
@@ -267,7 +267,7 @@ class Board:
         self.plies = self.plies_history.pop() if piece_type == Piece.pawn else self.plies - 1
 
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
-        # self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
+        self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
         if not search_state:
             self.repetition_history.pop()
             return 

@@ -17,9 +17,9 @@ class PlayConfig:
     max_processes = cpu_count()
     search_threads = 30
     vram_frac = 1.0
-    simulation_num_per_move = 100
+    simulation_num_per_move = 50
     logging_thinking = False
-    c_puct = 1.5
+    cpuct = 1.5
     noise_eps = 0.15
     dirichlet_alpha = 0.2
     tau_decay_rate = 0.9
