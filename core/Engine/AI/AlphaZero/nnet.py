@@ -36,6 +36,9 @@ class CNN(AlphaZeroModel):
         filepath = os.path.join(filepath, "model" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png")
         plot_model(self.model, filepath, show_shapes=True, show_layer_names=True)
 
+    def predict(self, inp):
+        return self.model.predict(self.bitboard_to_input(inp))
+
     @staticmethod
     def bitboard_to_input(bitboard):
         """

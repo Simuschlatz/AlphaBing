@@ -1,4 +1,3 @@
-import os
 from core.Engine.AI.AlphaZero.config import ModelConfifg
 
 import tensorflow as tf
@@ -7,14 +6,13 @@ from keras.models import Sequential, load_model, Model
 from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, Activation, LeakyReLU, Add
 from keras.optimizers import SGD
 from keras.regularizers import l2
-from tensorflow.keras.utils import plot_model
+from keras.utils import plot_model
 
-import datetime
 
 class AlphaZeroModel:
     def __init__(self):
         self.config = ModelConfifg
-        self.model = None
+        self.model = self._build()
 
     def _conv_layer(self, input, num_filters, kernel_size, name=None, index=None):
         """
@@ -83,11 +81,11 @@ class AlphaZeroModel:
             name="policy_head")(x)
         return x
 
-    def _build(self):
+    def _build(self) -> Model:
         """
         builds the AlphaZero model
         """
-        in_x = Input(self.config.input_shape, name="input_layer")
+        in_x = Input(shape=self.config.input_shape, name="input_layer", dtype=tf.float16)
         x = self._conv_layer(in_x, self.config.num_filters, self.config.input_kernel_size, name="input_conv")
         # Residual Layers
         for i in range(self.config.num_res_layers):
@@ -98,8 +96,3 @@ class AlphaZeroModel:
 
         self.model = Model(in_x, [policy_head, value_head], name="alphazero_model")
         
-        
-    def visualize(self, filepath="assets/imgs/ML"):
-        filepath = os.path.join(filepath, "model" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png")
-        plot_model(self.model, filepath, show_shapes=True, show_layer_names=True)
-
