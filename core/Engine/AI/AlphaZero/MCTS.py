@@ -4,7 +4,6 @@ import numpy as np
 from core.Engine import Board, LegalMoveGenerator, PrecomputingMoves
 from core.Engine.AI.AlphaZero import PlayConfig, CNN
 from core.Utils import time_benchmark
-EPS = 1e-8
 
 log = logging.getLogger(__name__)
 
@@ -56,8 +55,8 @@ class MCTS():
         Nsa[(s,a)]**(1./temp)
         """
         for i in range(self.config.simulation_num_per_move):
-            print(f"starting simulation n. {i}")
-            self.search(board)
+            # print(f"starting simulation n. {i}")
+            self.search(board, is_root=True)
 
         s = board.zobrist_key
         # Selcting valid moves from canonical board position
@@ -78,7 +77,7 @@ class MCTS():
         probs = [x / counts_sum for x in visit_counts]
         return probs
 
-    def search(self, board: Board):
+    def search(self, board: Board, is_root=False):
         """
         This function performs one iteration of MCTS. It recursively calls itself until a leaf node 
         is found. The move chosen at each point maximizes the upper confidence bound (Q(s|a) + U(s|a))
@@ -97,17 +96,14 @@ class MCTS():
         moves = LegalMoveGenerator.load_moves(board)
         # Check if position was already statically evaluated
         if s not in self.Es:
-            num_moves = len(moves)
-            mate, draw = board.get_terminal_status(num_moves)
+            mate, draw = board.get_terminal_status(len(moves))
             self.Es[s] = mate or draw
-            if draw: self.Es[s] = 0 # draw
+            if not mate and not draw: self.Es[s] = -1 # no terminal position
             elif mate: self.Es[s] = 1 # mate
-            else: self.Es[s] = -1 # no terminal position
+            else: self.Es[s] = 0 # draw
         # Terminal node
         if self.Es[s] != -1:
             return -self.Es[s]
-        
-        print(len(self.Ps))
 
         if board.moving_side: moves = board.flip_moves(moves)
         # Check if position was expanded
@@ -133,29 +129,39 @@ class MCTS():
             self.Vs[s] = valids
             self.Ns[s] = 0
             return -v
-        print("NO LEAF")
+
+        num_moves = len(moves)
+        if is_root:
+            # dirichlet noise for exploration
+            eps = self.config.noise_eps
+            noise = np.random.dirichlet([self.config.dirichlet_alpha] * num_moves)
+        else:
+            eps = 0
+            noise = np.zeros(num_moves) # [0] * num_moves (inconsistent with above)
+        # print("NO LEAF")
         # No leaf node, traverse tree
         valids = self.Vs[s]
         cur_best = -float('inf')
         best_act = -1
 
         # pick the action with the highest upper confidence bound by running one bubble sort iteration
-        for move in moves:
+        for i, move in enumerate(moves):
             a = PrecomputingMoves.move_index_hash[move]
-            # print(self.Ps[s][a])
-            # Calculate U values  (as defined in paper)
             if (s, a) in self.Qsa:
-                u = self.Qsa[(s, a)] + self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (
-                        1 + self.Nsa[(s, a)])
+                q = self.Qsa[(s, a)]
+                u = self.config.cpuct * \
+                    ((1-eps) * self.Ps[s][a] + eps * noise[i]) * \
+                    math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
             else:
-                u = self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + EPS)  # Q = 0
+                q = 0
+                u = self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + self.config.noise_eps)  # Q = 0
 
-            if u > cur_best:
+            if q + u > cur_best:
                 cur_best = u
                 best_act = a
 
         # TODO: board simplified for MCTS, only storing piece lists and zobrist key
-        print("MOVIN")
+        # print("MOVIN")
         a = best_act
         move = PrecomputingMoves.action_space_vector[a]
         # Flipping the move back around. Much more efficient than using bigger architecture, 
@@ -165,14 +171,15 @@ class MCTS():
         v = self.search(board)
         board.reverse_move()
 
+        # Update Qsa, Nsa and Ns
         if (s, a) in self.Qsa:
             self.Nsa[(s, a)] += 1
             self.Qsa[(s, a)] = ((self.Nsa[(s, a)] - 1) * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)])
-            print("CONTAINED, UPDATING")
+            # print("CONTAINED, UPDATING")
         else:
             self.Nsa[(s, a)] = 1
             self.Qsa[(s, a)] = v
-            print("NOT CONTAINED, UPDATING")
+            # print("NOT CONTAINED, UPDATING")
         self.Ns[s] += 1
         return -v
 
