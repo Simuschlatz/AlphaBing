@@ -75,7 +75,7 @@ class LegalMoveGenerator:
         cls.cause_cannon_defect = None
 
     @classmethod
-    def bitvector_legal_moves(cls, legal_moves=None, action_space_vector=PrecomputingMoves.action_space_vector):
+    def bitvector_legal_moves(cls, legal_moves=None, flip_moves=False, action_space_vector=PrecomputingMoves.action_space_vector):
         """
         :param moves: a list of tuples containing the start and end indices of all possible moves, if None,
         cls.moves is used
@@ -84,7 +84,7 @@ class LegalMoveGenerator:
         in action_pace_vector is valid
         """
         legal_moves = legal_moves or cls.load_moves()
-        if cls.board.moving_side: legal_moves = cls.board.flip_moves(legal_moves)
+        # if flip_moves: legal_moves = cls.board.flip_moves(legal_moves)
         legal_moves = set(legal_moves)
         return np.array([move in legal_moves for move in action_space_vector])
         # ^^^ quicker than vvv

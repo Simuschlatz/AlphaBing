@@ -100,14 +100,16 @@ class MCTS():
             num_moves = len(moves)
             mate, draw = board.get_terminal_status(num_moves)
             self.Es[s] = mate or draw
-            if draw: self.Es[s] = 0
-            elif mate: self.Es[s] = 1
-            else: self.Es[s] = -1
+            if draw: self.Es[s] = 0 # draw
+            elif mate: self.Es[s] = 1 # mate
+            else: self.Es[s] = -1 # no terminal position
         # Terminal node
         if self.Es[s] != -1:
             return -self.Es[s]
         
         print(len(self.Ps))
+
+        if board.moving_side: moves = board.flip_moves(moves)
         # Check if position was expanded
         if s not in self.Ps:
             state_planes = board.piecelist_to_bitboard(adjust_perspective=True)
@@ -123,7 +125,7 @@ class MCTS():
             if sum_Ps:
                 self.Ps[s] /= sum_Ps  # renormalize
             else:
-                # if all valid moves were masked make all valid moves equally probable
+                # if all valid moves were masked, make all valid moves equally probable
                 log.error("All valid moves were masked, doing a workaround. Please check your NN training process.")
                 self.Ps[s] = self.Ps[s] + valids
                 self.Ps[s] /= np.sum(self.Ps[s])
@@ -138,19 +140,19 @@ class MCTS():
         best_act = -1
 
         # pick the action with the highest upper confidence bound by running one bubble sort iteration
-        for a in range(PrecomputingMoves.action_space):
+        for move in moves:
+            a = PrecomputingMoves.move_index_hash[move]
             # print(self.Ps[s][a])
-            if valids[a]:
-                # Calculate U value (as defined in paper)
-                if (s, a) in self.Qsa:
-                    u = self.Qsa[(s, a)] + self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (
-                            1 + self.Nsa[(s, a)])
-                else:
-                    u = self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + EPS)  # Q = 0
+            # Calculate U values  (as defined in paper)
+            if (s, a) in self.Qsa:
+                u = self.Qsa[(s, a)] + self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (
+                        1 + self.Nsa[(s, a)])
+            else:
+                u = self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + EPS)  # Q = 0
 
-                if u > cur_best:
-                    cur_best = u
-                    best_act = a
+            if u > cur_best:
+                cur_best = u
+                best_act = a
 
         # TODO: board simplified for MCTS, only storing piece lists and zobrist key
         print("MOVIN")
