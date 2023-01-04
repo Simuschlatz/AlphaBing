@@ -184,8 +184,10 @@ class Board:
 
     def piecelist_to_bitboard(self, adjust_perspective: bool=False):
         """
-        :param adjust_perspective: if True, bitboards will be adjusted to perspective of players
-        :return: bitboard of squares generated from piece lists
+        :param adjust_perspective: if True, each side's bitboards are adjusted to 
+        that side's perspective and the two sides' bitboard planes are occasionally
+        swapped so that the first set of planes is always that of the moving side
+        :return: array of two sets of 7 bitboards generated from piece lists
         """
         bitboards = np.zeros((2, 7, 90), dtype=np.float32)
 
@@ -196,9 +198,7 @@ class Board:
                 # adjust the squares to current side's perspective
                 if flip: squares = [89 - square for square in squares]
                 np.put(bitboards[side][piece_type], squares, 1)
-
         # put the moving side's board first (only needs adjustment if lower side is moving)
-        # if flip: bitboards = np.flipud(bitboards)
         if self.moving_side and adjust_perspective: bitboards = np.flipud(bitboards)
         return bitboards
 
