@@ -48,13 +48,12 @@ class MCTS():
         self.Vs = {}  # stores legal moves for board s
 
     @time_benchmark
-    def get_probability_vector(self, board: Board, temp=1):
+    def get_probability_vector(self, board: Board, bitboards: list, temp=1):
         """
         This function performs numMCTSSims simulations of MCTS on ```board```.
         :return: probs: a policy vector where the probability of the ith action is proportional to 
         Nsa[(s,a)]**(1./temp)
         """
-        bitboards = list(board.piecelist_to_bitboard(adjust_perspective=True))
         for i in range(self.config.simulation_num_per_move):
             # print(f"starting simulation n. {i}")
             self.search(board, is_root=True, bitboards=bitboards)
@@ -71,7 +70,7 @@ class MCTS():
             probs = [0] * len(visit_counts)
             probs[bestA] = 1
             return probs
-            
+
         visit_counts = [x ** (1. / temp) for x in visit_counts]
         counts_sum = float(sum(visit_counts))
         # normalize
@@ -100,11 +99,8 @@ class MCTS():
         moves = LegalMoveGenerator.load_moves(board)
         # Check if position was already statically evaluated
         if s not in self.Es:
-            mate, draw = board.get_terminal_status(len(moves))
-            self.Es[s] = mate or draw
-            if not mate and not draw: self.Es[s] = -1 # no terminal position
-            elif mate: self.Es[s] = 1 # mate
-            else: self.Es[s] = 0 # draw
+            status = board.get_terminal_status(len(moves))
+            self.Es[s] = status
         # Terminal node
         if self.Es[s] != -1:
             return -self.Es[s]

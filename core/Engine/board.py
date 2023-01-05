@@ -16,6 +16,8 @@ class Board:
         """
         # Square-centric board repr
         self.squares = list(np.zeros(90, dtype=np.int8))
+        # NOTE: the bitboards aren't continually updated in make_move() or reverse_move()
+        self.bitboards = np.zeros((2, 7, 90), dtype=np.int8)
         # To keep track of the pieces' indices (Piece-centric repr)
         # Piece list at index 0 keeps track of pieces at the top, index 1 for bottom
         self.piece_lists = [[[] for _ in range(7)] for _ in range(2)]
@@ -136,7 +138,10 @@ class Board:
 
 
     def get_terminal_status(self, num_moves: int):
-        return not num_moves, self.plies >= self.max_plies
+        if num_moves and self.plies < self.max_plies: return -1
+        if not num_moves: return 1
+        return 0
+        # return not num_moves, self.plies >= self.max_plies
             
     @staticmethod
     def get_abs_dist(square_1, square_2):

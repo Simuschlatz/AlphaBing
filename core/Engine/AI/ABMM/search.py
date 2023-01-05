@@ -110,13 +110,14 @@ class Dfs:
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         num_moves = len(moves)
-        if board.is_terminal_state(num_moves):
-            mate, draw = board.get_terminal_status(num_moves)
-            if mate:
+        status = board.get_terminal_status(num_moves)
+        if status != -1:
+            if status:
                 # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
                 # checkmates, as the checkmate value still is better than the initial beta of -infinity
                 return -cls.checkmate_value
-            if draw == 0: return cls.draw
+            # if terminal state but not mate, must be draw
+            return cls.draw
 
         for move in moves:
             # traversing down the tree
