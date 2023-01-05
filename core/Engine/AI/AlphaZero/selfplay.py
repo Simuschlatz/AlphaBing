@@ -21,16 +21,15 @@ class SelfPlay:
         training_data = []
         while True:
             bb = self.board.piecelist_to_bitboard()
-            pi = self.mcts.get_probability_vector(self.board, bb)
+            pi = self.mcts.get_probability_distribution(self.board, bb)
             side = self.board.moving_side
 
             training_data.append((bb, pi, side))
 
-            a = np.random.choice(np.argwhere(pi == np.max(pi))).flatten()
-            move = PrecomputingMoves.action_space_vector[a]
+            move = MCTS.best_action_from_pi(pi)
 
             self.board.make_move(move, search_state=False)
-            
+
             status = self.board.get_terminal_status()
             if status == -1: continue
             # negative outcome for every example where the side was current (mated) moving side

@@ -47,35 +47,6 @@ class MCTS():
         self.Es = {}  # stores each state s where the terminal code has been evaluated
         self.Vs = {}  # stores legal moves for board s
 
-    @time_benchmark
-    def get_probability_vector(self, board: Board, bitboards: list, temp=1):
-        """
-        This function performs numMCTSSims simulations of MCTS on ```board```.
-        :return: probs: a policy vector where the probability of the ith action is proportional to 
-        Nsa[(s,a)]**(1./temp)
-        """
-        for i in range(self.config.simulation_num_per_move):
-            # print(f"starting simulation n. {i}")
-            self.search(board, is_root=True, bitboards=bitboards)
-
-        s = board.zobrist_key
-        # Selcting valid moves from current board position
-        visit_counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)]
-
-        # Choose best move ...
-        # ... deterministically for competition
-        if temp == 0:
-            bestAs = np.array(np.argwhere(visit_counts == np.max(visit_counts))).flatten()
-            bestA = np.random.choice(bestAs)
-            probs = [0] * len(visit_counts)
-            probs[bestA] = 1
-            return probs
-        # ... stochastically for exploration
-        visit_counts = [x ** (1. / temp) for x in visit_counts]
-        counts_sum = float(sum(visit_counts))
-        probs = [x / counts_sum for x in visit_counts] # renormalize
-        return probs
-
     def search(self, board: Board, is_root=False, bitboards=None):
         """
         This function performs one iteration of MCTS. It recursively calls itself until a leaf node 
@@ -182,4 +153,39 @@ class MCTS():
         self.Ns[s] += 1
         return -v
 
-        
+    @time_benchmark
+    def get_probability_distribution(self, board: Board, bitboards: list, temp=1):
+        """
+        This function performs numMCTSSims simulations of MCTS on ```board```.
+        :return: probs: a policy vector where the probability of the ith action is proportional to 
+        Nsa[(s,a)]**(1./temp)
+        """
+        for i in range(self.config.simulation_num_per_move):
+            # print(f"starting simulation n. {i}")
+            self.search(board, is_root=True, bitboards=bitboards)
+
+        s = board.zobrist_key
+        # Selcting valid moves from current board position
+        visit_counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)]
+
+        # Choose best move ...
+        # ... deterministically for competition
+        if temp == 0:
+            bestAs = np.array(np.argwhere(visit_counts == np.max(visit_counts))).flatten()
+            bestA = np.random.choice(bestAs)
+            probs = [0] * len(visit_counts)
+            probs[bestA] = 1
+            return probs
+        # ... stochastically for exploration
+        visit_counts = [x ** (1. / temp) for x in visit_counts]
+        counts_sum = float(sum(visit_counts))
+        probs = [x / counts_sum for x in visit_counts] # renormalize
+        return probs
+
+    @staticmethod
+    def best_action_from_pi(pi):
+        """
+        :return: the move corresponding to the maximum value in the probability distribution of search
+        """
+        a = np.random.choice(np.argwhere(pi == np.max(pi))).flatten()
+        return PrecomputingMoves.action_space_vector[a]
