@@ -7,7 +7,7 @@ import os, datetime
 
 class CNN(AlphaZeroModel):
     def __init__(self):
-        super(CNN, self).__init__()
+        super().__init__()
         
     def save_checkpoint(self, folder="./checkpoints", filename='checkpoint'):
         # change file type / extension
