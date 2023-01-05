@@ -47,7 +47,7 @@ class MCTS():
         self.Es = {}  # stores each state s where the terminal code has been evaluated
         self.Vs = {}  # stores legal moves for board s
 
-    def search(self, board: Board, is_root=False, bitboards=None):
+    def search(self, board: Board, is_root=False, bitboards=None, moves=None):
         """
         This function performs one iteration of MCTS. It recursively calls itself until a leaf node 
         is found. The move chosen at each point maximizes the upper confidence bound (Q(s|a) + U(s|a))
@@ -66,7 +66,8 @@ class MCTS():
 
         # NOTE: the term 'action' is synonymous with 'move' in this method for congruence with the paper
         s = board.zobrist_key
-        moves = LegalMoveGenerator.load_moves(board)
+        moves = moves or LegalMoveGenerator.load_moves(board)
+
         # Check if position was already statically evaluated
         if s not in self.Es:
             status = board.get_terminal_status(len(moves))
@@ -76,6 +77,7 @@ class MCTS():
             return -self.Es[s]
 
         if board.moving_side: moves = board.flip_moves(moves)
+
         # Check if position was expanded
         if s not in self.Ps:
             state_planes = bitboards or board.piecelist_to_bitboard(adjust_perspective=True)
@@ -153,16 +155,18 @@ class MCTS():
         self.Ns[s] += 1
         return -v
 
-    @time_benchmark
-    def get_probability_distribution(self, board: Board, bitboards: list, temp=1):
+    # @time_benchmark
+    def get_probability_distribution(self, board: Board, bitboards: list, moves=None, tau=1):
         """
         This function performs numMCTSSims simulations of MCTS on ```board```.
         :return: probs: a policy vector where the probability of the ith action is proportional to 
         Nsa[(s,a)]**(1./temp)
+        :param tau: parameter controlling exploration
+        :param bitboards: bitboards of current state
         """
-        for i in range(self.config.simulation_num_per_move):
+        for i in range(self.config.simulations_per_move):
             # print(f"starting simulation n. {i}")
-            self.search(board, is_root=True, bitboards=bitboards)
+            self.search(board, is_root=True, bitboards=bitboards, moves=moves)
 
         s = board.zobrist_key
         # Selcting valid moves from current board position
@@ -170,13 +174,13 @@ class MCTS():
 
         # Choose best move ...
         # ... deterministically for competition
-        if temp == 0:
+        if tau == 0:
             best_a = np.random.choice(np.argmax(visit_counts).flatten())
             probs = [0] * len(visit_counts)
             probs[best_a] = 1
             return probs
         # ... stochastically for exploration
-        visit_counts = [x ** (1. / temp) for x in visit_counts]
+        visit_counts = [x ** (1. / tau) for x in visit_counts]
         counts_sum = float(sum(visit_counts))
         probs = [x / counts_sum for x in visit_counts] # renormalize
         return probs

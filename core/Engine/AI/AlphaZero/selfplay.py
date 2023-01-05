@@ -1,6 +1,7 @@
-from . import CNN, MCTS
-from core.Engine import Board, PrecomputingMoves
+from . import CNN, MCTS, PlayConfig
+from core.Engine import Board, LegalMoveGenerator
 import numpy as np
+from random import shuffle
 
 class SelfPlay:
     def __init__(self, nnet: CNN, board: Board) -> None:
@@ -19,23 +20,57 @@ class SelfPlay:
         as set of bitboards, pi is the probability distribution returned by MCTS, for v see above.
         """
         training_data = []
+        plies = 0
+        moves = LegalMoveGenerator.load_moves(self.board)
         while True:
-            bb = self.board.piecelist_to_bitboard()
-            pi = self.mcts.get_probability_distribution(self.board, bb)
+            bb = list(self.board.piecelist_to_bitboard(adjust_perspective=True))
+
+            pi = self.mcts.get_probability_distribution(self.board, bitboards=bb, moves=moves, tau=1)
             side = self.board.moving_side
 
             training_data.append((bb, pi, side))
-
-            move = MCTS.best_action_from_pi(pi)
+            move = MCTS.best_action_from_pi(self.board, pi)
 
             self.board.make_move(move, search_state=False)
-
-            status = self.board.get_terminal_status()
+            moves = LegalMoveGenerator.load_moves(self.board)
+            status = self.board.get_terminal_status(len(moves))
             if status == -1: continue
             # negative outcome for every example where the side was current (mated) moving side
             return[(ex[0], ex[1], status * (1 - 2 * ex[2] == self.board.moving_side)) for ex in training_data]
 
     def train(self):
+        """
+        performs Play for
+        """
+        for i in range(1, PlayConfig.selfplay_iterations + 1):
+            print(f"starting self-play iteration no. {i}")
+            iteration_training_data = []
+
+            for _ in range(PlayConfig.episodes):
+                self.mcts = MCTS(self.nnet)
+                eps_training_data = self.execute_episode()
+                iteration_training_data.append(eps_training_data)
+
+            self.training_data.append(iteration_training_data)
+            if len(self.training_data) > PlayConfig.max_training_data_length:
+                self.training_data.pop(0)
+
+            # if not i % PlayConfig.steps_per_save:
+            #     self.save_training_data()
+            
+            train_examples = [example for iteration_data in self.training_data for example in iteration_data]           
+            shuffle(train_examples)
+
+            # self.nnet.train(train_examples)
+
+            
+    def load_training_data(self, folder, filename):
         pass
+
+    def save_training_data(self, folder, filename):
+        pass
+            
+            
+
 
     
