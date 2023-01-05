@@ -15,10 +15,7 @@ class ModelConfifg:
 
 class PlayConfig:
     max_processes = cpu_count()
-    search_threads = 30
-    vram_frac = 1.0
     simulation_num_per_move = 50
-    logging_thinking = False
     cpuct = 1.5
     noise_eps = 0.15
     dirichlet_alpha = 0.2
@@ -28,5 +25,3 @@ class PlayConfig:
     min_resign_turn = 40
     enable_resign_rate = 0.5
     max_game_length = 100
-    share_mtcs_info_in_self_play = False
-    reset_mtcs_info_per_game = 5
