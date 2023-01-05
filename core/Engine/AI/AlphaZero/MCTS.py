@@ -54,30 +54,31 @@ class MCTS():
         :return: probs: a policy vector where the probability of the ith action is proportional to 
         Nsa[(s,a)]**(1./temp)
         """
+        bitboards = list(board.piecelist_to_bitboard(adjust_perspective=True))
         for i in range(self.config.simulation_num_per_move):
             # print(f"starting simulation n. {i}")
-            self.search(board, is_root=True)
+            self.search(board, is_root=True, bitboards=bitboards)
 
         s = board.zobrist_key
-        # Selcting valid moves from canonical board position
+        # Selcting valid moves from current board position
         visit_counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)]
 
+        # choose a best move greedily with respect to the root state
         # Avoid division by zero
         if temp == 0:
-            # choose a best move
             bestAs = np.array(np.argwhere(visit_counts == np.max(visit_counts))).flatten()
             bestA = np.random.choice(bestAs)
             probs = [0] * len(visit_counts)
             probs[bestA] = 1
             return probs
-
+            
         visit_counts = [x ** (1. / temp) for x in visit_counts]
         counts_sum = float(sum(visit_counts))
         # normalize
         probs = [x / counts_sum for x in visit_counts]
         return probs
 
-    def search(self, board: Board, is_root=False):
+    def search(self, board: Board, is_root=False, bitboards=None):
         """
         This function performs one iteration of MCTS. It recursively calls itself until a leaf node 
         is found. The move chosen at each point maximizes the upper confidence bound (Q(s|a) + U(s|a))
@@ -89,6 +90,9 @@ class MCTS():
 
         The board states are represented as a 64-bit zobrist-hashed number of that board. Actions are 
         determined by finding the move in the action space vector corresponding to the policy vector index
+
+        :param is_root: True if current state is the root state
+        :param bitboards: bitboards of current state. If None, they're generated
         """
 
         # NOTE: the term 'action' is synonymous with 'move' in this method for congruence with the paper
@@ -108,7 +112,7 @@ class MCTS():
         if board.moving_side: moves = board.flip_moves(moves)
         # Check if position was expanded
         if s not in self.Ps:
-            state_planes = board.piecelist_to_bitboard(adjust_perspective=True)
+            state_planes = bitboards or board.piecelist_to_bitboard(adjust_perspective=True)
             # leaf node
             p, v = self.nnet.predict(state_planes)
             self.Ps[s] = p[0] # CNN output is two-dimensional
