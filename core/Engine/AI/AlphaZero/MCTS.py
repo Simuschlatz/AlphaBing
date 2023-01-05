@@ -171,10 +171,9 @@ class MCTS():
         # Choose best move ...
         # ... deterministically for competition
         if temp == 0:
-            bestAs = np.array(np.argwhere(visit_counts == np.max(visit_counts))).flatten()
-            bestA = np.random.choice(bestAs)
+            best_a = np.random.choice(np.argmax(visit_counts).flatten())
             probs = [0] * len(visit_counts)
-            probs[bestA] = 1
+            probs[best_a] = 1
             return probs
         # ... stochastically for exploration
         visit_counts = [x ** (1. / temp) for x in visit_counts]
@@ -183,9 +182,11 @@ class MCTS():
         return probs
 
     @staticmethod
-    def best_action_from_pi(pi):
+    def best_action_from_pi(board: Board, pi):
         """
         :return: the move corresponding to the maximum value in the probability distribution of search
+        NOTE: the perspective-dependent move is readjusted to the absolute squares
         """
-        a = np.random.choice(np.argwhere(pi == np.max(pi))).flatten()
-        return PrecomputingMoves.action_space_vector[a]
+        a = np.random.choice(np.argmax(pi).flatten())
+        move = PrecomputingMoves.action_space_vector[a]
+        return board.flip_move(move) if board.moving_side else move
