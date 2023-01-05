@@ -62,19 +62,18 @@ class MCTS():
         # Selcting valid moves from current board position
         visit_counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)]
 
-        # choose a best move greedily with respect to the root state
-        # Avoid division by zero
+        # Choose best move ...
+        # ... deterministically for competition
         if temp == 0:
             bestAs = np.array(np.argwhere(visit_counts == np.max(visit_counts))).flatten()
             bestA = np.random.choice(bestAs)
             probs = [0] * len(visit_counts)
             probs[bestA] = 1
             return probs
-
+        # ... stochastically for exploration
         visit_counts = [x ** (1. / temp) for x in visit_counts]
         counts_sum = float(sum(visit_counts))
-        # normalize
-        probs = [x / counts_sum for x in visit_counts]
+        probs = [x / counts_sum for x in visit_counts] # renormalize
         return probs
 
     def search(self, board: Board, is_root=False, bitboards=None):
