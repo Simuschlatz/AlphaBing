@@ -20,18 +20,24 @@ class SelfPlay:
         as set of bitboards, pi is the probability distribution returned by MCTS, for v see above.
         """
         training_data = []
-        plies = 0
+        plies, tau = 0, 1
         moves = LegalMoveGenerator.load_moves(self.board)
         while True:
             bb = list(self.board.piecelist_to_bitboard(adjust_perspective=True))
 
-            pi = self.mcts.get_probability_distribution(self.board, bitboards=bb, moves=moves, tau=1)
+            if plies > PlayConfig.tau_decay_threshold:
+                tau = PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold)
+
+            pi = self.mcts.get_probability_distribution(self.board, bitboards=bb, moves=moves, tau=tau)
             side = self.board.moving_side
+
+            bb = self.nnet.bitboard_to_input(bb)
 
             training_data.append((bb, pi, side))
             move = MCTS.best_action_from_pi(self.board, pi)
 
             self.board.make_move(move, search_state=False)
+            plies += 1
             moves = LegalMoveGenerator.load_moves(self.board)
             status = self.board.get_terminal_status(len(moves))
             if status == -1: continue
@@ -57,7 +63,7 @@ class SelfPlay:
 
             # if not i % PlayConfig.steps_per_save:
             #     self.save_training_data()
-            
+            # collapse 3D list to 2d list
             train_examples = [example for iteration_data in self.training_data for example in iteration_data]           
             shuffle(train_examples)
 
