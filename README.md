@@ -36,13 +36,17 @@
 **AlphaZero based approach**
 * _FINISHED:_
   * Convolutional RNN Model
-    * Labels, action space
   * Bitboard utility
-* _IN PROGRESS:_
   * self-play
-  * Monte Carlo Tree Search (MCTS)
-* _To-DO:_
+    * Monte Carlo Tree Search (MCTS)
+    * reinforcement learning
+      * training data collection (through self-play)
+      * training model
+* _IN PROGRESS:_
   * Alpha-Beta optimization for MCTS
+* _To-DO:_
+* optimization and JIT compiler support
+* Human vs. AI
 
 ## Installation
 * clone this repo ```git clone https://github.com/Simuschlatz/CheapChess.git```
