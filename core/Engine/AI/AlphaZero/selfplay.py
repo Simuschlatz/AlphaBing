@@ -25,9 +25,9 @@ class SelfPlay:
         while True:
             bb = list(self.board.piecelist_to_bitboard(adjust_perspective=True))
 
-            if plies > PlayConfig.tau_decay_threshold:
-                tau = PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold)
-
+            # if plies > PlayConfig.tau_decay_threshold:
+            #     tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
+            tau = plies < PlayConfig.tau_decay_threshold
             pi = self.mcts.get_probability_distribution(self.board, bitboards=bb, moves=moves, tau=tau)
             side = self.board.moving_side
 
