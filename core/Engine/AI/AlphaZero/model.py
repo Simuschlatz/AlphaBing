@@ -1,18 +1,15 @@
-from core.Engine.AI.AlphaZero.config import ModelConfifg
+from .config import ModelConfig
 
 import tensorflow as tf
 
-from keras.models import Sequential, load_model, Model
-from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, Activation, LeakyReLU, Add
-from keras.optimizers import SGD
+from keras.models import load_model, Model
+from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, Activation, Add
 from keras.regularizers import l2
-from keras.utils import plot_model
 
 
 class AlphaZeroModel:
     def __init__(self):
-        self.config = ModelConfifg
-        self.model = self._build()
+        self._build()
 
     def _conv_layer(self, input, num_filters, kernel_size, name=None, index=None):
         """
@@ -28,7 +25,7 @@ class AlphaZeroModel:
             padding="same",
             data_format="channels_first", 
             use_bias=False, 
-            kernel_regularizer=l2(self.config.l2_reg_const), 
+            kernel_regularizer=l2(ModelConfig.l2_reg_const), 
             name=name)(input)
         x = BatchNormalization(axis=1, name=name+"_BN")(x)
         x = Activation("relu", name=name+"_ReLu")(x)
@@ -38,15 +35,15 @@ class AlphaZeroModel:
     def _residual_block(self, input, index):
         name = "Res" + str(index)
 
-        x = self._conv_layer(input, self.config.num_filters, self.config.kernel_size, index=index)
+        x = self._conv_layer(input, ModelConfig.num_filters, ModelConfig.kernel_size, index=index)
 
         x = Conv2D(
-            filters=self.config.num_filters, 
-            kernel_size=self.config.kernel_size, 
+            filters=ModelConfig.num_filters, 
+            kernel_size=ModelConfig.kernel_size, 
             padding="same",
             data_format="channels_first", 
             use_bias=False, 
-            kernel_regularizer=l2(self.config.l2_reg_const), 
+            kernel_regularizer=l2(ModelConfig.l2_reg_const), 
             name=name)(x)
 
         x = BatchNormalization(axis=1, name="res"+str(index)+"_batchnorm2")(x)
@@ -62,12 +59,12 @@ class AlphaZeroModel:
         """
         x = self._conv_layer(input, 1, 1, name="value_conv")
         x = Flatten(name="value_flatten")(x)
-        x = Dense(self.config.value_fc_layer_size, 
-            kernel_regularizer=l2(self.config.l2_reg_const), 
+        x = Dense(ModelConfig.value_fc_layer_size, 
+            kernel_regularizer=l2(ModelConfig.l2_reg_const), 
             activation="relu", 
             name="value_dense")(x)
         x = Dense(1, 
-            kernel_regularizer=l2(self.config.l2_reg_const), 
+            kernel_regularizer=l2(ModelConfig.l2_reg_const), 
             activation="tanh", 
             name="value_head")(x)
         return x
@@ -75,8 +72,8 @@ class AlphaZeroModel:
     def _policy_head(self, input):
         x = self._conv_layer(input, 4, 1, name="policy_conv")
         x = Flatten(name="policy_flatten")(x)
-        x = Dense(self.config.policy_output_size, 
-            kernel_regularizer=l2(self.config.l2_reg_const), 
+        x = Dense(ModelConfig.policy_output_size, 
+            kernel_regularizer=l2(ModelConfig.l2_reg_const), 
             activation="softmax", 
             name="policy_head")(x)
         return x
@@ -85,14 +82,13 @@ class AlphaZeroModel:
         """
         builds the AlphaZero model
         """
-        in_x = Input(shape=self.config.input_shape, name="input_layer", dtype=tf.float16)
-        x = self._conv_layer(in_x, self.config.num_filters, self.config.input_kernel_size, name="input_conv")
+        in_x = Input(shape=ModelConfig.input_shape, name="input_layer", dtype=tf.float16)
+        x = self._conv_layer(in_x, ModelConfig.num_filters, ModelConfig.input_kernel_size, name="input_conv")
         # Residual Layers
-        for i in range(self.config.num_res_layers):
+        for i in range(ModelConfig.num_res_layers):
             x = self._residual_block(x, i+1)
         
         value_head = self._value_head(x)
         policy_head = self._policy_head(x)
 
         self.model = Model(in_x, [policy_head, value_head], name="alphazero_model")
-        
