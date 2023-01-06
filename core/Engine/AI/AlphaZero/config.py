@@ -15,7 +15,7 @@ class ModelConfig:
 
 class PlayConfig:
     max_processes = cpu_count()
-    simulations_per_move = 20
+    simulations_per_move = 1
     cpuct = 1.5
     noise_eps = .15
     dirichlet_alpha = .2

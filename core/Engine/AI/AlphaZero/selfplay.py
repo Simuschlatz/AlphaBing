@@ -31,9 +31,7 @@ class SelfPlay:
             pi = self.mcts.get_probability_distribution(self.board, bitboards=bb, moves=moves, tau=tau)
             side = self.board.moving_side
 
-            bb = self.nnet.bitboard_to_input(bb)
-
-            training_data.append((bb, pi, side))
+            training_data.append([bb, pi, side])
             move = MCTS.best_action_from_pi(self.board, pi)
 
             self.board.make_move(move, search_state=False)
@@ -42,7 +40,7 @@ class SelfPlay:
             status = self.board.get_terminal_status(len(moves))
             if status == -1: continue
             # negative outcome for every example where the side was current (mated) moving side
-            return[(ex[0], ex[1], status * (1 - 2 * ex[2] == self.board.moving_side)) for ex in training_data]
+            return[[ex[0], ex[1], 1 * (1 - 2 * ex[2] == self.board.moving_side)] for ex in training_data]
 
     def train(self):
         """
@@ -52,10 +50,10 @@ class SelfPlay:
             print(f"starting self-play iteration no. {i}")
             iteration_training_data = []
 
-            for _ in range(PlayConfig.episodes):
+            for _ in range(1):
                 self.mcts = MCTS(self.nnet)
                 eps_training_data = self.execute_episode()
-                iteration_training_data.append(eps_training_data)
+                iteration_training_data.extend(eps_training_data)
 
             self.training_data.append(iteration_training_data)
             if len(self.training_data) > PlayConfig.max_training_data_length:
@@ -64,10 +62,11 @@ class SelfPlay:
             # if not i % PlayConfig.steps_per_save:
             #     self.save_training_data()
             # collapse 3D list to 2d list
-            train_examples = [example for iteration_data in self.training_data for example in iteration_data]           
+            train_examples = [example for iteration_data in self.training_data for example in iteration_data]  
+ 
             shuffle(train_examples)
-
-            # self.nnet.train(train_examples)
+            print(np.asarray(train_examples, dtype=object).shape)
+            self.nnet.train(train_examples)
 
             
     def load_training_data(self, folder, filename):

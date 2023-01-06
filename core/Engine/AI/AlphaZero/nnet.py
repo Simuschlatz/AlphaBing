@@ -26,14 +26,19 @@ class CNN(AlphaZeroModel):
         """
         return tf.expand_dims(bitboard, axis=axis)
     
+    def process_training_data(self, training_data):
+        s, pi, v = zip(*training_data)
+        v = np.asarray(v)
+        pi = np.asarray(pi)
+        x_train = np.asarray(s)
+        y_train = [pi, v]
+        return x_train, y_train
+
     def train(self, inputs):
         """
         input shape: [[s, pi, v], [s', pi', v'], ...]
         """
-        # inputs = np.array(inputs)
-        s, pi, v = zip(*inputs)
-        x_train = self.bitboard_to_input(s, axis=1)
-        y_train = [pi, v]
+        x_train, y_train = self.process_training_data(inputs)
         self.model.fit(
             x=x_train, 
             y=y_train, 
@@ -44,7 +49,7 @@ class CNN(AlphaZeroModel):
     def update_lr(self, iterations):
         for threshold, lr in TrainingConfig.iter_to_lr:
             if iterations >= threshold:
-                keras.backend.set_value(self.opt.lr, lr)
+                keras.backend.set_value(self.opt.learning_rate, lr)
 
     def save_checkpoint(self, folder="./checkpoints", filename='checkpoint'):
         # change file type / extension
