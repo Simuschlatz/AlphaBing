@@ -170,19 +170,19 @@ class MCTS():
 
         s = board.zobrist_key
         # Selcting valid moves from current board position
-        visit_counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)]
+        visit_counts = np.array([self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)], dtype=np.float32)
 
         # Choose best move ...
         # ... deterministically for competition
-        if tau == 0:
+        if not tau:
             best_a = np.random.choice(np.argmax(visit_counts).flatten())
-            probs = [0] * len(visit_counts)
+            probs = np.zeros(len(visit_counts))
             probs[best_a] = 1
             return probs
         # ... stochastically for exploration
-        visit_counts = [x ** (1. / tau) for x in visit_counts]
-        counts_sum = float(sum(visit_counts))
-        probs = [x / counts_sum for x in visit_counts] # renormalize
+        visit_counts = visit_counts ** (1. / tau)
+        counts_sum = float(np.sum(visit_counts))
+        probs = visit_counts / counts_sum # renormalize
         return probs
 
     @staticmethod
