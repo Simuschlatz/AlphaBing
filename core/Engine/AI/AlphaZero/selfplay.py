@@ -15,14 +15,19 @@ class SelfPlay:
         self.mcts = MCTS(nnet)
         self.training_data = []
     
-    def execute_episode(self, examples=None, board: Board=None, mcts: MCTS=None):
+    def execute_episode(self, training_examples=None, board: Board=None, mcts: MCTS=None):
         """
         Execute one episode of self-play. The game is played until the end, simultaneously 
         collecting training data. when a terminal state is reached, each training example's
         value v is the outcome z of that game from the sample's side's perspective.
-
-        :return: a list of training examples. Form: (s, pi, v) where s is the state represented
+        
+        :param training_examples, board, mcts: only for multiprocessing. If not specified, returns
+        a list of training examples. If specified, they extend training_examples. Form: (s, pi, v) 
+        where s is the state represented
+        
         as set of bitboards, pi is the probability distribution returned by MCTS, for v see above.
+        :param training_examples: used for multiprocessing, a mp.Manager().list() object, shared memory
+        containing the training examples from episode's self-play iteration
         """
         board = board or self.board
         mcts = mcts or self.mcts
@@ -47,10 +52,10 @@ class SelfPlay:
             if status == -1: continue
             # print("GAME ENDED")
             # negative outcome for every example where the side was current (mated) moving side
-            if examples is None:
+            if training_examples is None:
                 return [[ex[0], ex[1], 1 * (1 - 2 * ex[2] == board.moving_side)] for ex in training_data]
 
-            examples.extend([[ex[0], ex[1], 1 * (1 - 2 * ex[2] == board.moving_side)] for ex in training_data])
+            training_examples.extend([[ex[0], ex[1], 1 * (1 - 2 * ex[2] == board.moving_side)] for ex in training_data])
             return
 
     @staticmethod
@@ -60,7 +65,10 @@ class SelfPlay:
 
     def multiprocess_train(self):
         """
-        performs self-play in parallel
+        Performs self-play for PlayConfig.training_iterations iterations of PlayConfig.self_play_eps 
+        episodes each. Every episode is executed in a separate process. allowing them to run in parallel.
+         The maximum length of training data is the examples from the last PlayConfig.max_training_data_length  
+        iterations. After each iteration, the neural network is retrained.
         """
         for i in range(1, PlayConfig.training_iterations + 1):
             print(f"starting self-play iteration no. {i}")
@@ -84,7 +92,12 @@ class SelfPlay:
             self.nnet.train(train_examples)
 
     def train(self):
-
+        """
+        Performs self-play for PlayConfig.training_iterations iterations of PlayConfig.self_play_eps 
+        episodes  each. The maximum length of training data is the examples from the last 
+        PlayConfig.max_training_data_length  iterations. After each iteration, the neural network is 
+        retrained.
+        """
         for i in range(1, PlayConfig.training_iterations + 1):
             print(f"starting self-play iteration no. {i}")
             iteration_training_data = []
