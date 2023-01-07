@@ -20,13 +20,17 @@ class CNN(AlphaZeroModel):
     @staticmethod
     def bitboard_to_input(bitboard, axis=0):
         """
-        converts array-like object with shape CNN.config.input_shape to tensor, 
+        Converts array-like object with shape CNN.config.input_shape to tensor, 
         expands dimension along axis ```axis```, making it suitable as input to model
         :return: tensor of bitboard
         """
         return tf.expand_dims(bitboard, axis=axis)
     
     def process_training_data(self, training_data):
+        """
+        Puts the training data into the right shape
+        :return: tuple containing features (bitboards) and labels (pi & v)
+        """
         s, pi, v = zip(*training_data)
         v = np.asarray(v)
         pi = np.asarray(pi)
@@ -36,6 +40,9 @@ class CNN(AlphaZeroModel):
 
     def train(self, inputs):
         """
+        Trains the neural network using examples from self-play with batch size
+        ```TrainingConfig.batch_size``` and ```TrainingConfig.epochs``` epochs.
+
         input shape: [[s, pi, v], [s', pi', v'], ...]
         """
         x_train, y_train = self.process_training_data(inputs)
