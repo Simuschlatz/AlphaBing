@@ -26,8 +26,8 @@ class SelfPlay:
         where s is the state represented
         
         as set of bitboards, pi is the probability distribution returned by MCTS, for v see above.
-        :param training_examples: used for multiprocessing, a mp.Manager().list() object, shared memory
-        containing the training examples from episode's self-play iteration
+        :param training_examples: used for multiprocessing, a ```mp.Manager().list()``` object, 
+        shared memory containing the training examples from episode's self-play iteration
         """
         board = board or self.board
         mcts = mcts or self.mcts
@@ -65,10 +65,11 @@ class SelfPlay:
 
     def multiprocess_train(self):
         """
-        Performs self-play for PlayConfig.training_iterations iterations of PlayConfig.self_play_eps 
-        episodes each. Every episode is executed in a separate process. allowing them to run in parallel.
-         The maximum length of training data is the examples from the last PlayConfig.max_training_data_length  
-        iterations. After each iteration, the neural network is retrained.
+        Performs self-play for ```PlayConfig.training_iterations``` iterations of `
+        ``PlayConfig.self_play_eps``` episodes each. Every episode is executed in a separate process 
+        allowing them to run in parallel. The maximum length of training data is the examples from the 
+        last ```PlayConfig.max_training_data_length``` iterations. After each iteration, the neural 
+        network is retrained.
         """
         for i in range(1, PlayConfig.training_iterations + 1):
             print(f"starting self-play iteration no. {i}")
@@ -93,10 +94,10 @@ class SelfPlay:
 
     def train(self):
         """
-        Performs self-play for PlayConfig.training_iterations iterations of PlayConfig.self_play_eps 
-        episodes  each. The maximum length of training data is the examples from the last 
-        PlayConfig.max_training_data_length  iterations. After each iteration, the neural network is 
-        retrained.
+        Performs self-play for ```PlayConfig.training_iterations``` iterations of 
+        ```PlayConfig.self_play_eps``` episodes  each. The maximum length of training data is the 
+        examples from the last ```PlayConfig.max_training_data_length```  iterations. After each 
+        iteration, the neural  network is retrained.
         """
         for i in range(1, PlayConfig.training_iterations + 1):
             print(f"starting self-play iteration no. {i}")
