@@ -7,6 +7,7 @@ from core.Engine.move_generator import LegalMoveGenerator
 from core.Engine.board import Board
 from core.Engine.AI.ABMM.eval_utility import Evaluation
 from core.Engine.AI import order_moves, order_moves_pst
+from core.Utils.timer import time_benchmark
 import multiprocessing as mp
 
 class Dfs:
@@ -22,6 +23,7 @@ class Dfs:
             yield iterable[ndx:min(len(iterable), ndx+batch_size)]
 
     @classmethod
+    @time_benchmark
     def multiprocess_search(cls, board, batch: bool=True) -> tuple:
         """
         Runs a search for board position leveraging multiple processors.
@@ -57,13 +59,13 @@ class Dfs:
         :param move_evals: dict shared between child processes
         """
         # make independent copy of board so attributes eg. board history don't get messed up
-        board = copy.deepcopy(board)
         board.make_move(move)
         evaluation = -cls.alpha_beta_opt(board, depth-1, 1, cls.negative_infinity, cls.positive_infinity)
         board.reverse_move()
         move_evals[move] = evaluation
 
     @classmethod
+    @time_benchmark
     def search(cls, board: Board):
         """
         Starts traversal of board's possible configurations
