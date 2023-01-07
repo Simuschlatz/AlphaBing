@@ -9,24 +9,27 @@ class ZobristHashing:
     A neat way to generate n-bit binaries for a given position, 
     showing that sometimes benefits of speed outweigh imperfection (rare hash collisions)
     """
-    table = []
     lowest_value = 0
-    @classmethod
-    def init_table(cls):
-        # Set the seed to wedding anniversary of my parents for good luck :)
-        np.random.seed(110697)
-        cls.highest_value = cls.get_largest_64_bit()
-        cls.lowest_value = -cls.highest_value
-        # Create a random value for each square for each piece for each side
-        num_sides = 2
-        num_pieces = 7
-        num_squares = 90
-        cls.table = np.random.randint(
-            cls.lowest_value, 
-            cls.highest_value, 
-            (num_sides, num_pieces, num_squares),
-            dtype=np.int64
-            )
+    
+    ### Didn't put this in a class function because it would have had to be called in every child process
+    ### leading toa lot of redudancy
+
+    # Set the seed to wedding anniversary of my parents for good luck :)
+    np.random.seed(110697)
+    largest_64 = "1" * 63
+    highest_value = int(largest_64, 2)
+    lowest_value = -highest_value
+    # Create a random value for each square for each piece for each side
+    num_sides = 2
+    num_pieces = 7
+    num_squares = 90
+
+    table = np.random.randint(
+        lowest_value, 
+        highest_value, 
+        (num_sides, num_pieces, num_squares),
+        dtype=np.int64
+        )
 
     @staticmethod
     def get_largest_64_bit():

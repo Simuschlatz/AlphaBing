@@ -253,6 +253,7 @@ class UI:
         self.play_sfx(is_capture)
         # See if there is a mate or stalemate
         LegalMoveGenerator.load_moves()
+        print(self.board.piecelist_to_bitboard(adjust_perspective=True))
         GameManager.check_game_state()
         return True
     
@@ -266,7 +267,7 @@ class UI:
         LegalMoveGenerator.load_moves()
 
     def make_AI_move(self):
-        AI_move = Dfs.search(self.board)
+        AI_move = Dfs.multiprocess_search(self.board)
         if AI_move == None:
             return
         self.update_move_str(AI_move)
@@ -335,10 +336,13 @@ class UI:
                 # Move reverse
                 key = event.key
                 if key == pygame.K_SPACE:
+                    print("Pressed Space-key")
                     self.unmake_move()
                 if key == pygame.K_a:
+                    print("Pressed A-key")
                     self.ai_vs_ai = not self.ai_vs_ai
                 if key == pygame.K_c:
+                    print("Pressed C-key")
                     self.command_response()
                 if key == pygame.K_RETURN:
                     print("ENTER")
@@ -351,7 +355,7 @@ class UI:
         """
         self.window.fill(UIConfig.BG_COLOR)
         self.window.blit(self.BOARD_IMG, UIConfig.OFFSETS)
-        self.show_square_ids()
+        # self.show_square_ids()
         self.move_responsiveness()
 
         self.render_game_state()
@@ -370,7 +374,7 @@ class UI:
         pygame.display.update()
 
     def update(self):
-        Clock.run(self.board.moving_color)  
+        Clock.run(self.board.moving_color) 
         self.render()
         self.event_handler()
         if GameManager.gameover:

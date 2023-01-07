@@ -14,7 +14,7 @@ class Dfs:
     draw = 0
     positive_infinity = 9999
     negative_infinity = -positive_infinity
-    search_depth = 4
+    search_depth = 5
 
     @staticmethod
     def batch(iterable, batch_size):
@@ -34,7 +34,7 @@ class Dfs:
         current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), board)
         if batch:
             jobs = [mp.Process(target=cls.search_for_move, args=(move, move_evals, cls.search_depth, board)) for move in current_pos_moves]
-            max_processes = mp.cpu_count() - 1
+            max_processes = mp.cpu_count()
             for processes in cls.batch(jobs, max_processes):
                 for p in processes: p.start()
                 for p in processes: p.join()
