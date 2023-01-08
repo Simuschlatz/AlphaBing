@@ -92,6 +92,7 @@ class PieceSquareTable:
              88, 85, 90, 88, 90, 88, 90, 85, 88,
         ],
     ]
+    max_value = 233 # Rook index 13
 
     @classmethod
     def get_pst_value(cls, piece_type, square, moving_side):
