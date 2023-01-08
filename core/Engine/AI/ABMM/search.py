@@ -2,7 +2,6 @@
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
-import copy
 from core.Engine.move_generator import LegalMoveGenerator
 from core.Engine.board import Board
 from core.Engine.AI.ABMM.eval_utility import Evaluation
@@ -24,31 +23,33 @@ class Dfs:
 
     @classmethod
     @time_benchmark
-    def multiprocess_search(cls, board, batch: bool=True) -> tuple:
+    def multiprocess_search(cls, board, batch: bool=True, get_evals=False, moves=None) -> tuple:
         """
         Runs a search for board position leveraging multiple processors.
         :return: best move from current position
         :param batch: determines if all cpu cores are leveraged
+
+        :param get_evals: if True, search returns a hash map of ordered
         """
-        best_move = None
         # shared dict
         move_evals = mp.Manager().dict()
-        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(), board)
+        moves = moves or LegalMoveGenerator.load_moves()
         if batch:
-            jobs = [mp.Process(target=cls.search_for_move, args=(move, move_evals, cls.search_depth, board)) for move in current_pos_moves]
+            jobs = [mp.Process(target=cls.search_for_move, args=(move, move_evals, cls.search_depth, board)) for move in moves]
             max_processes = mp.cpu_count()
             for processes in cls.batch(jobs, max_processes):
                 for p in processes: p.start()
                 for p in processes: p.join()
         else:
             jobs = []
-            for move in current_pos_moves:
+            for move in moves:
                 p = mp.Process(target=cls.search_for_move, args=(move, move_evals, cls.search_depth, board))
                 jobs.append(p)
                 p.start()
             for process in jobs: process.join()
         # print(sorted(move_evals, key=lambda move: move_evals[move]))
 
+        if get_evals: return move_evals
         best_move = sorted(move_evals, key=lambda move: move_evals[move]).pop()
         return best_move
 
