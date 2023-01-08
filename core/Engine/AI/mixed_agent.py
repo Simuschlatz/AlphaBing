@@ -33,6 +33,6 @@ class AlphaBetaZeroAgent(Agent):
         aza_value = aza_probs[aza_action_space_index] * PieceSquareTable.max_value + aba_eval_table[aza_action]
         print(f"AlphaZero value: {aza_value}")
 
-        return aza_action if aza_value > aba_value else aba_value
+        return aza_action if aza_value > aba_value else aba_action
 
 
