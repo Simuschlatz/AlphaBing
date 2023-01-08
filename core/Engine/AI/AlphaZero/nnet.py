@@ -60,24 +60,25 @@ class CNN(AlphaZeroModel):
 
     def save_checkpoint(self, folder="./checkpoints", filename='checkpoint'):
         # change file type / extension
-        if not filepath.endswith(".h5"):
+        if not filename.endswith(".h5"):
             filename = filename.split(".")[0] + ".h5"
         filepath = os.path.join(folder, filename)
         if not os.path.exists(folder):
-            print("Making checkpoint directory {}...".format(folder))
+            print(f"Making checkpoint directory {folder}...")
             os.mkdir(folder)
         else:
             print("Checkpoint Directory exists!")
         print("Saving checkpoint...")
-        self.model.save(filepath)
+        self.model.save_weights(filepath)
 
     def load_checkpoint(self, folder='./checkpoints', filename='checkpoint'):
         # change file type / extension
-        if not filepath.endswith(".h5"):
+        if not filename.endswith(".h5"):
             filename = filename.split(".")[0] + ".h5"
         filepath = os.path.join(folder, filename)
         if not os.path.exists(filepath):
-            raise("No model in path '{}'".format(filepath))
+            raise FileNotFoundError(f"No model in path '{filepath}")
+        print("Loading checkpoint...")
         self.model.load_weights(filepath)
 
     def visualize(self, filepath="assets/imgs/ML"):
