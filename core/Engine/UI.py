@@ -4,7 +4,8 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 import pygame
 from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board, NLPCommandHandler
-from core.Engine.AI import TrainingDataCollector, Dfs
+from core.Engine.AI.ABMM import Dfs
+from core.Engine.AI.SLEF import TrainingDataCollector
 from core.Utils import BoardUtility
 from core.Engine.config import UIConfig
 
@@ -381,4 +382,4 @@ class UI:
             return
         if self.ai_vs_ai:
             self.make_AI_move()
-            self.training_data_generator.store_training_data()
+            # self.training_data_generator.store_training_data()

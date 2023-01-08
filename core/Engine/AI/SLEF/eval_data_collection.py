@@ -4,7 +4,7 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 import csv
 import os
-from core.Engine.AI import Dfs
+from core.Engine.AI.ABMM import Dfs
 import pandas as pd
 
 class TrainingDataCollector:
