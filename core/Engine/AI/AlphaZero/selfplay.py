@@ -4,6 +4,7 @@ from core.Engine import Board, LegalMoveGenerator
 import numpy as np
 from random import shuffle
 
+from tqdm import tqdm
 import multiprocessing as mp
 from copy import deepcopy
 
@@ -15,7 +16,7 @@ class SelfPlay:
         self.mcts = MCTS(nnet)
         self.training_data = []
     
-    def execute_episode(self, training_examples=None, board: Board=None, mcts: MCTS=None):
+    def execute_episode(self, moves, training_examples=None, board: Board=None, mcts: MCTS=None):
         """
         Execute one episode of self-play. The game is played until the end, simultaneously 
         collecting training data. when a terminal state is reached, each training example's
@@ -33,7 +34,6 @@ class SelfPlay:
         mcts = mcts or self.mcts
         training_data = []
         plies, tau = 0, 1
-        moves = LegalMoveGenerator.load_moves(board)
         while True:
             bb = list(board.piecelist_to_bitboard(adjust_perspective=True))
             # if plies > PlayConfig.tau_decay_threshold:
@@ -72,21 +72,25 @@ class SelfPlay:
 
         :param parallel: If True, each episode is executed on a a separate process
         """
+        fen = self.board.load_fen_from_board()
+        moves = LegalMoveGenerator.load_moves(self.board)
         for i in range(1, PlayConfig.training_iterations + 1):
             print(f"starting self-play iteration no. {i}")
             iteration_training_data = []
 
             if parallel:
                 iteration_data = mp.Manager().list() # Shared list
-                jobs = [mp.Process(target=self.execute_episode(iteration_data, deepcopy(self.board), deepcopy(self.mcts))) for _ in range(PlayConfig.self_play_eps)]
-                for processes in self.batch(jobs, PlayConfig.max_processes):
+                jobs = [mp.Process(target=self.execute_episode(moves, iteration_data, deepcopy(self.board), deepcopy(self.mcts))) for _ in range(PlayConfig.self_play_eps)]
+                for processes in tqdm(self.batch(jobs, PlayConfig.max_processes)):
                     print("------starting process-------")
                     for p in processes: p.start()
                     for p in processes: p.join()
             else:
-                for _ in range(PlayConfig.self_play_eps):
+                for _ in tqdm(range(PlayConfig.self_play_eps)):
+                    print("Starting episode...")
                     self.mcts = MCTS(self.nnet)
-                    eps_training_data = self.execute_episode()
+                    self.board = Board(fen)
+                    eps_training_data = self.execute_episode(moves)
                     iteration_training_data.extend(eps_training_data)
                 
 
@@ -101,9 +105,9 @@ class SelfPlay:
  
             shuffle(train_examples)
 
-            # print(np.asarray(train_examples, dtype=object).shape)
+            print(np.asarray(train_examples, dtype=object).shape)
             self.nnet.train(train_examples)
-
+            self.nnet.save_checkpoint()
             
     def load_training_data(self, folder, filename):
         pass
