@@ -10,7 +10,7 @@ import os, datetime
 
 class CNN(AlphaZeroModel):
     def __init__(self):
-        super().__init__()
+        self._build()
         self.opt = SGD(learning_rate=TrainingConfig.initial_lr, momentum=TrainingConfig.momentum)
         self.model.compile(optimizer=self.opt, loss=['categorical_crossentropy', 'mean_squared_error'])
     

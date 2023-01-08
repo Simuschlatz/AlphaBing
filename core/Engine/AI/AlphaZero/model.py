@@ -8,9 +8,7 @@ from keras.regularizers import l2
 
 
 class AlphaZeroModel:
-    def __init__(self):
-        self._build()
-
+    
     def _conv_layer(self, input, num_filters, kernel_size, name=None, index=None):
         """
         builds a convolutional layer with given parameters. Applies BatchNorm and ReLu Activation.
