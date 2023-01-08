@@ -9,17 +9,20 @@ def main():
     fen += (" w " if red_moves_first else " b ") + "- - 0 1"
     Clock.init(600)
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    board = Board(fen, play_as_red)
 
+    board = Board(fen, play_as_red)
+    agent = AlphaBetaZeroAgent(board)
+    # print(agent.choose_action())
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
     # print(sum(LegalMoveGenerator.bitvector_legal_moves()))
     ui = UI(board)
     m = CNN()
-    # m._build()
+    m.load_checkpoint()
     # print(m.predict(board.piecelist_to_bitboard(adjust_perspective=True)))
-    # sp = SelfPlay(m, board)
-    # sp.train()
+    sp = SelfPlay(m, board)
+    sp.train()
+    # sp.parallel_training()
     # mcts = MCTS(m)
     # bb = board.piecelist_to_bitboard(adjust_perspective=True)
     # pi = mcts.get_probability_distribution(board, list(bb), tau=1)
@@ -42,6 +45,7 @@ if __name__ == "__main__":
     from core.Engine.UI import UI
     from core.Utils import start_search
     from core.Engine.AI.AlphaZero import CNN, MCTS, SelfPlay
+    from core.Engine.AI.mixed_agent import AlphaBetaZeroAgent
 
     FPS = 45
 

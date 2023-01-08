@@ -8,7 +8,7 @@ class AlphaBetaAgent(Agent):
         return Dfs.multiprocess_search(board, get_evals=True, moves=moves)
 
     @staticmethod
-    def choose_action(eval_table: dict=None, generate_eval_table: bool=False):
+    def choose_action(eval_table: dict=None):
         """
         NOTE: This agent uses multiprocess search. To run single-process search,
         don't use the AlphaBetaAgent class, but Dfs.search instead.

@@ -72,7 +72,7 @@ class MCTS():
         if s not in self.Es:
             status = board.get_terminal_status(len(moves))
             self.Es[s] = status
-        # Terminal node
+
         if self.Es[s] != -1:
             return -self.Es[s]
 
@@ -110,7 +110,7 @@ class MCTS():
         else:
             eps = 0
             noise = np.zeros(num_moves) # [0] * num_moves (inconsistent with above)
-        # print("NO LEAF")
+
         # No leaf node, traverse tree
         valids = self.Vs[s]
         cur_best = -float('inf')
@@ -132,8 +132,6 @@ class MCTS():
                 cur_best = u
                 best_act = a
 
-        # TODO: board simplified for MCTS, only storing piece lists and zobrist key
-        # print("MOVIN")
         a = best_act
         move = PrecomputingMoves.action_space_vector[a]
         # Flipping the move back around. Much more efficient than using bigger architecture, 
@@ -147,11 +145,10 @@ class MCTS():
         if (s, a) in self.Qsa:
             self.Nsa[(s, a)] += 1
             self.Qsa[(s, a)] = ((self.Nsa[(s, a)] - 1) * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)])
-            # print("CONTAINED, UPDATING")
         else:
             self.Nsa[(s, a)] = 1
             self.Qsa[(s, a)] = v
-            # print("NOT CONTAINED, UPDATING")
+
         self.Ns[s] += 1
         return -v
 
@@ -180,7 +177,7 @@ class MCTS():
             probs[best_a] = 1
             return probs
         # ... stochastically for exploration
-        visit_counts = visit_counts ** (1. / tau)
+        visit_counts = visit_counts ** round(1. / tau, 2)
         counts_sum = float(np.sum(visit_counts))
         probs = visit_counts / counts_sum # renormalize
         return probs
