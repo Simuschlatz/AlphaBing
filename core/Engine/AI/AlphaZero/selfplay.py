@@ -63,59 +63,39 @@ class SelfPlay:
         for ndx in range(0, len(iterable), batch_size):
             yield iterable[ndx:min(len(iterable), ndx+batch_size)]
 
-    def multiprocess_train(self):
-        """
-        Performs self-play for ```PlayConfig.training_iterations``` iterations of `
-        ``PlayConfig.self_play_eps``` episodes each. Every episode is executed in a separate process 
-        allowing them to run in parallel. The maximum length of training data is the examples from the 
-        last ```PlayConfig.max_training_data_length``` iterations. After each iteration, the neural 
-        network is retrained.
-        """
-        for i in range(1, PlayConfig.training_iterations + 1):
-            print(f"starting self-play iteration no. {i}")
-            iteration_data = mp.Manager().list() # Shared list
-            jobs = [mp.Process(target=self.execute_episode(iteration_data, deepcopy(self.board), deepcopy(self.mcts))) for _ in range(PlayConfig.self_play_eps)]
-            for processes in self.batch(jobs, PlayConfig.max_processes):
-                print("------starting process-------")
-                for p in processes: p.start()
-                for p in processes: p.join()
-
-            self.training_data.append(iteration_data)
-
-            if len(self.training_data) > PlayConfig.max_training_data_length:
-                self.training_data.pop(0)
-
-            train_examples = [example for iteration_data in self.training_data for example in iteration_data]  
- 
-            shuffle(train_examples)
-
-            print(np.asarray(train_examples, dtype=object).shape)
-            self.nnet.train(train_examples)
-
-    def train(self):
+    def train(self, parallel=False):
         """
         Performs self-play for ```PlayConfig.training_iterations``` iterations of 
         ```PlayConfig.self_play_eps``` episodes  each. The maximum length of training data is the 
         examples from the last ```PlayConfig.max_training_data_length```  iterations. After each 
         iteration, the neural  network is retrained.
+
+        :param parallel: If True, each episode is executed on a a separate process
         """
         for i in range(1, PlayConfig.training_iterations + 1):
             print(f"starting self-play iteration no. {i}")
             iteration_training_data = []
 
-
-            for _ in range(PlayConfig.self_play_eps):
-                self.mcts = MCTS(self.nnet)
-                eps_training_data = self.execute_episode()
-                iteration_training_data.extend(eps_training_data)
-            
+            if parallel:
+                iteration_data = mp.Manager().list() # Shared list
+                jobs = [mp.Process(target=self.execute_episode(iteration_data, deepcopy(self.board), deepcopy(self.mcts))) for _ in range(PlayConfig.self_play_eps)]
+                for processes in self.batch(jobs, PlayConfig.max_processes):
+                    print("------starting process-------")
+                    for p in processes: p.start()
+                    for p in processes: p.join()
+            else:
+                for _ in range(PlayConfig.self_play_eps):
+                    self.mcts = MCTS(self.nnet)
+                    eps_training_data = self.execute_episode()
+                    iteration_training_data.extend(eps_training_data)
+                
 
             self.training_data.append(iteration_training_data)
             if len(self.training_data) > PlayConfig.max_training_data_length:
                 self.training_data.pop(0)
 
             # if not i % PlayConfig.steps_per_save:
-            #     self.save_training_data()
+            # self.save_training_data()
             # collapse 3D list to 2d list
             train_examples = [example for iteration_data in self.training_data for example in iteration_data]  
  
