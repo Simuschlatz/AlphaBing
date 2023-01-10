@@ -21,6 +21,7 @@ class UIConfig:
     OFFSET_Y = (HEIGHT - BOARD_HEIGHT) // 2
     OFFSETS = (OFFSET_X, OFFSET_Y)
 
+    FPS = 45
     # Style of piece images
     piece_style_western = True
 

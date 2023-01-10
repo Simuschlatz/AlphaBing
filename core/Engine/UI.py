@@ -3,7 +3,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board, NLPCommandHandler
+from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board#, NLPCommandHandler
 from core.Engine.AI.ABMM import Dfs
 from core.Engine.AI.SLEF import TrainingDataCollector
 from core.Utils import BoardUtility
@@ -33,6 +33,7 @@ class Button:
 class UI:
     def __init__(self, board:Board):
         self.window = pygame.display.set_mode((UIConfig.WIDTH, UIConfig.HEIGHT), pygame.RESIZABLE)
+        pygame.display.set_caption("JOE MAMA")
         self.board = board
         # This board is created solely for UI purposes, so that the visual board can be modified
         # without crating interdependencies with the internal board representation
@@ -383,3 +384,10 @@ class UI:
         if self.ai_vs_ai:
             self.make_AI_move()
             # self.training_data_generator.store_training_data()
+        
+    def run(self):
+        py_clock = pygame.time.Clock()
+        run = True
+        while run:   
+            self.update()
+            py_clock.tick(UIConfig.FPS)    
