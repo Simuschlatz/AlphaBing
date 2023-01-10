@@ -14,7 +14,7 @@ class ModelConfig:
     distributed = False
 
 class PlayConfig:
-    simulations_per_move = 3
+    simulations_per_move = 25
     cpuct = 1.5
     noise_eps = .15
     dirichlet_alpha = .2
@@ -24,8 +24,8 @@ class PlayConfig:
 
     tau_decay_rate = .9
     tau_decay_threshold = 20 # threshold of plies when tau starts to decay
-    self_play_eps = 1
-    training_iterations = 1
+    self_play_eps = 4
+    training_iterations = 10
     steps_per_save = 2
     max_training_data_length = 100
     max_processes = cpu_count()
@@ -37,6 +37,6 @@ class TrainingConfig:
         (150000, 3e-3),
         (400000, 1e-4)
         ]
-    epochs = 15
+    epochs = 40
     batch_size = 64
     
