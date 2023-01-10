@@ -51,7 +51,6 @@ class SelfPlay:
             plies += 1
             moves = LegalMoveGenerator.load_moves(board)
             status = board.get_terminal_status(len(moves))
-            print(plies)
             if status == -1: continue
             # print("GAME ENDED")
             # negative outcome for every example where the side was current (mated) moving side

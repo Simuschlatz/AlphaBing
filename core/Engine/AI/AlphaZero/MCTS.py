@@ -152,7 +152,7 @@ class MCTS():
         self.Ns[s] += 1
         return -v
 
-    @time_benchmark
+    # @time_benchmark
     def get_probability_distribution(self, board: Board, bitboards: list, moves=None, tau=1):
         """
         This function performs numMCTSSims simulations of MCTS on ```board```.
