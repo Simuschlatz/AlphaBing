@@ -41,7 +41,7 @@ def main():
 if __name__ == "__main__":
     import pygame
     pygame.init()
-    from core.Engine import Board, LegalMoveGenerator, Clock, NLPCommandHandler, ZobristHashing, PrecomputingMoves
+    from core.Engine import Board, LegalMoveGenerator, Clock
     from core.Engine.UI import UI
     from core.Utils import start_search
     from core.Engine.AI.AlphaZero import CNN, MCTS, SelfPlay

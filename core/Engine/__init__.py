@@ -6,5 +6,5 @@ from .move_generator import LegalMoveGenerator
 from .game_manager import GameManager
 from .clock import Clock
 from .tt_entry import TtEntry
-from .verbal_command_handler import NLPCommandHandler
-NLPCommandHandler.init()
+# from .verbal_command_handler import NLPCommandHandler
+# NLPCommandHandler.init()

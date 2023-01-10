@@ -289,15 +289,15 @@ class UI:
         self.activate_ai = not self.activate_ai
         self.AI_BUTTON.change_image(self.get_button_img())
 
-    def command_response(self):
-        """
-        Handles response to verbal commands
-        """
-        start_search = NLPCommandHandler.listen_for_activation()
-        if start_search:
-            self.activate_ai = True
-            self.make_AI_move()
-            self.activate_ai = False
+    # def command_response(self):
+    #     """
+    #     Handles response to verbal commands
+    #     """
+    #     start_search = NLPCommandHandler.listen_for_activation()
+    #     if start_search:
+    #         self.activate_ai = True
+    #         self.make_AI_move()
+    #         self.activate_ai = False
             
     def event_handler(self):
         """
@@ -342,9 +342,9 @@ class UI:
                 if key == pygame.K_a:
                     print("Pressed A-key")
                     self.ai_vs_ai = not self.ai_vs_ai
-                if key == pygame.K_c:
-                    print("Pressed C-key")
-                    self.command_response()
+                # if key == pygame.K_c:
+                #     print("Pressed C-key")
+                #     self.command_response()
                 if key == pygame.K_RETURN:
                     print("ENTER")
                     self.training_data_generator.store_training_data()
