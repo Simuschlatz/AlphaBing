@@ -9,11 +9,14 @@ from collections import deque
 
 class Board:
     max_plies = 60
+    INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
+    INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
 
-    def __init__(self, FEN: str, play_as_red=True) -> None:
-        """
-        :param FEN: Forsyth-Edwards-Notation, a concise string version to represent a state of game
-        """
+    def __init__(self, play_as_red=False, red_moves_first=True) -> None:
+
+        fen = self.INITIAL_FEN_RED_DOWN if play_as_red else self.INITIAL_FEN_BLACK_DOWN 
+        fen += (" w " if red_moves_first else " b ") + "- - 0 1"
+
         # Square-centric board repr
         self.squares = list(np.zeros(90, dtype=np.int8))
         # NOTE: the bitboards aren't continually updated in make_move() or reverse_move()
@@ -25,11 +28,11 @@ class Board:
         # with int "color_to_start" or "color" because the colors are represented as ints in [0, 1]
         self.fullmoves, self.plies = 0, 0
         # basic setup
-        is_red_first = self.load_board_from_fen(FEN)
+        self.load_board_from_fen(fen)
         # Bitboards 2x7x10x9 (each side, number of pieces, board dims)
-        self.moving_side = int(play_as_red == is_red_first)
+        self.moving_side = int(play_as_red == red_moves_first)
         self.opponent_side = 1 - self.moving_side
-        self.moving_color = int(is_red_first)
+        self.moving_color = int(red_moves_first)
         self.opponent_color = 1 - self.moving_color
         self.bitboards = self.piecelist_to_bitboard(adjust_perspective=True)
         # If we don't play as red, the pieces are at the top, 
@@ -77,10 +80,9 @@ class Board:
         King:K, Advisor:A, Elephant:E, Rook:R, Cannon:C, Horse:H, Pawn:P
         """
         file, rank = 0, 0
-        board_config, color, *_, plies, fullmoves = FEN.split()
+        board_config, *_, plies, fullmoves = FEN.split()
         self.plies, self.fullmoves = map(int, (plies, fullmoves))
         # print("plies: ", self.plies, "fullmoves: ", self.fullmoves)
-        moving_color = color == "w"
         for char in board_config:
             if char == "/":
                 rank += 1
@@ -95,7 +97,6 @@ class Board:
                 file += 1
             if char.isdigit():
                 file += int(char)
-        return moving_color
 
     def load_fen_from_board(self) -> str:
         """
