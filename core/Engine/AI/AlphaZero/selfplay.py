@@ -1,3 +1,4 @@
+import os
 from . import CNN, MCTS, PlayConfig
 from core.Engine import Board, LegalMoveGenerator
 
@@ -5,6 +6,7 @@ import numpy as np
 from random import shuffle
 
 from tqdm import tqdm
+from pickle import Pickler, Unpickler
 import multiprocessing as mp
 from copy import deepcopy
 
@@ -36,9 +38,9 @@ class SelfPlay:
         plies, tau = 0, 1
         while True:
             bb = list(board.piecelist_to_bitboard(adjust_perspective=True))
-            # if plies > PlayConfig.tau_decay_threshold:
-            #     tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
-            tau = plies < PlayConfig.tau_decay_threshold
+            if plies > PlayConfig.tau_decay_threshold:
+                tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
+            # tau = plies < PlayConfig.tau_decay_threshold
             pi = mcts.get_probability_distribution(board, bitboards=bb, moves=moves, tau=tau)
             side = board.moving_side
 
@@ -49,6 +51,7 @@ class SelfPlay:
             plies += 1
             moves = LegalMoveGenerator.load_moves(board)
             status = board.get_terminal_status(len(moves))
+            print(plies)
             if status == -1: continue
             # print("GAME ENDED")
             # negative outcome for every example where the side was current (mated) moving side
@@ -86,7 +89,7 @@ class SelfPlay:
                     for p in processes: p.start()
                     for p in processes: p.join()
             else:
-                for _ in tqdm(range(PlayConfig.self_play_eps)):
+                for _ in tqdm(range(PlayConfig.self_play_eps), desc="Episodes"):
                     print("Starting episode...")
                     self.mcts = MCTS(self.nnet)
                     self.board = Board(fen)
@@ -98,22 +101,36 @@ class SelfPlay:
             if len(self.training_data) > PlayConfig.max_training_data_length:
                 self.training_data.pop(0)
 
-            # if not i % PlayConfig.steps_per_save:
-            # self.save_training_data()
             # collapse 3D list to 2d list
             train_examples = [example for iteration_data in self.training_data for example in iteration_data]  
- 
+            
             shuffle(train_examples)
 
+            self.save_training_data()
             print(np.asarray(train_examples, dtype=object).shape)
             self.nnet.train(train_examples)
             self.nnet.save_checkpoint()
             
-    def load_training_data(self, folder, filename):
-        pass
+    def save_training_data(self, folder="core/checkpoints", filename="examples"):
+        if not os.path.exists(folder):
+            print("Making folder for training data...")
+            os.mkdir(folder)
+        filepath = os.path.join(folder, filename)
+        print("Saving training data...")
+        with open(filepath, "wb+") as f:
+            Pickler(f).dump(self.training_data)
+        print("Done!")
 
-    def save_training_data(self, folder, filename):
-        pass
+    def load_training_data(self, folder="core/checkpoints", filename="examples"):
+        filepath = os.path.join(folder, filename)
+        if not os.path.isfile(filepath):
+            print(f"Training data file {filepath} does not exist yet. Try running one iteration of self-play first.")
+            return
+        with open(filepath, "rb") as f:
+            print("Training examples file found. Loading content...")
+            self.training_data = Unpickler(f).load()
+            print("Done!")
+
             
             
 
