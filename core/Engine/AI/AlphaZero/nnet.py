@@ -58,7 +58,7 @@ class CNN(AlphaZeroModel):
             if iterations >= threshold:
                 keras.backend.set_value(self.opt.learning_rate, lr)
 
-    def save_checkpoint(self, folder="./checkpoints", filename='checkpoint'):
+    def save_checkpoint(self, folder="core/checkpoints", filename='checkpoint'):
         # change file type / extension
         if not filename.endswith(".h5"):
             filename = filename.split(".")[0] + ".h5"
@@ -71,7 +71,7 @@ class CNN(AlphaZeroModel):
         print("Saving checkpoint...")
         self.model.save_weights(filepath)
 
-    def load_checkpoint(self, folder='./checkpoints', filename='checkpoint'):
+    def load_checkpoint(self, folder='core/checkpoints', filename='checkpoint'):
         # change file type / extension
         if not filename.endswith(".h5"):
             filename = filename.split(".")[0] + ".h5"
