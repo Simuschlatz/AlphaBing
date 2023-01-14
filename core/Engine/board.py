@@ -173,10 +173,10 @@ class Board:
     def update_zobrist(self, moved_piece_type, captured_piece, moved_from, moved_to):
         if captured_piece:
             cap_piece_type = Piece.get_type(captured_piece)
-            self.zobrist_key ^= ZobristHashing.table[self.opponent_color][cap_piece_type][moved_to]
+            self.zobrist_key ^= ZobristHashing.table[self.opponent_side][cap_piece_type][moved_to]
         self.zobrist_key ^= ZobristHashing.table[self.moving_side][moved_piece_type][moved_from]
         self.zobrist_key ^= ZobristHashing.table[self.moving_side][moved_piece_type][moved_to]
-        self.zobrist_key ^= self.opponent_color
+        self.zobrist_key ^= self.opponent_side
         self.zobrist_key ^= self.moving_side
 
     @staticmethod
