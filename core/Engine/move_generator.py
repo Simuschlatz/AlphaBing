@@ -214,8 +214,7 @@ class LegalMoveGenerator:
                     # If target_piece is friendly, go to next direction
                     if Piece.is_color(target_piece, cls.board.moving_color):
                         break
-                    if target_square in cls.illegal_squares:
-                        continue
+
                     # Because all squares between the rook and cannon (inclusive) are in block_check_hash and
                     # current square is avoids_cannon_check, the number of checks blocked would be 2, not 1
                     # so it skips moves between cannon and rook, but would also skip the capture of checking cannon
@@ -254,8 +253,7 @@ class LegalMoveGenerator:
                 target_piece = cls.board.squares[target_square]
                 if Piece.is_color(target_piece, cls.board.moving_color):
                     continue
-                if target_square in cls.illegal_squares:
-                    continue
+
                 dir_idx = cls.dir_offsets.index(target_square - current_square)
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
                     continue
@@ -264,7 +262,7 @@ class LegalMoveGenerator:
                 # so it skips moves between cannon and pawn, but would also skip the capture of checking cannon
                 # Thus, if pawn is screen for checking cannon and captures it, increment the number of checks by 1
                 # => condition 2 == 1 becomes 2 == 2
-                captures_checking_cannon = cls.checking_cannon_square == target_square
+                captures_checking_cannon = avoids_cannon_check and cls.checking_cannon_square == target_square
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                 if not blocks_all_checks:
                     continue
@@ -301,9 +299,6 @@ class LegalMoveGenerator:
                 blocking_square = cls.get_elephant_block(current_square, target_square)
                 if cls.board.squares[blocking_square]:
                     continue
-
-                if target_square in cls.illegal_squares:
-                    continue
                 
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
@@ -336,8 +331,7 @@ class LegalMoveGenerator:
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
                 if not blocks_all_checks:
                     continue
-                if target_square in cls.illegal_squares:
-                    continue
+
                 # If it's quiescene search and move isn't a capture, continue
                 if not cls.generate_quiets and not target_piece:
                     continue
@@ -374,8 +368,7 @@ class LegalMoveGenerator:
                 blocking_square = cls.get_horse_block(current_square, target_square)
                 if cls.board.squares[blocking_square]:
                     continue
-                if target_square in cls.illegal_squares:
-                    continue
+
                 # If there's a check (or multiple)
                 # Only proceed if num of checks the moves blocks is equivalent to total num of checks
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square)
@@ -435,9 +428,6 @@ class LegalMoveGenerator:
                             break
                         continue
                     
-                    # Can't move to or capture pieces on squares that would result in check
-                    if target_square in cls.illegal_squares:
-                        continue
                     # If it's quiescene search and move isn't a capture, continue
                     if not cls.generate_quiets and not target_piece:
                         continue
@@ -725,7 +715,8 @@ class LegalMoveGenerator:
 
                     # -------------------------MISTAKE DOCUMENTATION----------------------------
                     # This is no viable solution to double screen capturing, because we
-                    # only want to limit the friendly screen from capturing opponent screen
+                    # only want to limit the friendly screen from capturing opponent screen, 
+                    # not all other pieces.
                     # if not friendly_screens:
                     #     continue
                     # for screen in opponent_screens:
@@ -739,8 +730,6 @@ class LegalMoveGenerator:
                 # Single screen
                 if screens:
                     cls.checks += 1
-                    # Can't capture enemy screen, as it would still be check
-                    cls.illegal_squares |= opponent_screens
                     # Fiendly screen / block piece can prevent check by moving away
                     if friendly_screens:
                         cls.cause_cannon_defect = next(iter(friendly_screens))
@@ -751,7 +740,8 @@ class LegalMoveGenerator:
                 else:
                     # All squares between king and opponent cannon empty, so mark them as illegal
                     # as moving to any of them would result in a check
-                    cls.illegal_squares |= visited_squares - {cannon}
+                    for block_square in visited_squares - {cannon}:
+                        cls.block_check_hash[block_square] = cls.block_check_hash.get(block_square, 0) - 1
 
             # This is the third piece we come across, thus preventing any checks / pins
             if double_block:
