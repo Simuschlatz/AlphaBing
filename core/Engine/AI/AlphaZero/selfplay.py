@@ -46,6 +46,7 @@ class SelfPlay:
 
             training_data.append([bb, pi, side])
             move = MCTS.best_action_from_pi(board, pi)
+            # move = MCTS.random_action_from_pi(board, pi)
 
             board.make_move(move, search_state=False)
             plies += 1

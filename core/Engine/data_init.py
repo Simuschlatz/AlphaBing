@@ -5,7 +5,7 @@ You may use, distribute and modify this code under the terms of the GNU General 
 import pygame
 import os
 
-def init_imgs(unit, window_dims, board_dims, button_dims, is_western_style: bool, images_folder="assets/imgs") -> list:
+def init_imgs(unit, window_dims, board_dims, button_dims, is_western_style: bool, images_folder="./assets/imgs") -> list:
 
     pieces_file_names = ["general.png",
                         "elephant.png",

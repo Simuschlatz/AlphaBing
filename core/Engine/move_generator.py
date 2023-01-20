@@ -199,7 +199,7 @@ class LegalMoveGenerator:
             is_pinned = cls.is_pinned(current_square)
             if cls.checks and is_pinned:
                 continue
-            avoids_cannon_check = current_square == cls.cause_cannon_defect
+            cause_cannon_defect = current_square == cls.cause_cannon_defect
 
             rook_mm = PrecomputingMoves.orthogonal_mm[current_square]
             # Going through chosen direction indices
@@ -216,11 +216,11 @@ class LegalMoveGenerator:
                         break
 
                     # Because all squares between the rook and cannon (inclusive) are in block_check_hash and
-                    # current square is avoids_cannon_check, the number of checks blocked would be 2, not 1
+                    # current square is cause_cannon_defect, the number of checks blocked would be 2, not 1
                     # so it skips moves between cannon and rook, but would also skip the capture of checking cannon
                     # Thus, if rook is screen for checking cannon and captures it, increment the number of checks by 1
                     # => condition 2 == 1 becomes 2 == 2
-                    captures_checking_cannon = avoids_cannon_check and cls.checking_cannon_square == target_square
+                    captures_checking_cannon = cause_cannon_defect and cls.checking_cannon_square == target_square
                     blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                     
                     # If it's quiescene search and move isn't a capture, continue
@@ -234,7 +234,7 @@ class LegalMoveGenerator:
                     if target_piece:
                         break
                     # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
-                    if blocks_all_checks and cls.checks and not avoids_cannon_check:
+                    if blocks_all_checks and cls.checks and not cause_cannon_defect:
                         break
 
     @classmethod
@@ -247,7 +247,7 @@ class LegalMoveGenerator:
             is_pinned = cls.is_pinned(current_square)
             if cls.checks and is_pinned:
                 break
-            avoids_cannon_check = current_square == cls.cause_cannon_defect
+            cause_cannon_defect = current_square == cls.cause_cannon_defect
 
             for target_square in PrecomputingMoves.pawn_mm[cls.board.moving_side][current_square]:
                 target_piece = cls.board.squares[target_square]
@@ -258,11 +258,11 @@ class LegalMoveGenerator:
                 if is_pinned and not cls.moves_along_ray(cls.moving_king, current_square, dir_idx):
                     continue
                 # Because all squares between the pawn and cannon (inclusive) are in block_check_hash and
-                # current square is avoids_cannon_check, the number of checks blocked would be 2, not 1
+                # current square is cause_cannon_defect, the number of checks blocked would be 2, not 1
                 # so it skips moves between cannon and pawn, but would also skip the capture of checking cannon
                 # Thus, if pawn is screen for checking cannon and captures it, increment the number of checks by 1
                 # => condition 2 == 1 becomes 2 == 2
-                captures_checking_cannon = avoids_cannon_check and cls.checking_cannon_square == target_square
+                captures_checking_cannon = cause_cannon_defect and cls.checking_cannon_square == target_square
                 blocks_all_checks = cls.blocks_all_checks(current_square, target_square, captures_checking_cannon)
                 if not blocks_all_checks:
                     continue
@@ -272,7 +272,7 @@ class LegalMoveGenerator:
         
                 cls.moves.append((current_square, target_square))
                 # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
-                if blocks_all_checks and cls.checks and not avoids_cannon_check:
+                if blocks_all_checks and cls.checks and not cause_cannon_defect:
                     break
     
     @classmethod
@@ -289,7 +289,7 @@ class LegalMoveGenerator:
         for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.elephant]:
             if cls.is_pinned(current_square):
                 continue
-            avoids_cannon_check = current_square == cls.cause_cannon_defect
+            cause_cannon_defect = current_square == cls.cause_cannon_defect
             
             for target_square in PrecomputingMoves.elephant_mm[cls.board.moving_side][current_square]:
                 target_piece = cls.board.squares[target_square]
@@ -309,7 +309,7 @@ class LegalMoveGenerator:
                 cls.moves.append((current_square, target_square))
 
                 # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
-                if blocks_all_checks and cls.checks and not avoids_cannon_check:
+                if blocks_all_checks and cls.checks and not cause_cannon_defect:
                     break
 
     @classmethod
@@ -320,7 +320,7 @@ class LegalMoveGenerator:
         for current_square in cls.board.piece_lists[cls.board.moving_color][Piece.advisor]:
             if cls.is_pinned(current_square):
                 continue
-            avoids_cannon_check = current_square == cls.cause_cannon_defect
+            cause_cannon_defect = current_square == cls.cause_cannon_defect
             target_squares = PrecomputingMoves.advisor_mm[cls.board.moving_side][current_square]
 
             for target_square in target_squares:
@@ -339,7 +339,7 @@ class LegalMoveGenerator:
                 cls.moves.append((current_square, target_square))
                 
                  # If this move blocks check, other moves can't, unless it moves the piece away from cannon check ray
-                if blocks_all_checks and cls.checks and not avoids_cannon_check:
+                if blocks_all_checks and cls.checks and not cause_cannon_defect:
                     break
 
     @staticmethod
@@ -387,7 +387,7 @@ class LegalMoveGenerator:
             is_pinned = cls.is_pinned(current_square)
             if cls.checks and is_pinned:
                 continue
-            avoids_cannon_check = current_square == cls.cause_cannon_defect
+            cause_cannon_defect = current_square == cls.cause_cannon_defect
             cannon_attack_map = PrecomputingMoves.orthogonal_mm[current_square]
             is_double_screen = current_square in cls.double_screens
             for dir_idx, targets_in_dir in cannon_attack_map.items():
@@ -436,7 +436,7 @@ class LegalMoveGenerator:
                     # Move was a capture, can't move further in this direction 
                     if target_piece:
                         break
-                    if blocks_all_checks and cls.checks and not avoids_cannon_check:
+                    if blocks_all_checks and cls.checks and not cause_cannon_defect:
                         break
 
 

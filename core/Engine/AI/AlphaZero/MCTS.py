@@ -191,3 +191,14 @@ class MCTS():
         a = np.random.choice(np.argmax(pi).flatten())
         move = PrecomputingMoves.action_space_vector[a]
         return board.flip_move(move) if board.moving_side else move
+    
+    @staticmethod
+    def random_action_from_pi(board: Board, pi):
+        """
+        :return: a random move where the corresponding value in the probability distribution of search 
+        is not 0.
+        NOTE: the perspective-dependent move is readjusted to the absolute squares
+        """
+        a = np.random.choice(np.argwhere(a).flatten())
+        move = PrecomputingMoves.action_space_vector[a]
+        return board.flip_move(move) if board.moving_side else move

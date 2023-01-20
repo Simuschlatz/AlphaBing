@@ -47,11 +47,7 @@ class PrecomputingMoves:
                     up,
                     right,
                     down,
-                    left,
-                    min(up, right),
-                    min(right, down),
-                    min(down, left),
-                    min(left, up)
+                    left
                 ]
                 distances.append(dist)
         return distances
