@@ -12,23 +12,25 @@ def main():
     board = Board(fen, play_as_red)
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
-    # print(sum(LegalMoveGenerator.bitvector_legal_moves()))
+    # # print(sum(LegalMoveGenerator.bitvector_legal_moves()))
     ui = UI(board)
     m = CNN()
     # m.load_checkpoint()
-    # print(m.predict(board.piecelist_to_bitboard(adjust_perspective=True)))
+    # # print(m.predict(board.piecelist_to_bitboard(adjust_perspective=True)))
     sp = SelfPlay(m, board)
-    sp.train()
-    mcts = MCTS(m)
-    bb = board.piecelist_to_bitboard(adjust_perspective=True)
-    pi = mcts.get_probability_distribution(board, list(bb), tau=1)
-    print(pi)
+    sp.load_training_data()
+    # sp.train()
+    # mcts = MCTS(m)
+    # bb = board.piecelist_to_bitboard(adjust_perspective=True)
+    # pi = mcts.get_probability_distribution(board, list(bb), tau=1)
+    # print(pi)
     
     # ------To run perft search------
     # start_search(board)
     # -------------------------------
 
     ui.run()
+
 if __name__ == "__main__":
     import pygame
     pygame.init()
@@ -36,6 +38,8 @@ if __name__ == "__main__":
     from core.Engine.UI import UI
     from core.Utils import start_search
     from core.Engine.AI.AlphaZero import CNN, MCTS, SelfPlay
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
 
     INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
     INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"

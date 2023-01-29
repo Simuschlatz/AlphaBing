@@ -5,7 +5,7 @@ from core.Engine import Board, LegalMoveGenerator, PrecomputingMoves
 from core.Engine.AI.AlphaZero import PlayConfig, CNN
 from core.Utils import time_benchmark
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 '''
 - statically evaluate node, if terminal node: return -value
@@ -94,7 +94,7 @@ class MCTS():
                 self.Ps[s] /= sum_Ps  # renormalize
             else:
                 # if all valid moves were masked, make all valid moves equally probable
-                log.error("All valid moves were masked, doing a workaround. Please check your NN training process.")
+                logger.error("All valid moves were masked, doing a workaround. Please check your NN training process.")
                 self.Ps[s] = self.Ps[s] + valids
                 self.Ps[s] /= np.sum(self.Ps[s])
 
@@ -116,7 +116,7 @@ class MCTS():
         cur_best = -float('inf')
         best_act = -1
 
-        # pick the action with the highest upper confidence bound by running one bubble sort iteration
+        # pick the action with the highest upper confidence bound
         for i, move in enumerate(moves):
             a = PrecomputingMoves.move_index_hash[move]
             if (s, a) in self.Qsa:
@@ -199,6 +199,6 @@ class MCTS():
         is not 0.
         NOTE: the perspective-dependent move is readjusted to the absolute squares
         """
-        a = np.random.choice(np.argwhere(a).flatten())
+        a = np.random.choice(np.argwhere(pi).flatten())
         move = PrecomputingMoves.action_space_vector[a]
         return board.flip_move(move) if board.moving_side else move

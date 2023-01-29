@@ -9,7 +9,10 @@ from tqdm import tqdm
 from pickle import Pickler, Unpickler
 import multiprocessing as mp
 from copy import deepcopy
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 class SelfPlay:
     def __init__(self, nnet: CNN, board: Board) -> None:
@@ -45,11 +48,12 @@ class SelfPlay:
             side = board.moving_side
 
             training_data.append([bb, pi, side])
-            move = MCTS.best_action_from_pi(board, pi)
-            # move = MCTS.random_action_from_pi(board, pi)
+            # move = MCTS.best_action_from_pi(board, pi)
+            move = MCTS.random_action_from_pi(board, pi)
 
             board.make_move(move, search_state=False)
             plies += 1
+            logger.debug(f"plies: {plies}")
             moves = LegalMoveGenerator.load_moves(board)
             status = board.get_terminal_status(len(moves))
             if status == -1: continue
@@ -78,7 +82,7 @@ class SelfPlay:
         fen = self.board.load_fen_from_board()
         moves = LegalMoveGenerator.load_moves(self.board)
         for i in range(1, PlayConfig.training_iterations + 1):
-            print(f"starting self-play iteration no. {i}")
+            logger.debug(f"starting self-play iteration no. {i}")
             iteration_training_data = []
 
             if parallel:
@@ -113,23 +117,23 @@ class SelfPlay:
             
     def save_training_data(self, folder="core/checkpoints", filename="examples"):
         if not os.path.exists(folder):
-            print("Making folder for training data...")
+            logger.info("Making folder for training data...")
             os.mkdir(folder)
         filepath = os.path.join(folder, filename)
-        print("Saving training data...")
+        logger.info("Saving training data...")
         with open(filepath, "wb+") as f:
             Pickler(f).dump(self.training_data)
-        print("Done!")
+        logger.info("Done!")
 
     def load_training_data(self, folder="core/checkpoints", filename="examples"):
         filepath = os.path.join(folder, filename)
         if not os.path.isfile(filepath):
-            print(f"Training data file {filepath} does not exist yet. Try running one iteration of self-play first.")
+            logger.warning(f"Training data file {filepath} does not exist yet. Try running one iteration of self-play first.")
             return
         with open(filepath, "rb") as f:
-            print("Training examples file found. Loading content...")
+            logger.info("Training examples file found. Loading content...")
             self.training_data = Unpickler(f).load()
-            print("Done!")
+            logger.info("Done!")
 
             
             

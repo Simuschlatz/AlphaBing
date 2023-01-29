@@ -4,13 +4,15 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 import http.client as httplib
 from contextlib import contextmanager
+import logging
 import sys, os, warnings
+
+logger = logging.getLogger(__name__)
 try:
     import speech_recognition as sr
 except ImportError as e:
-    print("ERROR: Cannot find module 'speech_recognition.' Speech activation command utitlity will be deactivated.")
-    print("Try run `pip install pyaudio` and `pip install SpeechRecognition`")
-
+    logger.critical("Cannot find module 'speech_recognition.' Try run `pip install pyaudio` and `pip install SpeechRecognition`")
+    raise e
 
 def is_internet_connected(ip_adresses: tuple=("8.8.8.8", "8.8.4.4")) -> bool:
     """

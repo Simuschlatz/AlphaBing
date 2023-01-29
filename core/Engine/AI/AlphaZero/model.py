@@ -2,7 +2,7 @@ from .config import ModelConfig
 
 import tensorflow as tf
 
-from keras.models import load_model, Model
+from keras.models import Model
 from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, Activation, Add
 from keras.regularizers import l2
 

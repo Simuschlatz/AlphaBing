@@ -14,7 +14,7 @@ class Dfs:
     draw = 0
     positive_infinity = 9999
     negative_infinity = -positive_infinity
-    search_depth = 5
+    search_depth = 4
 
     @staticmethod
     def batch(iterable, batch_size):

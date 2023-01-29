@@ -270,7 +270,7 @@ class UI:
         LegalMoveGenerator.load_moves()
 
     def make_AI_move(self):
-        AI_move = Dfs.multiprocess_search(self.board)
+        AI_move = Dfs.search(self.board)
         if AI_move == None:
             return
         self.update_move_str(AI_move)
