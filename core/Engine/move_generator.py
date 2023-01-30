@@ -2,9 +2,9 @@
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
-from core.Engine.piece import Piece
-from core.Engine.board import Board
-from core.Engine.precomputed_move_data import PrecomputingMoves
+from core.engine.piece import Piece
+from core.engine.board import Board
+from core.engine.precomputed_move_data import PrecomputingMoves
 from typing import Iterable
 import numpy as np
 

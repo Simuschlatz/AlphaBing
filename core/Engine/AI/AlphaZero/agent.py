@@ -1,10 +1,10 @@
 from . import MCTS, CNN
-from core.Engine import Board
-from core.Engine.AI.agent_interface import Agent
+from core.engine import Board
+from core.engine.AI.agent_interface import Agent
 
 class AlphaZeroAgent(Agent):
     """
-    Alpha Zero Agent for the Engine to interact with
+    Alpha Zero Agent for the engine to interact with
     handles playing and training
     """
     def __init__(self) -> None:

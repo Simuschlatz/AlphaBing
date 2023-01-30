@@ -2,7 +2,7 @@
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
-from core.Engine import LegalMoveGenerator, Board
+from core.engine import LegalMoveGenerator, Board
 from time import perf_counter
 
 def start_search(board: Board):

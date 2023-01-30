@@ -1,5 +1,5 @@
 import pygame
-from core.Engine.data_init import init_imgs
+from core.engine.data_init import init_imgs
 
 class UIConfig:
     BG_COLOR = (100, 100, 100)

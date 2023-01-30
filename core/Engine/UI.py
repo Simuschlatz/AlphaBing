@@ -3,11 +3,11 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 import pygame
-from core.Engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board#, NLPCommandHandler
-from core.Engine.AI.ABMM import Dfs
-from core.Engine.AI.SLEF import TrainingDataCollector
-from core.Utils import BoardUtility
-from core.Engine.config import UIConfig
+from core.engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board#, NLPCommandHandler
+from core.engine.AI.ABMM import Dfs
+from core.engine.AI.SLEF import TrainingDataCollector
+from core.utils import BoardUtility
+from core.engine.config import UIConfig
 
 class Button:
     def __init__(self, x, y, image):

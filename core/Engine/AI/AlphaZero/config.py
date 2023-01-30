@@ -1,5 +1,5 @@
 from multiprocessing import cpu_count
-from core.Engine import PrecomputingMoves
+from core.engine import PrecomputingMoves
 
 class ModelConfig:
     input_depth = 14
@@ -39,4 +39,7 @@ class TrainingConfig:
         ]
     epochs = 40
     batch_size = 64
+
+class EvaluationConfig:
+    max_processes = cpu_count()
     

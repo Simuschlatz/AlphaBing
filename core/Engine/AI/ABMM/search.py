@@ -2,11 +2,11 @@
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
-from core.Engine.move_generator import LegalMoveGenerator
-from core.Engine.board import Board
-from core.Engine.AI.ABMM.eval_utility import Evaluation
-from core.Engine.AI.ABMM import order_moves, order_moves_pst
-from core.Utils.timer import time_benchmark
+from core.engine.move_generator import LegalMoveGenerator
+from core.engine.board import Board
+from core.engine.AI.ABMM.eval_utility import Evaluation
+from core.engine.AI.ABMM import order_moves, order_moves_pst
+from core.utils.timer import time_benchmark
 import multiprocessing as mp
 
 class Dfs:

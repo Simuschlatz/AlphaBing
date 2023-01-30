@@ -34,10 +34,10 @@ def main():
 if __name__ == "__main__":
     import pygame
     pygame.init()
-    from core.Engine import Board, LegalMoveGenerator, Clock
-    from core.Engine.UI import UI
-    from core.Utils import start_search
-    from core.Engine.AI.AlphaZero import CNN, MCTS, SelfPlay
+    from core.engine import Board, LegalMoveGenerator, Clock
+    from core.engine.UI import UI
+    from core.utils import start_search
+    from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlay
     import logging
     logging.basicConfig(level=logging.DEBUG)
 

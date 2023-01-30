@@ -1,9 +1,9 @@
 from numba import jit
 from numba.core import types
 from numba.typed import Dict 
-from core.Engine.piece import Piece
-from core.Engine.board import Board
-from core.Engine.precomputed_move_data import PrecomputingMoves
+from core.engine.piece import Piece
+from core.engine.board import Board
+from core.engine.precomputed_move_data import PrecomputingMoves
 from typing import Iterable
 import numpy as np
 

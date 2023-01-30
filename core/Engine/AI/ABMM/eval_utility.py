@@ -2,8 +2,8 @@
 Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
-from core.Engine.AI.ABMM.piece_square_tables import PieceSquareTable
-from core.Engine.board import Board
+from core.engine.AI.ABMM.piece_square_tables import PieceSquareTable
+from core.engine.board import Board
 
 class Evaluation:
     # Piece's values

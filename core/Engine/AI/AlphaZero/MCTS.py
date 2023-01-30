@@ -1,9 +1,9 @@
 import logging
 import math
 import numpy as np
-from core.Engine import Board, LegalMoveGenerator, PrecomputingMoves
-from core.Engine.AI.AlphaZero import PlayConfig, CNN
-from core.Utils import time_benchmark
+from core.engine import Board, LegalMoveGenerator, PrecomputingMoves
+from core.engine.AI.AlphaZero import PlayConfig, CNN
+from core.utils import time_benchmark
 
 logger = logging.getLogger(__name__)
 

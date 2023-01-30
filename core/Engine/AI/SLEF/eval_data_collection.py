@@ -4,11 +4,11 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 import csv
 import os
-from core.Engine.AI.ABMM import Dfs
+from core.engine.AI.ABMM import Dfs
 import pandas as pd
 
 class TrainingDataCollector:
-    dir_path = "core/Engine/AI/SLEF"
+    dir_path = "core/engine/AI/SLEF"
     filepaths = [os.path.join(dir_path, "eval_data_black.csv"), os.path.join(dir_path, "eval_data_red.csv")]
     num_plies_ahead = 3
 

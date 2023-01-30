@@ -3,7 +3,7 @@ Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 from collections import defaultdict, deque
-from core.Engine import Board
+from core.engine import Board
 class PrecomputingMoves:
     """
     precomputes all pseudo-legal moves for all pieces at all possible positions

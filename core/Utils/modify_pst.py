@@ -15,7 +15,7 @@ def slice_off_excesss():
 		
 def print_formatted_code():
 	"""
-	prints out the piece-square-tables used in core/Engine/AI/eval_utility.py
+	prints out the piece-square-tables used in core/engine/AI/eval_utility.py
 	"""
 	print("pst = [")
 	for pst in ten_by_nine:

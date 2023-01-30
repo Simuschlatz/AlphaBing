@@ -1,5 +1,5 @@
-from core.Engine.AI.agent_interface import Agent
-from core.Engine import Board
+from core.engine.AI.agent_interface import Agent
+from core.engine import Board
 from .search import Dfs
 
 class AlphaBetaAgent(Agent):

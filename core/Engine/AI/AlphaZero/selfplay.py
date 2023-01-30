@@ -1,6 +1,6 @@
 import os
 from . import CNN, MCTS, PlayConfig
-from core.Engine import Board, LegalMoveGenerator
+from core.engine import Board, LegalMoveGenerator
 
 import numpy as np
 from random import shuffle
@@ -85,20 +85,22 @@ class SelfPlay:
             logger.debug(f"starting self-play iteration no. {i}")
             iteration_training_data = []
 
-            if parallel:
-                iteration_data = mp.Manager().list() # Shared list
-                jobs = [mp.Process(target=self.execute_episode(moves, iteration_data, deepcopy(self.board), deepcopy(self.mcts))) for _ in range(PlayConfig.self_play_eps)]
-                for processes in tqdm(self.batch(jobs, PlayConfig.max_processes)):
-                    print("------starting process-------")
-                    for p in processes: p.start()
-                    for p in processes: p.join()
-            else:
-                for _ in tqdm(range(PlayConfig.self_play_eps), desc="Episodes"):
-                    print("Starting episode...")
-                    self.mcts = MCTS(self.nnet)
-                    self.board = Board(fen)
-                    eps_training_data = self.execute_episode(moves)
-                    iteration_training_data.extend(eps_training_data)
+            # if parallel:
+            #     iteration_data = mp.Manager().list() # Shared list
+            #     jobs = [mp.Process(target=self.execute_episode(moves, iteration_data, deepcopy(self.board), deepcopy(self.mcts))) for _ in range(PlayConfig.self_play_eps)]
+            #     for processes in tqdm(self.batch(jobs, PlayConfig.max_processes)):
+            #         print("------starting process-------")
+            #         for p in processes: p.start()
+            #         for p in processes: p.join()
+            # else:
+            #     for _ in tqdm(range(PlayConfig.self_play_eps), desc="Episodes"):
+            #         print("Starting episode...")
+            #         self.mcts = MCTS(self.nnet)
+            #         self.board = Board(fen)
+            #         eps_training_data = self.execute_episode(moves)
+            #         iteration_training_data.extend(eps_training_data)
+
+
                 
 
             self.training_data.append(iteration_training_data)
@@ -112,8 +114,8 @@ class SelfPlay:
 
             self.save_training_data()
             print(np.asarray(train_examples, dtype=object).shape)
-            self.nnet.train(train_examples)
-            self.nnet.save_checkpoint()
+            # self.nnet.train(train_examples)
+            # self.nnet.save_checkpoint()
             
     def save_training_data(self, folder="core/checkpoints", filename="examples"):
         if not os.path.exists(folder):
