@@ -8,11 +8,12 @@ import logging
 import sys, os, warnings
 
 logger = logging.getLogger(__name__)
+
 try:
     import speech_recognition as sr
 except ImportError as e:
     logger.critical("Cannot find module 'speech_recognition.' Try run `pip install pyaudio` and `pip install SpeechRecognition`")
-    raise e
+
 
 def is_internet_connected(ip_adresses: tuple=("8.8.8.8", "8.8.4.4")) -> bool:
     """
@@ -55,7 +56,7 @@ class NLPCommandHandler:
         try:
             cls.recognizer = sr.Recognizer()
         except Exception as e:
-            print("ERROR:", e, "You might have to install missing modules. Make sure all requirements are met")
+            logger.error(e, "You might have to install missing modules. Make sure all requirements are met")
         else:
             cls.recognizer.pause_threshold = 0.5
         cls.activation_keywords = keywords or cls.activation_keywords
@@ -75,13 +76,13 @@ class NLPCommandHandler:
                 # Where the magic happens
                 text = cls.recognizer.recognize_google(audio)
         except Exception as e:
-            print("ERROR:", str(e))
+            logger.error(e)
         return text
 
     @classmethod
     def listen_for_activation(cls) -> bool:
         commands = cls.speech_to_text()
         commands = commands.lower()
-        print(commands)
+        logger.info(commands)
         keyword_counter = len(list(filter(lambda kw: kw in commands, cls.activation_keywords)))
         return keyword_counter >= cls.activation_threshold
