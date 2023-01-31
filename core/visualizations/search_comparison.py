@@ -54,7 +54,7 @@ def run_benchmarks():
         logger.info(pos_id)
 
 
-    return {alg: total // (num_moves * num_positions - num_moves_skipped) for alg, total in bms.items()}
+    return {alg: total / (num_moves * num_positions - num_moves_skipped) for alg, total in bms.items()}
 
 
 def run_bms_for_pos(board: Board, bms, mode: str):
@@ -97,9 +97,10 @@ def visualize():
     
     print(coefficients, vals)
     with sns.axes_style("darkgrid"):
+        plt.figure(figsize=(10, 8))
         plt.ticklabel_format(style='scientific', axis='x', scilimits=(0,0))
         plt.bar(coefficients, vals, color=colors)
-        # plt.title("Vergleich der Zugsortierung-Performance mit unterschiedlichen Koeffizienten")
+        plt.title("Vergleich der Performance unterschiedlicher Suchalgorithmen")
         plt.xlabel('Algorithmus')
         plt.ylabel('Evaluierte Positionen')
     plt.show()
