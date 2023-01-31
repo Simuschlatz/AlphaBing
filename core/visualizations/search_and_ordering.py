@@ -13,7 +13,7 @@ import seaborn as sns
 
 
 evaluated_nodes = [1281157, 173628, 109786, 66932]
-algorithms = ['minimax', 'alphabeta', 'ab-moveordering\nkoeffizient = 1','ab-moveordering\koeffizient = 250' ]
+algorithms = ['minimax', 'alphabeta', 'ab-moveordering\nkoeffizient = 1','ab-moveordering\nkoeffizient = 250' ]
 
 
 colors = sns.color_palette("Blues_r")
