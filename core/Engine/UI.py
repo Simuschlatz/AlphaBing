@@ -1,5 +1,5 @@
 """
-Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
+Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 import pygame
@@ -8,6 +8,7 @@ from core.engine.AI.ABMM import Dfs
 from core.engine.AI.SLEF import TrainingDataCollector
 from core.utils import BoardUtility
 from core.engine.config import UIConfig
+from core.utils import time_benchmark
 
 class Button:
     def __init__(self, x, y, image):
@@ -63,6 +64,7 @@ class UI:
         # Data collector for Self-Learning-Evaluation-Function (SLEF)
         self.training_data_generator = TrainingDataCollector(board)
 
+        self.search = time_benchmark(Dfs.search)
     def render_piece(self, color, piece_type, coords):
         self.window.blit(self.PIECES_IMGS[color * 7 + piece_type], coords)
     
@@ -160,7 +162,7 @@ class UI:
 
     def update_info(self):
         self.fen = self.board.load_fen_from_board()
-        print(self.fen)
+        # print(self.fen)
         self.zobrist_off = (UIConfig.WIDTH - len(bin(self.board.zobrist_key)) * UIConfig.FONT_WIDTH_SMALL) / 2
         
     def drop_update(self):
@@ -270,7 +272,7 @@ class UI:
         LegalMoveGenerator.load_moves()
 
     def make_AI_move(self):
-        AI_move = Dfs.search(self.board)
+        AI_move = self.search(self.board, 250)
         if AI_move == None:
             return
         self.update_move_str(AI_move)

@@ -1,3 +1,7 @@
+"""
+Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
+You may use, distribute and modify this code under the terms of the GNU General Public License
+"""
 if __name__ == "__main__":
     import sys
     import os
@@ -100,9 +104,9 @@ def visualize():
         plt.figure(figsize=(10, 8))
         plt.ticklabel_format(style='scientific', axis='x', scilimits=(0,0))
         plt.bar(coefficients, vals, color=colors)
-        plt.title("Vergleich der Performance unterschiedlicher Suchalgorithmen")
-        plt.xlabel('Algorithmus')
-        plt.ylabel('Evaluierte Positionen')
+        plt.title("Vergleich der Performance unterschiedlicher Suchalgorithmen", fontweight="bold")
+        plt.xlabel('Algorithmus', fontweight="bold")
+        plt.ylabel('Evaluierte Positionen', fontweight="bold")
     plt.show()
 
 if __name__ == '__main__':

@@ -1,3 +1,7 @@
+"""
+Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
+You may use, distribute and modify this code under the terms of the GNU General Public License
+"""
 import os
 from . import CNN, MCTS, PlayConfig
 from core.engine import Board, LegalMoveGenerator

@@ -1,3 +1,7 @@
+"""
+Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
+You may use, distribute and modify this code under the terms of the GNU General Public License
+"""
 
 import sys
 import os
@@ -22,10 +26,10 @@ sorted_evaluated = sorted(evaluated_nodes)
 colors = [colors[sorted_evaluated.index(n)] for n in evaluated_nodes]
 
 with sns.axes_style("darkgrid"):
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(6, 5))
     plt.ticklabel_format(style='scientific', axis='x', scilimits=(0,0))
     plt.bar(algorithms, evaluated_nodes, color=colors)
-    plt.title("Vergleich der Performance unterschiedlicher Suchalgorithmen")
-    plt.xlabel('Algorithmus')
-    plt.ylabel('Evaluierte Positionen')
+    plt.title("Vergleich der Performance unterschiedlicher Suchalgorithmen", fontweight="bold")
+    plt.xlabel('Algorithmus', fontweight='bold')
+    plt.ylabel('Evaluierte Positionen', fontweight="bold")
 plt.show()

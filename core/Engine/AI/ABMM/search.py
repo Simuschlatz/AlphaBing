@@ -1,5 +1,5 @@
 """
-Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
+Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 from core.engine.move_generator import LegalMoveGenerator
@@ -15,6 +15,10 @@ class Dfs:
     positive_infinity = 9999
     negative_infinity = -positive_infinity
     search_depth = 4
+
+    # Ananlytics
+    cutoffs = 0
+    evaluated_nodes = 0
 
     @staticmethod
     def batch(iterable, batch_size):
@@ -65,50 +69,59 @@ class Dfs:
         move_evals[move] = evaluation
 
     @classmethod
-    @time_benchmark
-    def search(cls, board: Board):
+    def search(cls, board: Board, m=250, algorithm: str="optalphabeta"):
         """
         Starts traversal of board's possible configurations
+        :param algorithm: "minimax", "alphabeta", optalphabeta"
+        :param m: coefficient used in move ordering
         :return: best move possible
         """
+        cls.evaluated_nodes = 0
+        cls.cutoffs = 0
         best_move = None
         alpha = cls.positive_infinity
         beta = cls.negative_infinity
         best_eval = beta
-        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(board), board)
+        current_pos_moves = order_moves(LegalMoveGenerator.load_moves(board), board, m=m)
         cls.mate_found = False
         for move in current_pos_moves:
             board.make_move(move)
-            evaluation = -cls.alpha_beta_opt(board, cls.search_depth - 1, 0, beta, alpha)
+            match algorithm:
+                case "optalphabeta":
+                    evaluation = -cls.alpha_beta_opt(board, cls.search_depth - 1, 0, beta, alpha, m)
+                case "alphabeta":
+                    evaluation = cls.alpha_beta(board, cls.search_depth - 1, beta, alpha)
+                case "minimax":
+                    evaluation = cls.minimax(board, cls.search_depth - 1)
             board.reverse_move()
             if evaluation > best_eval:
                 best_eval = evaluation
                 best_move = move
             if cls.mate_found:
                 return best_move
-        
         return best_move
 
 
     @classmethod
-    def alpha_beta_opt(cls, board: Board, depth: int, plies: int, alpha: int, beta: int):
+    def alpha_beta_opt(cls, board: Board, depth: int, plies: int, alpha: int, beta: int, m):
         """
-        Optimized alpha-beta search with more elaborate optimizations
+        Optimized alpha-beta search with move ordering
         TODO: Transposition tables
         """
         if not depth:
             # return cls.quiescene(alpha, beta)
+            cls.evaluated_nodes += 1
             return Evaluation.pst_shef(board)
 
         # if plies > 0:
-        #     if cls.board.is_repetition():
+        #     if board.is_repetition():
         #         return 0
             # alpha = max(alpha, -cls.checkmate_value + plies)
             # beta = min(beta, cls.checkmate_value - plies)
             # if alpha >= beta:
             #     return alpha
 
-        moves = order_moves(LegalMoveGenerator.load_moves(board), board)
+        moves = order_moves(LegalMoveGenerator.load_moves(board), board, m=m)
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         num_moves = len(moves)
@@ -124,13 +137,13 @@ class Dfs:
         for move in moves:
             # traversing down the tree
             board.make_move(move)
-            evaluation = -cls.alpha_beta_opt(board, depth - 1, plies + 1, -beta, -alpha)
+            evaluation = -cls.alpha_beta_opt(board, depth - 1, plies + 1, -beta, -alpha, m)
             board.reverse_move()
 
             # Move is even better than best eval before,
             # opponent won't choose this move anyway so PRUNE YESSIR
             if evaluation >= beta:
-                # cls.cutoffs += 1
+                cls.cutoffs += 1
                 return beta # Return -alpha of opponent, which will be turned to alpha in depth - 1
             # Keep track of best move for moving color
             alpha = max(evaluation, alpha)
@@ -138,7 +151,7 @@ class Dfs:
         return alpha
         
     @classmethod
-    def quiescene(cls, alpha, beta):
+    def quiescene(cls, board: Board, alpha, beta):
         """
         A dfs-like algorithm used for chess searches, only considering captureing moves, thus helping the conventional
         search with misjudgment of situations when significant captures could take place in a depth below the search depth.
@@ -147,26 +160,27 @@ class Dfs:
         # Evaluate current position before doing any moves, so a potentially good state for non-capture moves
         # isn't ruined by bad captures
         # cls.evaluated_positions += 1
-        eval = Evaluation.pst_shef()
+        eval = Evaluation.pst_shef(board)
+        cls.evaluated_nodes += 1
         # Typical alpha beta operations
         if eval >= beta:
             return beta
         alpha = max(eval, alpha)
 
-        moves = order_moves_pst(LegalMoveGenerator.load_moves(generate_quiets=False), cls.board)
+        moves = order_moves_pst(LegalMoveGenerator.load_moves(generate_quiets=False), board)
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
-        if cls.board.is_terminal_state():
-            status = cls.board.get_status()
+        if board.is_terminal_state():
+            status = board.get_status()
             if status:
                 return -cls.checkmate_value
             if status == 0: 
                 return cls.draw
 
         for move in moves:
-            cls.board.make_move(move)
+            board.make_move(move)
             evaluation = -cls.quiescene(-beta, -alpha)
-            cls.board.reverse_move()
+            board.reverse_move()
             # Move is even better than best eval before,
             # opponent won't choose move anyway so PRUNE YESSIR
             if evaluation >= beta:
@@ -178,7 +192,7 @@ class Dfs:
 
 
     @classmethod
-    def minimax(cls, depth):
+    def minimax(cls, board: Board, depth):
         """
         A brute force dfs-like algorithm traversing every node of the game's 
         possible-outcome-tree of given depth
@@ -187,32 +201,33 @@ class Dfs:
         """
         # leaf node, return the static evaluation of current board
         if not depth:
-            return cls.board.shef()
-
+            cls.evaluated_nodes += 1
+            return Evaluation.pst_shef(board)
+        
         moves = LegalMoveGenerator.load_moves()
         
         # Check- or Stalemate, meaning game is lost
         # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
         if not len(moves):
-            return float("-inf")
+            return -cls.checkmate_value
 
         best_evaluation = float("-inf")
         for move in moves:
-            cls.searched_nodes += 1
-            cls.board.make_move(move)
-            evaluation = -cls.minimax(depth - 1)
+            board.make_move(move)
+            evaluation = -cls.minimax(board, depth - 1)
             best_evaluation = max(evaluation, best_evaluation)
-            cls.board.reverse_move()
+            board.reverse_move()
 
         return best_evaluation
     
     @classmethod
-    def alpha_beta(cls, depth, alpha, beta):
+    def alpha_beta(cls, board: Board, depth, alpha, beta):
         """
         Minimax with alpha-beta pruning
         """
         if not depth:
-            return cls.board.shef()
+            cls.evaluated_nodes += 1
+            return Evaluation.pst_shef(board)
 
         moves = LegalMoveGenerator.load_moves()
         # Check- or Stalemate, meaning game is lost
@@ -221,13 +236,13 @@ class Dfs:
             return float("-inf")
 
         for move in moves:
-            cls.searched_nodes += 1
-            cls.board.make_move(move)
-            evaluation = -cls.alpha_beta(depth - 1, -beta, -alpha)
-            cls.board.reverse_move()
+            board.make_move(move)
+            evaluation = -cls.alpha_beta(board, depth - 1, -beta, -alpha)
+            board.reverse_move()
             # Move is even better than best eval before,
             # opponent won't choose move anyway so PRUNE YESSIR
             if evaluation >= beta:
+                cls.cutoffs += 1
                 return beta
             alpha = max(evaluation, alpha)
         return alpha

@@ -1,5 +1,5 @@
 """
-Copyright (C) 2021-2022 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
+Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 def main():
@@ -12,24 +12,25 @@ def main():
     board = Board(fen, play_as_red)
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
+
+    printer = pprint.PrettyPrinter(2)
+    printer.pprint(board.piecelist_to_bitboard())
+    printer.pprint(board.piece_lists)
+    printer.pprint(board.zobrist_key)
+    # run_benchmarks(board)
     # # print(sum(LegalMoveGenerator.bitvector_legal_moves()))
-    ui = UI(board)
-    m = CNN()
+    # m = CNN()
     # m.load_checkpoint()
-    # # print(m.predict(board.piecelist_to_bitboard(adjust_perspective=True)))
-    sp = SelfPlay(m, board)
-    sp.load_training_data()
+    # sp = SelfPlay(m, board)
+    # sp.load_training_data()
     # sp.train()
-    # mcts = MCTS(m)
-    # bb = board.piecelist_to_bitboard(adjust_perspective=True)
-    # pi = mcts.get_probability_distribution(board, list(bb), tau=1)
-    # print(pi)
     
     # ------To run perft search------
     # start_search(board)
     # -------------------------------
-
+    ui = UI(board)
     ui.run()
+
 
 if __name__ == "__main__":
     import pygame
@@ -38,6 +39,8 @@ if __name__ == "__main__":
     from core.engine.UI import UI
     from core.utils import start_search
     from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlay
+    from core.visualizations.move_ordering_analysis import run_benchmarks
+    import pprint
     import logging
     logging.basicConfig(level=logging.DEBUG)
 
