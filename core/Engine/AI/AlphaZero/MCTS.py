@@ -117,7 +117,7 @@ class MCTS():
 
         # No leaf node, traverse tree
         valids = self.Vs[s]
-        cur_best = -float('inf')
+        best = -float('inf')
         best_act = -1
 
         # pick the action with the highest upper confidence bound
@@ -132,8 +132,8 @@ class MCTS():
                 q = 0
                 u = self.config.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + self.config.noise_eps)  # Q = 0
 
-            if q + u > cur_best:
-                cur_best = u
+            if q + u > best:
+                best = u
                 best_act = a
 
         a = best_act
@@ -166,7 +166,7 @@ class MCTS():
         :param bitboards: bitboards of current state
         """
         for i in range(self.config.simulations_per_move):
-            # print(f"starting simulation n. {i}")
+            logger.info(f"starting simulation n. {i}")
             self.search(board, is_root=True, bitboards=bitboards, moves=moves)
 
         s = board.zobrist_key

@@ -4,7 +4,9 @@ You may use, distribute and modify this code under the terms of the GNU General 
 """
 import pygame
 from core.engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board#, NLPCommandHandler
-from core.engine.AI.ABMM import Dfs
+from core.engine.AI.ABMM import Dfs, AlphaBetaAgent
+from core.engine.AI.AlphaZero import AlphaZeroAgent
+from core.engine.AI.mixed_agent import AlphaBetaZeroAgent
 from core.engine.AI.SLEF import TrainingDataCollector
 from core.utils import BoardUtility
 from core.engine.config import UIConfig
@@ -32,7 +34,7 @@ class Button:
 
 
 class UI:
-    def __init__(self, board:Board):
+    def __init__(self, board: Board, agent: str="ab"):
         self.window = pygame.display.set_mode((UIConfig.WIDTH, UIConfig.HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("JOE MAMA")
         self.board = board
@@ -64,7 +66,16 @@ class UI:
         # Data collector for Self-Learning-Evaluation-Function (SLEF)
         self.training_data_generator = TrainingDataCollector(board)
 
-        self.search = time_benchmark(Dfs.search)
+        # self.search = time_benchmark(Dfs.search)
+        # self.agent = AlphaBetaZeroAgent()
+        self.select_agent(agent)
+
+    def select_agent(self, agent_str: str):
+        match agent_str.lower():
+            case "ab": self.agent = AlphaBetaAgent()
+            case "az": self.agent = AlphaZeroAgent()
+            case "abz": self.agent = AlphaBetaZeroAgent()
+
     def render_piece(self, color, piece_type, coords):
         self.window.blit(self.PIECES_IMGS[color * 7 + piece_type], coords)
     
@@ -272,7 +283,8 @@ class UI:
         LegalMoveGenerator.load_moves()
 
     def make_AI_move(self):
-        AI_move = self.search(self.board, 250)
+        # AI_move = self.search(self.board, 250)
+        AI_move = self.agent.choose_action(self.board)
         if AI_move == None:
             return
         self.update_move_str(AI_move)
@@ -334,6 +346,8 @@ class UI:
             if event.type == pygame.MOUSEBUTTONUP:
                 move_succes = self.make_human_move()
                 if not move_succes or not self.activate_ai:
+                    continue
+                if GameManager.gameover:
                     continue
                 self.make_AI_move()
 

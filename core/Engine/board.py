@@ -170,7 +170,10 @@ class Board:
         dist_y = square_1 // 9 - square_2 // 9
         return dist_x, dist_y
 
-    def update_zobrist(self, moved_piece_type, captured_piece, moved_from, moved_to):
+    def lazo_update(self, moved_piece_type, captured_piece, moved_from, moved_to):
+        """
+        Lazy zobrist, modifies exisiting zobrist key instead of creating a new one
+        """
         if captured_piece:
             cap_piece_type = Piece.get_type(captured_piece)
             self.zobrist_key ^= ZobristHashing.table[self.opponent_side][cap_piece_type][moved_to]
@@ -238,7 +241,7 @@ class Board:
         self.squares[moved_from] = 0
 
         # Update zobrist key
-        self.update_zobrist(piece_type, captured_piece, *move)
+        self.lazo_update(piece_type, captured_piece, *move)
         if not search_state:
             self.repetition_history.add(self.zobrist_key)
         # print(self.zobrist_key)
@@ -272,7 +275,7 @@ class Board:
         self.plies = self.plies_history.pop() if piece_type == Piece.pawn else self.plies - 1
 
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
-        self.update_zobrist(piece_type, captured_piece, previous_square, moved_to)
+        self.lazo_update(piece_type, captured_piece, previous_square, moved_to)
         if not search_state:
             self.repetition_history.pop()
             return 

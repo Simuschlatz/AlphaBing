@@ -13,10 +13,10 @@ def main():
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
 
-    printer = pprint.PrettyPrinter(2)
-    printer.pprint(board.piecelist_to_bitboard())
-    printer.pprint(board.piece_lists)
-    printer.pprint(board.zobrist_key)
+    # printer = pprint.PrettyPrinter(2)
+    # printer.pprint(board.piecelist_to_bitboard())
+    # print(board.piece_lists)
+    # printer.pprint(board.zobrist_key)
     # run_benchmarks(board)
     # # print(sum(LegalMoveGenerator.bitvector_legal_moves()))
     # m = CNN()
@@ -28,22 +28,34 @@ def main():
     # ------To run perft search------
     # start_search(board)
     # -------------------------------
-    ui = UI(board)
+    if len(sys.argv) > 1:
+        agent = sys.argv[1]
+    else: agent = "ab"
+
+    if agent not in {"ab", "az", "abz"}:
+        logger.error(f"Unknown agent '{agent}'. Selected Agent must be in 'ab', 'az', 'abz'.")
+        logger.info("Using Alpha-Beta agent as default.")
+        agent = "ab"
+    logger.info(f"You selected agent '{agent}'.")
+
+    ui = UI(board, agent=agent)
     ui.run()
 
 
 if __name__ == "__main__":
     import pygame
     pygame.init()
+    import pprint
+    import sys
     from core.engine import Board, LegalMoveGenerator, Clock
     from core.engine.UI import UI
     from core.utils import start_search
     from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlay
     from core.visualizations.move_ordering_analysis import run_benchmarks
-    import pprint
     import logging
     logging.basicConfig(level=logging.DEBUG)
 
+    logger = logging.getLogger(__name__)
     INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
     INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
     main()

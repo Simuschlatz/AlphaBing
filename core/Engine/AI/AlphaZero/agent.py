@@ -15,12 +15,13 @@ class AlphaZeroAgent(Agent):
         nnet = CNN()
         self.mcts = MCTS(nnet)
     
-    def get_mcts_pi(self, board):
+    def get_mcts_pi(self, board: Board):
+        print(board)
         bitboards = list(board.piecelist_to_bitboard(adjust_perspective=True))
         pi = self.mcts.get_probability_distribution(board, bitboards=bitboards)
         return pi
 
-    def choose_action(self, board: Board, pi=None):
-        pi = list(pi) or self.get_mcts_pi
+    def choose_action(self, board: Board, pi=[]):
+        pi = list(pi) or self.get_mcts_pi(board)
         action = self.mcts.best_action_from_pi(board, pi)
         return action

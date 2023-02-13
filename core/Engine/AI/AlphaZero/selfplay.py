@@ -57,11 +57,11 @@ class SelfPlay:
 
             board.make_move(move, search_state=False)
             plies += 1
-            logger.debug(f"plies: {plies}")
+            logger.debug(f"plies of current episode: {plies}")
             moves = LegalMoveGenerator.load_moves(board)
             status = board.get_terminal_status(len(moves))
             if status == -1: continue
-            # print("GAME ENDED")
+            logger.info("self-play episode ended")
             # negative outcome for every example where the side was current (mated) moving side
             if training_examples is None:
                 return [[ex[0], ex[1], 1 * (1 - 2 * ex[2] == board.moving_side)] for ex in training_data]
@@ -89,22 +89,20 @@ class SelfPlay:
             logger.debug(f"starting self-play iteration no. {i}")
             iteration_training_data = []
 
-            # if parallel:
-            #     iteration_data = mp.Manager().list() # Shared list
-            #     jobs = [mp.Process(target=self.execute_episode(moves, iteration_data, deepcopy(self.board), deepcopy(self.mcts))) for _ in range(PlayConfig.self_play_eps)]
-            #     for processes in tqdm(self.batch(jobs, PlayConfig.max_processes)):
-            #         print("------starting process-------")
-            #         for p in processes: p.start()
-            #         for p in processes: p.join()
-            # else:
-            #     for _ in tqdm(range(PlayConfig.self_play_eps), desc="Episodes"):
-            #         print("Starting episode...")
-            #         self.mcts = MCTS(self.nnet)
-            #         self.board = Board(fen)
-            #         eps_training_data = self.execute_episode(moves)
-            #         iteration_training_data.extend(eps_training_data)
-
-
+            if parallel:
+                iteration_data = mp.Manager().list() # Shared list
+                jobs = [mp.Process(target=self.execute_episode(moves, iteration_data, deepcopy(self.board), deepcopy(self.mcts))) for _ in range(PlayConfig.self_play_eps)]
+                for processes in tqdm(self.batch(jobs, PlayConfig.max_processes)):
+                    print("------starting process-------")
+                    for p in processes: p.start()
+                    for p in processes: p.join()
+            else:
+                for _ in tqdm(range(PlayConfig.self_play_eps), desc="Episodes"):
+                    print("Starting episode...")
+                    self.mcts = MCTS(self.nnet)
+                    self.board = Board(fen)
+                    eps_training_data = self.execute_episode(moves)
+                    iteration_training_data.extend(eps_training_data)
                 
 
             self.training_data.append(iteration_training_data)
@@ -118,8 +116,8 @@ class SelfPlay:
 
             self.save_training_data()
             print(np.asarray(train_examples, dtype=object).shape)
-            # self.nnet.train(train_examples)
-            # self.nnet.save_checkpoint()
+            self.nnet.train(train_examples)
+            self.nnet.save_checkpoint()
             
     def save_training_data(self, folder="core/checkpoints", filename="examples"):
         if not os.path.exists(folder):

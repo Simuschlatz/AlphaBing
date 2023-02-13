@@ -27,13 +27,12 @@ class Dfs:
 
     @classmethod
     @time_benchmark
-    def multiprocess_search(cls, board, batch: bool=True, get_evals=False, moves=None) -> tuple:
+    def multiprocess_search(cls, board, batch: bool=False, get_evals=False, moves=None) -> tuple:
         """
         Runs a search for board position leveraging multiple processors.
         :return: best move from current position
         :param batch: determines if all cpu cores are leveraged
-
-        :param get_evals: if True, search returns a hash map of ordered
+        :param get_evals: if True, search returns a hash map of moves ordered by their value
         """
         # shared dict
         move_evals = mp.Manager().dict()
@@ -64,7 +63,7 @@ class Dfs:
         :param move_evals: dict shared between child processes
         """
         board.make_move(move)
-        evaluation = -cls.alpha_beta_opt(board, depth-1, 1, cls.negative_infinity, cls.positive_infinity)
+        evaluation = -cls.alpha_beta_opt(board, depth-1, 1, cls.negative_infinity, cls.positive_infinity, 250)
         board.reverse_move()
         move_evals[move] = evaluation
 
