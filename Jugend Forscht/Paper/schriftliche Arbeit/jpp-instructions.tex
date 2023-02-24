@@ -249,13 +249,13 @@ Ein weiteres Problem bleibt aber. Im Fall \textit{„X steht auf einem starken F
 \end{figure}
 
 \subsection{MiniMax}
-In meiner Recherche über einfache Spiel-KIs stieß ich auf den populären und weitverbreiteten MiniMax-Algorithmus. Dieser ist zwar simpel und ineffizient, bildet aber das konzeptionelle Fundament selbst für Programme wie Stockfish.
+In meiner Recherche über einfache Spiel-KIs stieß ich auf den populären und weitverbreiteten MiniMax-Algorithmus \cite{minimax}. Dieser ist zwar simpel und ineffizient, bildet aber das konzeptionelle Fundament selbst für Programme wie Stockfish.
 Es wird angenommen, dass jeder Spieler an jeder Situation den optimalen Zug spielt. Das bedeutet, dass ein Spieler den erwarteten Gewinn laut der SHEF maximiert und der Gegner versucht, diesen zu minimieren. So werden die Blätter (unterste Knoten) des Such-Baums mit den Evaluationen der jeweiligen Positionen gekennzeichnet und die restlichen Knoten werden rekursiv durch Auswahl des Zuges mit dem höchsten (für max) bzw. dem niedrigsten (für min) Gewinn gekennzeichnet. Ich habe eine elegantere Methode genutzt, wo jeder Spieler den besten erreichten Wert seines Gegners mit -1 multipliziert, denn ein guter Wert aus Perspektive des Gegners ist ein schlechter Wert für sich selbst. Somit kann auf unterschiedliche Operationen basierend auf dem Spieler verzichtet und immer die \textit{max()} Funktion genutzt werden.
 
 Ich implementierte diesen Algorithmus, erzielte jedoch nicht mein Ziel, hochperformante Algorithmen zu schreiben. Die Suche dauerte schon für drei Züge in die Zukunft rund zwanzig Sekunden. Dies lag daran, dass Minimax-Algorithmen eine exponentielle Zeit-Komplexität von $O(b^d)$ haben, wobei $b$ der Ausdehnungsfaktor und $d$ die Tiefe (en. depth) der Suche ist.
 
 \subsection{Alpha-Beta-Pruning}
-Ich fand heraus, dass Alpha-Beta-Pruning die Leistung des Minimax-Algorithmus deutlich verbessert, indem es unbrauchbare Zweige des Such-Baumes frühzeitig abschneidet. Dies wird erreicht, indem für jeden Knoten im Baum zwei Werte, $\alpha$ und $\beta$, verwendet werden. $\alpha$ repräsentiert den besten Wert, den der aktuelle Spieler erreichen kann, und $\beta$ repräsentiert den besten Wert, den der gegnerische Spieler erreichen kann. Wenn $\alpha \geq \beta$ ist, wird der Rest des Zweigs abgeschnitten, da der Gegner den Knoten mit Wert $a$ nicht wählen wird und der aktuelle Spieler keine Möglichkeit hat, ein besseres Ergebnis zu erzielen.
+Ich fand heraus, dass Alpha-Beta-Pruning \cite{abp} die Leistung des Minimax-Algorithmus deutlich verbessert, indem es unbrauchbare Zweige des Such-Baumes frühzeitig abschneidet. Dies wird erreicht, indem für jeden Knoten im Baum zwei Werte, $\alpha$ und $\beta$, verwendet werden. $\alpha$ repräsentiert den besten Wert, den der aktuelle Spieler erreichen kann, und $\beta$ repräsentiert den besten Wert, den der gegnerische Spieler erreichen kann. Wenn $\alpha \geq \beta$ ist, wird der Rest des Zweigs abgeschnitten, da der Gegner den Knoten mit Wert $a$ nicht wählen wird und der aktuelle Spieler keine Möglichkeit hat, ein besseres Ergebnis zu erzielen.
 
 Die Verwendung von $\alpha$ und $\beta$ ermöglicht es dem Algorithmus, schneller Entscheidungen zu treffen, indem unbrauchbare Zweige des Entscheidungsbaums und der damit verbundenen untergeordneten Baum-Struktur des Entscheidungsbaumes frühzeitig abgeschnitten werden. Dies führt zu einer signifikanten Reduzierung der Anzahl der Knoten, die untersucht werden müssen und damit zu einer deutlichen Leistungssteigerung. Die Untergrenze der Zeit-Komplexität liegt nur noch bei $\Omega(b^{d/2})$
 
@@ -282,7 +282,7 @@ Ich machte es mir demnach zum Ziel, einen weiteren großen Schritt zu gehen und 
 
 Zu Beginn hatte ich vor, große Datenbanken an Spielaufzeichnungen von Profis zu nutzen und damit ein neuronales Netzwerk zu trainieren. Das Problem war aber, dass diese nicht existieren, weshalb der Algorithmus selber in der Lage sein muss, diese Trainingsdaten zu generieren. Somit soll auch verhindert werden, dass das neuronale Netzwerk nur lernt, Menschen zu imitieren und kein neues Verständnis über das Spiel erlangt und eine Art Kreativität entwickelt. Zur Verfügung stehende Mittel sind dabei nur die Spielregeln. In anderen Worten: Etwa wie wir Menschen soll ein Deep Convolutional Neural Network durch eine Vielzahl von Spielen gegen sich selbst, tabula rasa, Xiangqi meistern. 
 
-Dafür recherchierte ich über AlphaZero von Deepmind und fand heraus, wie es AlphaZero gelang, mit einem generischen Reinforcement Learning Algorithmus nur durch \textit{Self-Play} mehrere strategische Brettspiele zu meistern. Dies beseitigte vor allem das Bedürfnis zu professionellem Wissen und menschlicher Arbeit, um weitere domänenspezifischen Optimierungen zu treffen und löste weitere Probleme einer Minimax-basierten Suche.
+Dafür recherchierte ich über AlphaGoZero \cite{ag0} und AlphaZero \cite{a0} von Deepmind und fand heraus, wie es AlphaZero gelang, mit einem generischen Reinforcement Learning Algorithmus nur durch \textit{Self-Play} mehrere strategische Brettspiele zu meistern. Dies beseitigte vor allem das Bedürfnis zu professionellem Wissen und menschlicher Arbeit, um weitere domänenspezifischen Optimierungen zu treffen und löste weitere Probleme einer Minimax-basierten Suche.
 Ich schaute mir Präsentationen an und  las den Forschungsbericht, in dem die grundsätzlichen Ideen grob beschrieben wurden. Es ist aber zu beachten, dass z.B. die Architektur des neuronalen Netzwerks und genauere Informationen zum Reinforcement Learning Algorithmus Geschäftsgeheimnisse sind und darüber hinaus klar angedeutet wurde, dass normale Hardware sie bei weitem nicht handhaben kann. Dieser Teil des Projekts erforderte sehr viel intensives Nachdenken, weil ich einerseits nur einen groben vorgegebenen Rahmen hatte und die Details in der Implementierung des Algorithmus selber erschließen und ihn darüber hinaus modifizieren musste, sodass er auf normaler Hardware lauffähig ist.
 
 \begin{figure}
@@ -303,7 +303,7 @@ Meine Architektur besteht aus zwei Hauptkomponenten:
 Residual-Schichten ermöglichen es dem Netzwerk statt der Ausgabe den Residual, also den Unterschied zwischen Eingabe und gewünschter Ausgabe, zu lernen. Dadurch wird das Problem des verschwindenden Gradienten behoben. Residual-Schichten erleichtern auch das Training sehr tiefer Netzwerke, da sie es ermöglichen, neue Schichten hinzuzufügen, ohne die Leistung zu verschlechtern. 
 
 \subsection{MCTS}
-Der Monte-Carlo Tree Search (MCTS) Algorithmus wird aus gleichen Gründen wie beim Zuggenerator abstrahiert. Wichtig ist, dass die Suche eine neue, informierte und somit genauere Wahrscheinlichkeitsverteilung $\pi$ mithilfe des aktuellen CNN $f_\theta$ generiert, welche dann genutzt werden, um die Parameter $\theta$ anzupassen. Ich habe mir erschlossen, dass MCTS auf der Idee basiert, den menschlichen Gedankenverlauf zu simulieren.
+Die Implementierung des Monte-Carlo Tree Search (MCTS) Algorithmus \cite{mcts} wird aus gleichen Gründen wie beim Zuggenerator abstrahiert. Wichtig ist, dass die Suche eine neue, informierte und somit genauere Wahrscheinlichkeitsverteilung $\pi$ mithilfe des aktuellen CNN $f_\theta$ generiert, welche dann genutzt werden, um die Parameter $\theta$ anzupassen. Ich habe mir erschlossen, dass MCTS auf der Idee basiert, den menschlichen Gedankenverlauf zu simulieren.
 
 Der Algorithmus besteht aus vier Schritten: Auswahl, Erweiterung, Simulation und Backpropagation.
 \begin{enumerate}
@@ -397,6 +397,11 @@ Ich lernte auch, dass diese neuen Konzepte nur durch kritisches Hinterfragen und
 Es war ein langer Prozess vom wiederholten Kopfzerbrechen und Scheitern, der mir beibrachte, dass das Verstehen von komplexen Themen manchmal vielleicht gar nicht so unmöglich ist wie es scheint. Mit etwas Bescheidenheit, der Akzeptanz des eigenen Unwissens und sehr viel Offenheit zum Lernen kann man diese Konzepte nicht nur verstehen und umsetzen, sondern auch erweitern, auf Ihnen aufbauen, vielleicht anderen Menschen helfen und auf dem Weg zu einem besseren Informatiker werden.
 
 \newpage
+
+\bibliographystyle{jpp}
+
+
+\bibliography{jpp-instructions}
 
 \section{Quellen- und Literaturverzeichnis}
 \url{https://github.com/Simuschlatz/CheapChess}, 15.01.23, Simon Ma, CheapChess Quellcode für detaillierte Beschreibungen der angewandten Methoden
