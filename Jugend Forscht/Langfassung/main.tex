@@ -1,5 +1,14 @@
+\documentclass[
+  manuscript=article,  %% article (default), rescience, data, or software
+  layout=publish,  %% preprint (for submission) or publish (for publisher only)
+  year=2023,
+  volume=1,
+]{extra/joas}
 
-\documentclass{jpp}
+% --- blew is the area for authors ---
+
+
+\usepackage[german]{babel}
 \usepackage{graphicx}
 % \usepackage{epstopdf, epsfig}
 \graphicspath{ {imgs/} }
@@ -8,53 +17,54 @@
 \usepackage{amsmath}
 \usepackage{blindtext}
 \usepackage{titlesec}
+\usepackage{amsbsy}
+\usepackage{caption}
 
+% specify the .bib file for references
+\addbibresource{reference.bib} 
+
+% Make sure your article tile is within 12 words
 \title{Das Meistern von chinesischem Schach mit autodidaktischem Reinforcement Learning}
 
-\author{Simon Ma (15)\aff{1}
-  \corresp{\email{simon.mama07@gmail.com}}
-  }
-
-\affiliation{\aff{1}Schillerschule Hannover,
-Ebellstr. 15, 30629 Hannover, Germany}
-
+\author{Simon Ma (15)}
+\affiliation{Schillerschule Hannover, Ebellstr. 15, 30629 Hannover, Germany}
+\email{simon.ma@iserv-schillerschule.de}
 
 \begin{document}
+\begin{abstract}
+    Xiangqi, chinesisches Schach, ist ein unvorstellbar komplexes Spiel, dessen Meisterung Jahrzehnte dauert - für einen Menschen. CheapChess ist meine Xiangqi-Applikation, mit Fokus auf einer selbstlernenden KI, die sich um die Frage dreht, wie sich die ressourcenintensiven existierenden Programme optimieren und sich komplexe Probleme kostengünstig lösen lassen. Zentrale Schwerpunkte lagen neben der Entwicklung eines funktionsfähigen Xiangqi Environments vor allem auf dem Entwurf und der Optimierung eines autodidaktischen Reinforcement Learning Algorithmus und dessen Erweiterung mit einem hochperformanten Suchalgorithmus, alles mit limitierter Hardware. Dafür entwarf ich neue Konzepte und es entstand eine flexibler, starke Spiel-KI.
+\end{abstract}
+
+\begin{tabular}{l p{12cm}}
+
+    Projektbetreuerin: & Birgit Ziegenmeyer                                                    \\
+
+    Institution:       & Schillerschule Hannover                                               \\
+
+    Thema des Projektes:
+                       & Die Entwicklung eines autodidaktischen Reinforcement Learning 
+
+    Algorithmus erweitert mit einem hochperformanten Suchalgorithmus um chinesisches Schach 
+    zu meistern                                                                                \\
+
+    Fachgebiet:        & Mathematik/Informatik                                                 \\
+
+    Wettbewerbssparte: & Jugend Forscht                                                        \\
+
+    Bundesland:        & Niedersachsen                                                         \\
+
+    Wettbewerbsjahr:   & 2023                                                                  \\
+\end{tabular}
+
+\newpage
+
 \begin{figure}
 \centering
-\includegraphics[width={0.5\textwidth}]{imgs/loogo.png}
+\includegraphics[width={0.5\textwidth}]{imgs/loogo.jpg}
 \end{figure}
 \maketitle
 
-
-Projektbetreuerin: Birgit Ziegenmeyer
-
-Institution: Schillerschule Hannover
-
-Thema des Projektes:
-
-Die Entwicklung eines autodidaktischen Reinforcement Learning 
-
-Algorithmus erweitert mit einem hochperformanten Suchalgorithmus 
-
-um chinesisches Schach zu meistern
-
-Fachgebiet: Mathematik/Informatik
-
-Wettbewerbssparte: Jugend forscht
-
-Bundesland: Niedersachsen
-
-Wettbewerbsjahr: 2023
-
-\newpage
-
 \tableofcontents
-
-\newpage
-
-\section{Kurzfassung}
-Xiangqi, chinesisches Schach, ist ein unvorstellbar komplexes Spiel, dessen Meisterung Jahrzehnte dauert - für einen Menschen. CheapChess ist meine Xiangqi-Applikation, mit Fokus auf einer selbstlernenden KI, die sich um die Frage dreht, wie sich die ressourcenintensiven existierenden Programme optimieren und sich komplexe Probleme kostengünstig lösen lassen. Zentrale Schwerpunkte lagen neben der Entwicklung eines funktionsfähigen Xiangqi Environments vor allem auf dem Entwurf und der Optimierung eines autodidaktischen Reinforcement Learning Algorithmus und dessen Erweiterung mit einem hochperformanten Suchalgorithmus, alles mit limitierter Hardware. Dafür entwarf ich neue Konzepte und es entstand eine flexibler, starke Spiel-KI.
 
 \newpage
 \section{Einleitung}\label{sec:einleitung}
@@ -71,23 +81,25 @@ So entwarf ich eine Python Xiangqi Applikation und entwickelte einen effizienten
 Meine Arbeit soll einerseits eine radikale Reduktion der benötigten Hardware ermöglichen, andererseits den Stärken einer Methode erlauben, für die Schwächen der anderen zu kompensieren und darüber hinaus zu neuen Einblicken in die taktische Welt von Xiangqi führen.
 
 Xiangqi, auch bekannt als chinesisches Schach, ist ein strategisches Brettspiel, das tief in der chinesischen Kultur verwurzelt ist und seit dem neunten Jahrhundert überall in China gespielt wird. Seinen historischen Ursprung findet das Spiel schon um 200 v.Chr. , als sich zwei Dynastien vor einem der bedeutendsten Kämpfe der chinesischen Geschichte gegenüberstanden. Die Figuren sollen die zwei Armeen darstellen und der horizontale Barren in der Mitte des Feldes ist ein Symbol für den Fluss, der die Armeen auf dem Schlachtfeld trennte. 
+
 \begin{figure}
   \centering
   \begin{minipage}{0.49\textwidth}
     \includegraphics[width=\textwidth]{imgs/board.png}
-    \caption{Die Standardaufstellung eines Xiangqi-Spiels, veranschaulicht mit dem GUI meiner Applikation}
-    \label{fig:board}
   \end{minipage}
   \hfill
   \begin{minipage}{0.49\textwidth}
     \includegraphics[width=\textwidth]{imgs/MovementOfHorsePiece.png}
     \caption{Züge des Pferdes}
-    \label{fig:Horse}
   \end{minipage}
+  \captionsetup{justification=centering}
+  \caption{Die Standardaufstellung eines Xiangqi-Spiels, veranschaulicht mit dem GUI meiner Applikation (links)
+  Züge des Pferdes (rechts)}
+  \label{fig:horseandBoard}
 \end{figure}
 \section{Einführung zu Xiangqi}\label{sec:introtoxiangqi}
 Das Spiel ist in einigen Aspekten ähnlich wie Schach, weist aber auch Unterschiede auf. So wird es auf einem $9 \times 10$ Brett gespielt und es gibt andere Figuren.
-Das Brett besteht aus $9 \times 10$ Linien und Figuren stehen auf den Kreuzungen dieser Linien statt auf den Feldern. Um dem König herum ein Palast, welcher mit zusätzlichen Linien markiert ist \ref{fig:board}.
+Das Brett besteht aus $9 \times 10$ Linien und Figuren stehen auf den Kreuzungen dieser Linien statt auf den Feldern. Um dem König herum ein Palast, welcher mit zusätzlichen Linien markiert ist \ref{fig:horseandBoard}.
 
 
 Der Feldherr / König geht immer nur einen Schritt waagerecht oder senkrecht. Er darf den Palast nie verlassen und eine Rochade gibt es nicht. Die beiden gegnerischen Feldherren dürfen sich niemals ohne einen dazwischen stehenden Stein auf einer Linie gegenüberstehen. Der „Todesblick“ der Feldherrn verbietet dies, was besonders im Endspiel genutzt werden kann, um ein Patt (in Xiangqi kein Remis, sondern ein Sieg) zu erzwingen.
@@ -96,7 +108,7 @@ Die Leibwächter / Berater gehen immer nur einen Schritt diagonal auf ein unmitt
 
 Die Elefanten gehen genau zwei Schritte in diagonaler Richtung. Falls das zwischenliegende (übersprungene) Feld besetzt ist, wird der Zug geblockt. Darüber hinaus dürfen die Elefanten niemals den Fluss überqueren.
 
-Die Pferde entsprechen im Wesentlichen den Springern des internationalen Schachs, können jedoch ebenfalls blockiert werden. Ein Pferd bewegt sich in seinem Zug in zwei Schritten: zuerst ein Feld waagerecht oder senkrecht in beliebiger Richtung und anschließend ein Feld diagonal. Das Pferd wird blockiert, wenn eine andere Figur auf dem zuerst zu betretenden Feld steht \ref{fig:Horse}.
+Die Pferde entsprechen im Wesentlichen den Springern des internationalen Schachs, können jedoch ebenfalls blockiert werden. Ein Pferd bewegt sich in seinem Zug in zwei Schritten: zuerst ein Feld waagerecht oder senkrecht in beliebiger Richtung und anschließend ein Feld diagonal. Das Pferd wird blockiert, wenn eine andere Figur auf dem zuerst zu betretenden Feld steht \ref{fig:horseandBoard}.
 
  Der Turm / Wagen entspricht der den Türmen des europäischen Schachs. 
  
@@ -122,29 +134,29 @@ Die interne Brettdarstellung ist die möglichst effiziente Repräsentation des S
 \item Zobrist-Hash-Key für die Kodierung des Spielzustandes in einen 8 Byte Integer
 \end{enumerate}
 
-\begin{figure}
+  
+\subsection{Zobrist-Hashing und LaZo}{\label{subsec:Zobrist}}
+Für die folgenden KI-Suchalgorithmen ist es sehr wichtig, Spielzustände einfach und effizient darzustellen, z.B. für den schnellen Zugriff auf positionsspezifische Daten in einer Hash-Table. Ich fand heraus, dass der \textit{Zobrist-Hashing} Algorithmus die Kodierung eines Spielzustands in einen einzigen n-Bit Integer ermöglicht. \ref{fig:zobristVisLaZo} Ich wählte für die Größe des Hash-Schlüssels 64 Bits.
+Aufgrund der  $2^{64}$ möglichen individuellen Hash-Werten sind Hash-Kollisionen besonders unwahrscheinlich, was Zobrist-Hashing zu einer sehr zuverlässigen Methode macht.
+
+ \begin{figure}
     \centering
     \begin{minipage}{0.44\textwidth}
       \includegraphics[width=\textwidth]{imgs/zobristVis.png}
-      \caption{Simplifizierte Zobrist Hashing Visualisierung (Bezug auf \ref{fig:repr})}
-      \label{fig:zobristHashing}
     \end{minipage}
     \hfill
-    \begin{minipage}{0.55\textwidth}
+    \begin{minipage}{0.49\textwidth}
       \includegraphics[width=\textwidth]{imgs/zobristVsLazo.png}
-      \caption{Unterschiedliche Vorgehensweisen von Zobrist Hashing vs. Lazy-Zobrist}
-      \label{fig:zobristVis}
     \end{minipage}
+    \captionsetup{justification=centering}
+    \caption{Simplifizierte Zobrist Hashing Visualisierung Bezug auf \ref{fig:repr} (rechts) \\ Unterschiedliche Vorgehensweisen von Zobrist Hashing vs. Lazy-Zobrist (links)}
+    \label{fig:zobristVisLaZo}
   \end{figure}
   
-\subsection{Zobrist-Hashing und LaZo}{\label{subsec:Zobrist}}
-Für die folgenden KI-Suchalgorithmen ist es sehr wichtig, Spielzustände einfach und effizient darzustellen, z.B. für den schnellen Zugriff auf positionsspezifische Daten in einer Hash-Table. Ich fand heraus, dass der \textit{Zobrist-Hashing} Algorithmus die Kodierung eines Spielzustands in einen einzigen n-Bit Integer ermöglicht. Ich wählte für die Größe des Hash-Schlüssels 64 Bits.
-Aufgrund der  $2^{64}$ möglichen individuellen Hash-Werten sind Hash-Kollisionen besonders unwahrscheinlich, was Zobrist-Hashing zu einer sehr zuverlässigen Methode macht.
-
-Um Zobrist Hashing für Xiangqi zu implementieren, werden vorerst Zobrist-Tabellen initialisiert. Diese besteht aus Zufallszahlen für jede Farbe, jede Figur und jedes Feld. Dargestellt habe ich sie als dreidimensionales numpy-array bestehend aus zufälligen 64-Bit Integern. 
+Um Zobrist Hashing für Xiangqi zu implementieren, werden vorerst Zobrist-Tabellen initialisiert. Diese besteht aus Zufallszahlen für jede Farbe, jede Figur und jedes Feld. Dargestellt habe ich sie als dreidimensionales numpy-array bestehend aus zufälligen 8-Byte Integern. 
 Danach werden die jeweilgen Werte in den Zobrist-Tabellen für jede Figur auf dem Brett mit die bitweisen XOR-Operation (Kontravalenz) verkettet. Die sich bewegende Seite wird ebenfalls berücksichtigt.
 Die Grundidee des Hashing-Algorithmus ist also die Abstrahierung der Merkmale des Bretts (mithilfe der Zufallszahlen der Zobrist-Tabellen) und die Nutzung dieser abstrakten Merkmale, um einen Hash-Schlüssel zu generieren.
-
+  
 Ich merkte hierbei, dass für die Generation des Hash-Schlüssels jedes mal über alle Figuren iteriert werden muss, obwohl sich für jeden Zug maximal die Position von zwei Figuren (\textit{„X schlägt Y"}) verändern und alle restlichen Merkmale identisch bleiben. Durch diese Beobachtung entwarf ich ein Konzept, welches ich \textit{Lazy-Zobrist (LaZo)} nenne, das anders als der traditionelle Zobrist-Hashing Algorithmus nicht auf Merkmale, sondern auf Veränderungen fokussiert ist. 
 Dafür untersuchte ich die Eigenschaften von Kontravalenzen und fand Folgendes heraus:
 \begin{equation}
@@ -156,7 +168,7 @@ In anderen Worten ist es möglich, vorherige XOR-Operationen rückgängig zu mac
 \end{equation}
 Wobei $Z$  für den Zobrist-Hash-Wert, $T$ für die Zobrist Tabellen, $a$ für einen Zeitpunkt des Spiels, $f$ für die bewegte und $c$ für eine ggf. geschlagene Figur stehen ($\veebar$ ist die mathematische Notierung der XOR-Operation). Bei jedem Zug wird die bewegte Figur $f$ auf seiner ursprünglichen Position (Zeitpunkt $a-1$) vom Hash-Wert als Brett-Eigenschaft gelöscht und auf seiner neuen Position (Zeitpunkt $a$) hinzugefügt. Falls eine Figur $c$ geschlagen wurde, wird diese ebenfalls vom Hash-Schlüssel entfernt.
 
-LaZo vermeidet also die wiederholte Generation eines neuen Hash-Schlüssels für jede Position, ermöglicht stattdessen die Modifizierung eines existierenden Hash-Schlüssels \ref{fig:zobristVis}  und sorgt für ein identisches Resultat mit deutlich weniger Berechnungen.
+LaZo vermeidet also die wiederholte Generation eines neuen Hash-Schlüssels für jede Position, ermöglicht stattdessen die Modifizierung eines existierenden Hash-Schlüssels \ref{fig:zobristVisLaZo}  und sorgt für ein identisches Resultat mit deutlich weniger Berechnungen.
 
 \subsection{Schwerpunkt: Zuggeneration}\label{subsec:zuggeneration}
 Die Entwicklung eines Zuggeneration-Algorithmus ist die effiziente Übersetzung der Spielregeln in Code. Weil er von der KI innerhalb Sekunden Milliarden Male genutzt wird, ist exzellente 
@@ -211,23 +223,23 @@ Trotzdem konnte ich die Leistung vom Zugfilter un seine Präzision mit jeder Opt
   \centering
     \begin{minipage}{0.49\textwidth}
     \includegraphics[width=\textwidth]{imgs/gameComplexity.png}
-    \caption{Vergleich der Suchbaum-Komplexität von Xiangqi, Schach und TicTacToe}
-    \label{fig:gameComplexity}
   \end{minipage}
   \hfill
   \begin{minipage}{0.49\textwidth}
     \centering
     \includegraphics[width={\textwidth}]{imgs/Wert.png}
-    \caption{Wert der Figuren}
-    \label{fig:wert}
   \end{minipage}
+  \captionsetup{justification=centering}
+  \caption{Vergleich der Suchbaum-Komplexität von Xiangqi, Schach und TicTacToe (links) \\ Wert der Figuren (rechts)}
+  \label{fig:compAndValue}
 \end{figure}
+
 \section{KI-Suche}
 Die Suche in einer KI beschreibt den Prozess, unterschiedliche Züge zu spielen, diese zu bewerten und aus ihnen den besten Zug zu wählen. Hierfür hilft es, sich das Spiel als einen Baum-Datenstruktur mit Spielzuständen (en. state) {$s_{root}, s_2, s_3 ...$} als Knoten vorzustellen. Diese Knoten werden von Zügen {$a_1, a_2, a_3 ...$} als Zweige verbunden. Hierbei ist $s_{root}$ der Startzustand und alle untergeordneten Knoten beschreiben Positionen, die aus Folge von den Zügen entstehen. Diese Baum Datenstruktur wird auch \textit{Search Tree} bzw. \textit{Such-Baum} genannt. 
-Wenn das Endergebnis des Spiels für jeden Zug bekannt wäre, bestünden die Bewertungen nur aus Verlust, Unentschieden und Sieg und die KI müsste nur einen Zug in die Zukunft schauen, um den Besten zu finden. In der Praxis ist kann jedoch aufgrund der unvorstellbar großen Such-Baum-Komplexität von Xiangqi ($10^{150}$) der exakte Wert einer Position nicht ermittelt werden, weshalb dieser geschätzt werden muss.
+Wenn das Endergebnis des Spiels für jeden Zug bekannt wäre, bestünden die Bewertungen nur aus Verlust, Unentschieden und Sieg und die KI müsste nur einen Zug in die Zukunft schauen, um den Besten zu finden. In der Praxis ist kann jedoch aufgrund der unvorstellbar großen Such-Baum-Komplexität von Xiangqi ($10^{150}$) \ref{fig:compAndValue} der exakte Wert einer Position nicht ermittelt werden, weshalb dieser geschätzt werden muss.
 
 \subsection{SHEF}
-Genau dafür nutze ich eine \textit{Standard-Heuristic-Evaluation-Function (SHEF)}, die einen statischen Wert für jede Figur festlegt \ref{fig:wert} und damit einen Spielzustand bewertet.
+Genau dafür nutze ich eine \textit{Standard-Heuristic-Evaluation-Function (SHEF)}, die einen statischen Wert für jede Figur festlegt \ref{fig:compAndValue} und damit einen Spielzustand bewertet.
 \textit{Piece-Square-Tables} implementierte ich, um diese Werte zu spezifizieren. Diese gehen von der Beobachtung aus, dass Figuren abhängig von ihrer Position unterschiedlich stark sind und geben demnach jeder Figur einen Feld-spezifischen Wert. Beispielsweise ist ein Turm vor dem gegnerischen Palast stärker als in einer Ecke. Eine großes Problem der SHEF, welches ich dabei erkannte, ist die absolute Abhängigkeit der Bewertung von den Positionen der Figuren und die fehlende Berücksichtigung der Brettstruktur, was zu großen Ungenauigkeiten führen kann (deshalb auch \textit{heuristisch}).
 
 \subsection{Quiescene-Suche}
@@ -237,25 +249,33 @@ Ein weiteres Problem bleibt aber. Im Fall \textit{„X steht auf einem starken F
   \centering
   \begin{minipage}[b]{0.49\textwidth}
     \includegraphics[width=\textwidth]{imgs/MM.png}
-    \caption{Einfache Visualisierung von Minimax. Weiß: max, schwarz: min}
-    \label{fig:minimax}
   \end{minipage}
   \hfill
   \begin{minipage}[b]{0.49\textwidth}
     \includegraphics[width=\textwidth]{imgs/ABP.png}
-    \caption{Der gleiche Suchbaum, mit Alpha-Beta-Pruning}
-    \label{fig:alphabeta}
   \end{minipage}
+  \captionsetup{justification=centering}
+  \caption{Einfache Visualisierung von Minimax. Weiß: max, schwarz: min (links) \\ Der gleiche Suchbaum, mit Alpha-Beta-Pruning (rechts)}
+  \label{fig:mmabp}
 \end{figure}
 
 \subsection{MiniMax}
-In meiner Recherche über einfache Spiel-KIs stieß ich auf den populären und weitverbreiteten MiniMax-Algorithmus \cite{minimax}. Dieser ist zwar simpel und ineffizient, bildet aber das konzeptionelle Fundament selbst für Programme wie Stockfish.
+In meiner Recherche über einfache Spiel-KIs stieß ich auf den populären und weitverbreiteten MiniMax-Algorithmus \cite{mman} \ref{fig:mmabp}. Dieser ist zwar simpel und ineffizient, bildet aber das konzeptionelle Fundament selbst für Programme wie Stockfish.
 Es wird angenommen, dass jeder Spieler an jeder Situation den optimalen Zug spielt. Das bedeutet, dass ein Spieler den erwarteten Gewinn laut der SHEF maximiert und der Gegner versucht, diesen zu minimieren. So werden die Blätter (unterste Knoten) des Such-Baums mit den Evaluationen der jeweiligen Positionen gekennzeichnet und die restlichen Knoten werden rekursiv durch Auswahl des Zuges mit dem höchsten (für max) bzw. dem niedrigsten (für min) Gewinn gekennzeichnet. Ich habe eine elegantere Methode genutzt, wo jeder Spieler den besten erreichten Wert seines Gegners mit -1 multipliziert, denn ein guter Wert aus Perspektive des Gegners ist ein schlechter Wert für sich selbst. Somit kann auf unterschiedliche Operationen basierend auf dem Spieler verzichtet und immer die \textit{max()} Funktion genutzt werden.
 
 Ich implementierte diesen Algorithmus, erzielte jedoch nicht mein Ziel, hochperformante Algorithmen zu schreiben. Die Suche dauerte schon für drei Züge in die Zukunft rund zwanzig Sekunden. Dies lag daran, dass Minimax-Algorithmen eine exponentielle Zeit-Komplexität von $O(b^d)$ haben, wobei $b$ der Ausdehnungsfaktor und $d$ die Tiefe (en. depth) der Suche ist.
 
+\begin{figure}
+    \centering
+    \includegraphics[width={0.5\textwidth}]{imgs/comp.png}
+    \captionsetup{justification=centering}
+    \caption{Evaluierte Positionen von jedem Algorithmus bei Suchtiefe von 4.
+    Die Daten sind von jeweils 105 Suchen für jeden Algorithmus an unterschiedlichen Startpositionen gesammelt}
+    \label{fig:comp}
+\end{figure}
+
 \subsection{Alpha-Beta-Pruning}
-Ich fand heraus, dass Alpha-Beta-Pruning \cite{abp} die Leistung des Minimax-Algorithmus deutlich verbessert, indem es unbrauchbare Zweige des Such-Baumes frühzeitig abschneidet. Dies wird erreicht, indem für jeden Knoten im Baum zwei Werte, $\alpha$ und $\beta$, verwendet werden. $\alpha$ repräsentiert den besten Wert, den der aktuelle Spieler erreichen kann, und $\beta$ repräsentiert den besten Wert, den der gegnerische Spieler erreichen kann. Wenn $\alpha \geq \beta$ ist, wird der Rest des Zweigs abgeschnitten, da der Gegner den Knoten mit Wert $a$ nicht wählen wird und der aktuelle Spieler keine Möglichkeit hat, ein besseres Ergebnis zu erzielen.
+Ich fand heraus, dass Alpha-Beta-Pruning \cite{abp} die Leistung des Minimax-Algorithmus deutlich verbessert, indem es unbrauchbare Zweige des Such-Baumes frühzeitig abschneidet \ref{fig:mmabp}. Dies wird erreicht, indem für jeden Knoten im Baum zwei Werte, $\alpha$ und $\beta$, verwendet werden. $\alpha$ repräsentiert den besten Wert, den der aktuelle Spieler erreichen kann, und $\beta$ repräsentiert den besten Wert, den der gegnerische Spieler erreichen kann. Wenn $\alpha \geq \beta$ ist, wird der Rest des Zweigs abgeschnitten, da der Gegner den Knoten mit Wert $a$ nicht wählen wird und der aktuelle Spieler keine Möglichkeit hat, ein besseres Ergebnis zu erzielen.
 
 Die Verwendung von $\alpha$ und $\beta$ ermöglicht es dem Algorithmus, schneller Entscheidungen zu treffen, indem unbrauchbare Zweige des Entscheidungsbaums und der damit verbundenen untergeordneten Baum-Struktur des Entscheidungsbaumes frühzeitig abgeschnitten werden. Dies führt zu einer signifikanten Reduzierung der Anzahl der Knoten, die untersucht werden müssen und damit zu einer deutlichen Leistungssteigerung. Die Untergrenze der Zeit-Komplexität liegt nur noch bei $\Omega(b^{d/2})$
 
@@ -264,13 +284,6 @@ Um die Anzahl der abgeschnittenen Zweige bei der Alpha-Beta-Suche zu maximieren,
 \[v_a = c_a * m - f_a\]
 Hierbei ist $m$ eine Konstante, welche die Gewichtung des geschlagenen Figurenwertes kontrolliert. Ich fand heraus, dass die meisten Zweige abgeschnitten werden konnten, wenn $m \geq \dfrac{b}{w}$ ist ($b$ steht für den höchsten Wert unter allen Figuren, $w$ für den Schlechtesten). Somit hat selbst das Schlagen schlechter Figuren mit starken Figuren Vorrang über nicht-schlagende Züge. So wird z.B. ein Turm-schlägt-Bauern Zug vor einem Bauer-schlägt-Turm Zug erforscht, welcher wiederum Vorrang vor einem normalen Bauer-Zug hat.
 
-\begin{figure}
-    \centering
-    \includegraphics[width={0.6\textwidth}]{imgs/comp.png}
-    \caption{Evaluierte Positionen von jedem Algorithmus bei Suchtiefe von 4.
-    Die Daten sind von jeweils 105 Suchen für jeden Algorithmus an unterschiedlichen Startpositionen gesammelt}
-    \label{fig:my_label}
-\end{figure}
 
 \subsection{Multiprocessing und Parallelismus}
 Um die Performance zu verbessern, verteilte ich den Algorithmus mit dem Multiprocessing Modul auf mehrere Prozessor-Kerne und konnte somit in acht Sekunden bis zu fünf Züge in die Zunkunft (\textit{133 Millionen} Positionen) suchen. 
@@ -286,10 +299,10 @@ Dafür recherchierte ich über AlphaGoZero \cite{ag0} und AlphaZero \cite{a0} vo
 Ich schaute mir Präsentationen an und  las den Forschungsbericht, in dem die grundsätzlichen Ideen grob beschrieben wurden. Es ist aber zu beachten, dass z.B. die Architektur des neuronalen Netzwerks und genauere Informationen zum Reinforcement Learning Algorithmus Geschäftsgeheimnisse sind und darüber hinaus klar angedeutet wurde, dass normale Hardware sie bei weitem nicht handhaben kann. Dieser Teil des Projekts erforderte sehr viel intensives Nachdenken, weil ich einerseits nur einen groben vorgegebenen Rahmen hatte und die Details in der Implementierung des Algorithmus selber erschließen und ihn darüber hinaus modifizieren musste, sodass er auf normaler Hardware lauffähig ist.
 
 \begin{figure}
-\centering
-\includegraphics[width={0.63\textwidth}]{imgs/model.jpg}
-\caption{Neuronales Netzwerk visualisiert}
-\label{fig:model}
+    \centering
+    \includegraphics[width={0.63\textwidth}]{imgs/model.jpg}
+    \caption{Neuronales Netzwerk visualisiert}
+    \label{fig:model}
 \end{figure}
 
 \subsection{Modellarchitektur}
@@ -327,7 +340,7 @@ Ich erkannte außerdem, dass die Effektivität der Sammlung von Trainingsdaten u
 \subsection{Training}
 Traingsdaten werden durch Spiele gegen sich selbst mit MCTS gesammelt. Im ersten Schritt vom MCTS (Auswahl) wird mithilfe von Dirichlet Noise für einen gewissen Grad an Zufall gesorgt, sodass nicht immer deterministisch der beste Zug gewählt wird, sondern der Suchbaum erforscht wird, um zukünftige gute Positionen zu entdecken, die aus nicht so guten Zügen (laut des CNN) entstehen. 
 Am Ende jedes Spiels wird jedes Trainingsset mit dem Endergebnis $z$ ergänzt, sodass neben der verbesserten Wahrscheinlichkeitsverteilung $\pi$ auch die Bewertung der Positionen genauer sind. Das Ziel vom Training ist es, die Differenz zwischen vorhergesagtem Ergebnis $v$ und Endergebnis $z$ zu minimieren und die Ähnlichkeit zwischen vorhergesagter Wahrscheinlichkeitsverteilung $p$ und $\pi$ zu maximieren, sodass das Netzwerk $f_\theta$ immer genauere Vorhersagen treffen kann.
-Hierfür nutze ich den SGD (Stochastic Gradient Descent) Optimierer und eine Verlust-Funktion $l$, welche mean-squared-error (MSE) für die Ergebnisse und categorical-cross-entropy für die Wahrscheinlichkeitsverteilung nutzt. Mathematisch notiert sieht diese wiefolgt aus:
+Hierfür nutze ich den SGD (Stochastic Gradient Descent) Optimierer \cite{sgd} und eine Verlust-Funktion $l$, welche mean-squared-error (MSE) für die Ergebnisse und categorical-cross-entropy \cite{crossentropy} für die Wahrscheinlichkeitsverteilung nutzt. Mathematisch notiert sieht diese wiefolgt aus:
 \[
 l = (z - v)^2 - \pi^T \log p + c\lVert \theta \rVert^2
 \]
@@ -352,32 +365,28 @@ Alpha-Beta-Zero ist ein Hybrid aus zwei sehr unterschiedlichen Algorithmen, der 
   \centering
   \begin{minipage}[c]{0.33\textwidth}
     \includegraphics[width=\textwidth]{imgs/zobristComp.png}
-    \caption{Vergleich der Berechnungen von Zobrist-Hashing und LaZo}
-    \label{fig:zobristPerf}
   \end{minipage}
   \hfill
   \begin{minipage}[c]{0.33\textwidth}
     \includegraphics[width=\textwidth]{imgs/Perft.png}
-    \caption{Performance-Vergleich unterschiedlicher Versionen des Zuggenerators bei Suchtiefe 4}
-    \label{fig:perft}
   \end{minipage}
   \hfill
   \begin{minipage}[c]{0.32\textwidth}
-  \includegraphics[width={\textwidth}]{imgs/loss.png}
-  \caption{Die Loss-Werte im Laufe von 15 Trainings-Epochen mit 800+ Trainingsbeispielen}
-  
-  \label{fig:loss}
+      \includegraphics[width={\textwidth}]{imgs/loss.png}
   \end{minipage}
+  \captionsetup{justification=centering}
+  \caption{Vergleich der Berechnungen von Zobrist-Hashing und LaZo (links) \\ Performance-Vergleich unterschiedlicher Versionen des Zuggenerators bei Suchtiefe 4 (mittig) \\ Die Loss-Werte im Laufe von 15 Trainings-Epochen mit 800+ Trainingsbeispielen (rechts)}
+  \label{fig:results}
 \end{figure}
 
 \section{Ergebnisse}
 Nach gut acht Monaten und vielen Iterationen von Recherchieren, Nachdenken, Ausprobieren, Scheitern und wieder Recherchieren gelang es mir, eine Xiangqi-KI zu entwickeln, die einen selbstlernenden Algorithmus mit der traditionellen Alpha-Beta-Suche harmonisch ergänzt. 
 
-Dafür entwickelte ich selber eine Xiangqi-Applikation. Dabei entwarf ich eine neue Methode, um Zobrist-Hashing um bis zu 1600\% zu verbessern \ref{fig:zobristPerf}. Mein Zuggenerator ist mittlerweile die schnellste Python-Implementierung weltweit und kann bei Performance-Tests auf meinem Laptop (M1 Pro Chip, acht Kerne, 16GB RAM) bis zu $1.080.000$ Blätter pro Sekunde im Suchbaum erreichen \ref{fig:perft}. Diese Performance-Tests (perft) werden durchgeführt, um die Leistung des Zuggenerators zu ermitteln und seine Genauigkeit durch den Vergleich mit dem Konsens anderer Programme zu überprüfen. Diese stimmen zu 100\% überein. 
+Dafür entwickelte ich selber eine Xiangqi-Applikation. Dabei entwarf ich eine neue Methode, um Zobrist-Hashing um bis zu 1600\% zu verbessern \ref{fig:results}. Mein Zuggenerator ist mittlerweile die schnellste Python-Implementierung weltweit und kann bei Performance-Tests auf meinem Laptop (M1 Pro Chip, acht Kerne, 16GB RAM) bis zu $1.080.000$ Blätter pro Sekunde im Suchbaum erreichen \ref{fig:results}. Diese Performance-Tests (perft) werden durchgeführt, um die Leistung des Zuggenerators zu ermitteln und seine Genauigkeit durch den Vergleich mit dem Konsens anderer Programme zu überprüfen. Diese stimmen zu 100\% überein. 
 
 Ich entwickelte einen domänenspezifisch optimierten Alpha-Beta-Suchalgorithmus, welcher in ca. acht Sekundenbis zu fünf Züge (~133.000.000 Blattknoten) in die Zukunft schauen kann.
 
-Im Reinforcement Learning Algorithmus konnten durch Anpassungen der Modellarchitektur-Komplexität die benötigte Hardware von 5000+ TPUs auf einen Laptop reduziert werden. Die Modifizierung Eingaben des neuronalen Netzwerks erleichterte dies und erlaubte kombiniert mit der Ausnutzung von Symmetrien des Bretts eine Augmentation der Trainingsdaten um 400\%. Die Generation von vier Trainingssets dauert dadurch nicht mehr als drei Sekunden und das Training verläuft reibungslos auf einer einzelnen GPU \ref{fig:loss}.
+Im Reinforcement Learning Algorithmus konnten durch Anpassungen der Modellarchitektur-Komplexität die benötigte Hardware von 5000+ TPUs auf einen Laptop reduziert werden. Die Modifizierung Eingaben des neuronalen Netzwerks erleichterte dies und erlaubte kombiniert mit der Ausnutzung von Symmetrien des Bretts eine Augmentation der Trainingsdaten um 400\%. Die Generation von vier Trainingssets dauert dadurch nicht mehr als drei Sekunden und das Training verläuft reibungslos auf einer einzelnen GPU \ref{fig:results}.
 
 % Ohne viel Training schlägt Alpha-Beta-Zero mittlerweile bereits die zweitbeste KI auf Xiangqi.com und hält auch bei dem „Endboss" lange mit.
 \section{Ausblick}
@@ -398,30 +407,26 @@ Es war ein langer Prozess vom wiederholten Kopfzerbrechen und Scheitern, der mir
 
 \newpage
 
-\bibliographystyle{jpp}
-
-
-\bibliography{jpp-instructions}
-
-\section{Quellen- und Literaturverzeichnis}
-\url{https://github.com/Simuschlatz/CheapChess}, 15.01.23, Simon Ma, CheapChess Quellcode für detaillierte Beschreibungen der angewandten Methoden
-\\
-\url{https://www.chessprogramming.org/Main_Page}, 15.01.23, 
-Chessprogramming Wiki, Wikipedia für Schachprogrammierung
-\\
-\url{https://en.wikipedia.org/wiki/Monte_Carlo_tree_search}, 15.01.23, Wikipedia, Monte-Carlo-Tree-Search
-\\
-\url{https://de.wikipedia.org/wiki/Xiangqi}, 15.01.21, Wikipedia, Xiangqi
-\\
-\url{https://www.xiangqi.com/}, 15.01.23, Xiangqi.com, Play Chinese Chess For Free on the \#1 Xiangqi Site!
-\\
-\url{https://www.deepmind.com/}, 15.01.23, Deepmind, Tocherfirma von Google
-\\
-\url{https://arxiv.org/abs/1712.01815}, Deepmind, Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm
-\\
-\url{https://www.youtube.com/c/SebastianLague}, 15.01.23, Sebastian Lague
-\\
-\url{https://www.youtube.com/watch?v=l-hh51ncgDI}, 21.08.22, Sebastian Lague, Algorithms Explained – minimax and alpha-beta pruning
-\\
-\url{https://en.wikipedia.org/wiki/Game_complexity} 15.09.22, Wikipedia, Game complexity
+\printbibliography
+% \section{Quellen- und Literaturverzeichnis}
+% \url{https://github.com/Simuschlatz/CheapChess}, 15.01.23, Simon Ma, CheapChess Quellcode für detaillierte Beschreibungen der angewandten Methoden
+% \\
+% \url{https://www.chessprogramming.org/Main_Page}, 15.01.23, 
+% Chessprogramming Wiki, Wikipedia für Schachprogrammierung
+% \\
+% \url{https://en.wikipedia.org/wiki/Monte_Carlo_tree_search}, 15.01.23, Wikipedia, Monte-Carlo-Tree-Search
+% \\
+% \url{https://de.wikipedia.org/wiki/Xiangqi}, 15.01.21, Wikipedia, Xiangqi
+% \\
+% \url{https://www.xiangqi.com/}, 15.01.23, Xiangqi.com, Play Chinese Chess For Free on the \#1 Xiangqi Site!
+% \\
+% \url{https://www.deepmind.com/}, 15.01.23, Deepmind, Tocherfirma von Google
+% \\
+% \url{https://arxiv.org/abs/1712.01815}, Deepmind, Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm
+% \\
+% \url{https://www.youtube.com/c/SebastianLague}, 15.01.23, Sebastian Lague
+% \\
+% \url{https://www.youtube.com/watch?v=l-hh51ncgDI}, 21.08.22, Sebastian Lague, Algorithms Explained – minimax and alpha-beta pruning
+% \\
+% \url{https://en.wikipedia.org/wiki/Game_complexity} 15.09.22, Wikipedia, Game complexity
 \end{document}
