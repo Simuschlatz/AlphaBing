@@ -1,1 +1,0 @@
-This is the directory containing my entry to Jugend Forscht, German science fair.
