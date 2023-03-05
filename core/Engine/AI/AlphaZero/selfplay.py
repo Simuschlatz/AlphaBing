@@ -64,9 +64,9 @@ class SelfPlay:
             logger.info("self-play episode ended")
             # negative outcome for every example where the side was current (mated) moving side
             if training_examples is None:
-                return [[ex[0], ex[1], 1 * (1 - 2 * ex[2] == board.moving_side)] for ex in training_data]
+                return [[ex[0], ex[1], 1 - 2 * ex[2] == board.moving_side] for ex in training_data]
 
-            training_examples.extend([[ex[0], ex[1], 1 * (1 - 2 * ex[2] == board.moving_side)] for ex in training_data])
+            training_examples.extend([[ex[0], ex[1], 1 - 2 * ex[2] == board.moving_side] for ex in training_data])
             return
 
     @staticmethod
