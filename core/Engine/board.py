@@ -209,7 +209,8 @@ class Board:
                 print(squares)
                 np.put(bitboards[color][piece_type], squares, 1)
         # put the moving side's board first (only needs adjustment if lower side is moving)
-        if self.moving_color != self.is_red_up and adjust_perspective: bitboards = np.flipud(bitboards)        return bitboards
+        if self.moving_color != self.is_red_up and adjust_perspective: bitboards = np.flipud(bitboards)        
+        return bitboards
 
     def is_repetition(self):
         return self.zobrist_key in self.repetition_history
