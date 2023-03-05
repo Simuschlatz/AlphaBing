@@ -25,6 +25,20 @@ class SelfPlay:
         self.mcts = MCTS(nnet)
         self.training_data = []
 
+    def augument_data(self, example, eps_data):
+        augumented = [example]
+        bitboard, pi, side = example
+        
+        # Flipping the board
+        # flipped = self.board.mirror_bitboard(bitboard, 0)
+        # augumented.append([flipped, pi, 1-side])
+
+        # Mirroring the board
+        mirrored_bb = self.board.mirror_bitboard(bitboard, 2)
+        augumented.append([mirrored_bb, pi, side])
+
+        eps_data.extend(augumented)
+        
     def execute_episode(self, moves, training_examples=None, board: Board=None, mcts: MCTS=None):
         """
         Execute one episode of self-play. The game is played until the end, simultaneously 
@@ -51,9 +65,9 @@ class SelfPlay:
             pi = mcts.get_probability_distribution(board, bitboards=bb, moves=moves, tau=tau)
             side = board.moving_side
 
-            training_data.append([bb, pi, side])
+            self.augument_data([bb, pi, side], training_data)
             move = MCTS.best_action_from_pi(board, pi)
-            # move = MCTS.random_action_from_pi(board, pi)
+            move = MCTS.random_action_from_pi(board, pi)
 
             board.make_move(move, search_state=False)
             plies += 1
