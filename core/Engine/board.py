@@ -31,9 +31,10 @@ class Board:
         self.opponent_side = 1 - self.moving_side
         self.moving_color = int(is_red_first)
         self.opponent_color = 1 - self.moving_color
-        self.bitboards = self.piecelist_to_bitboard(adjust_perspective=True)
         # If we don't play as red, the pieces are at the top, 
         self.is_red_up = not play_as_red
+        # -> is_red_up xor moving_color = moving side
+        self.bitboards = self.piecelist_to_bitboard(adjust_perspective=True)
         # moving color is 16 if red moves first or 8 when white moves first
         # self.moving_color = (1 + red_moves_first) * 8
         # self.opponent_color = (2 - red_moves_first) * 8
@@ -43,7 +44,7 @@ class Board:
         # so multiple moves can be reversed consecutively, coming in really handy in dfs
         self.game_history = deque() # Stack(:previous square, :target square :captured piece)
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
-        self.zobrist_key = ZobristHashing.digest(self.moving_color, self.piece_lists)
+        self.zobrist_key = ZobristHashing.digest(self.moving_side, self.piece_lists)
         self.repetition_history = {self.zobrist_key}
 
     @staticmethod
@@ -187,7 +188,7 @@ class Board:
         return 89 - move[0], 89 - move[1]
 
     @staticmethod
-    def flip_moves(moves):
+    def flip_moves(moves): 
         return [(89 - move[0], 89 - move[1]) for move in moves]
 
     def piecelist_to_bitboard(self, adjust_perspective: bool=False):
@@ -198,17 +199,17 @@ class Board:
         :return: array of two sets of 7 bitboards generated from piece lists
         """
         bitboards = np.zeros((2, 7, 90), dtype=np.float32)
+        for color, piece_lists in enumerate(self.piece_lists):
+            # determines whether the squares have to be adjusted
+            flip = color != self.is_red_up and adjust_perspective
 
-        # flip = self.moving_side and adjust_perspective
-        for side, piece_lists in enumerate(self.piece_lists):
-            flip = side and adjust_perspective
             for piece_type, squares in enumerate(piece_lists):
                 # adjust the squares to current side's perspective
                 if flip: squares = [89 - square for square in squares]
-                np.put(bitboards[side][piece_type], squares, 1)
+                print(squares)
+                np.put(bitboards[color][piece_type], squares, 1)
         # put the moving side's board first (only needs adjustment if lower side is moving)
-        if self.moving_side and adjust_perspective: bitboards = np.flipud(bitboards)
-        return bitboards
+        if self.moving_color != self.is_red_up and adjust_perspective: bitboards = np.flipud(bitboards)        return bitboards
 
     def is_repetition(self):
         return self.zobrist_key in self.repetition_history
