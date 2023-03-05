@@ -24,7 +24,7 @@ class SelfPlay:
         self.board = board
         self.mcts = MCTS(nnet)
         self.training_data = []
-    
+
     def execute_episode(self, moves, training_examples=None, board: Board=None, mcts: MCTS=None):
         """
         Execute one episode of self-play. The game is played until the end, simultaneously 
@@ -52,8 +52,8 @@ class SelfPlay:
             side = board.moving_side
 
             training_data.append([bb, pi, side])
-            # move = MCTS.best_action_from_pi(board, pi)
-            move = MCTS.random_action_from_pi(board, pi)
+            move = MCTS.best_action_from_pi(board, pi)
+            # move = MCTS.random_action_from_pi(board, pi)
 
             board.make_move(move, search_state=False)
             plies += 1
