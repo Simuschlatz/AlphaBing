@@ -10,15 +10,10 @@ def main():
     Clock.init(600)
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
     board = Board(fen, play_as_red)
+    # Set up move generator
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
 
-    # printer = pprint.PrettyPrinter(2)
-    # printer.pprint(board.piecelist_to_bitboard())
-    # print(board.piece_lists)
-    # printer.pprint(board.zobrist_key)
-    # run_benchmarks(board)
-    # # print(sum(LegalMoveGenerator.bitvector_legal_moves()))
     # m = CNN()
     # m.load_checkpoint()
     # sp = SelfPlay(m, board)
@@ -26,8 +21,9 @@ def main():
     # sp.train()
     
     # ------To run perft search------
-    # start_search(board)
-    # -------------------------------
+    start_search(board)
+    # -------------------------------#
+
     if len(sys.argv) > 1:
         agent = sys.argv[1]
     else: agent = "ab"
@@ -45,7 +41,6 @@ def main():
 if __name__ == "__main__":
     import pygame
     pygame.init()
-    import pprint
     import sys
     from core.engine import Board, LegalMoveGenerator, Clock
     from core.engine.UI import UI
@@ -56,6 +51,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     logger = logging.getLogger(__name__)
+
     INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
     INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
     main()
