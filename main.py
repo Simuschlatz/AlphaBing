@@ -9,14 +9,15 @@ def main():
     fen += (" w " if red_moves_first else " b ") + "- - 0 1"
     Clock.init(600)
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    board = Board("r1eakaehr/9/1ch/p1p3p1p/4p2c/1C4P1P/P1P1P/7C/4A/RHE1KAEHR b - - 0 4", play_as_red)
-    bb = board.piecelist_to_bitboard(adjust_perspective=True)
+    board = Board("CRH1k1e2/3ca4/4ea3/9/2hr5/9/9/4E4/4A4/4KA3 w - - 0 1", play_as_red)
+    bb = board.piecelist_to_bitboard()
     mirrored = board.mirror_bitboard(bb)
     # Set up move generator
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
 
-    # m = CNN()
+    m = CNN()
+    evaluate_worker("CRH1k1e2/3ca4/4ea3/9/2hr5/9/9/4E4/4A4/4KA3 w - - 0 1", m)
     # m.load_checkpoint()
     # sp = SelfPlay(m, board)
     # sp.load_training_data()
@@ -24,7 +25,7 @@ def main():
     
     # ------To run perft search------
     # start_search(board)
-    # -------------------------------#
+    # -------------------------------
 
     agent = select_agent()
     ui = UI(board, agent=agent)
@@ -39,6 +40,7 @@ if __name__ == "__main__":
     from core.engine.UI import UI
     from core.utils import start_search, select_agent
     from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlay
+    from core.engine.AI.EvaluateAgent.compute_elo import evaluate_worker
     from core.visualizations.move_ordering_analysis import run_benchmarks
     import logging
     logging.basicConfig(level=logging.DEBUG)
