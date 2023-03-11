@@ -159,14 +159,14 @@ class MCTS():
     # @time_benchmark
     def get_probability_distribution(self, board: Board, bitboards: list, moves=None, tau=1):
         """
-        This function performs numMCTSSims simulations of MCTS on ```board```.
+        This function performs numMCTSSims simulations of MCTS on ``board``.
         :return: probs: a policy vector where the probability of the ith action is proportional to 
-        Nsa[(s,a)]**(1./temp)
+        ``Nsa[(s,a)]**(1./temp)``
         :param tau: parameter controlling exploration
         :param bitboards: bitboards of current state
         """
         for i in range(self.config.simulations_per_move):
-            logger.info(f"starting simulation n. {i}")
+            # logger.info(f"starting simulation n. {i}")
             self.search(board, is_root=True, bitboards=bitboards, moves=moves)
 
         s = board.zobrist_key
@@ -206,3 +206,18 @@ class MCTS():
         a = np.random.choice(np.argwhere(pi).flatten())
         move = PrecomputingMoves.action_space_vector[a]
         return board.flip_move(move) if board.moving_side else move
+
+    @staticmethod
+    def mirror_pi(pi):
+        """
+        Mirrors probability distribution
+        """
+        mirrored_pi = np.zeros(len(PrecomputingMoves.action_space_vector))
+        for a, v in enumerate(pi):
+            # Skip illegal moves
+            if not v: continue
+            move = PrecomputingMoves.action_space_vector[a]
+            mirrored_move = Board.mirror_move(move)
+            # Get action space index of mirrored move
+            mirrored_index = PrecomputingMoves.move_index_hash[mirrored_move]
+            mirrored_pi[mirrored_index] = v

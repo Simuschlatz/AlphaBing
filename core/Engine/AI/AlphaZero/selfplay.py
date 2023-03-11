@@ -26,16 +26,28 @@ class SelfPlay:
         self.training_data = []
 
     def augument_data(self, example, eps_data):
+        """
+        Scales training data without additional MCTS search by:
+        1. flipping bitboards and pi
+        2. mirroring bitboards and pi
+        
+        adds augmented examples to :param eps_data:"""
+
         augumented = [example]
         bitboard, pi, side = example
-        
-        # Flipping the board
+
+        # NOTE flipping the board only works if the model takes in an input plane. This is due to the
+        # fact that pi can't be flipped like the bitboards as pi's value changes with the moving side
+        # 
         # flipped = self.board.mirror_bitboard(bitboard, 0)
+
+        # This would be a bad training example detrimental for the model's training as pi is inaccurate
         # augumented.append([flipped, pi, 1-side])
 
         # Mirroring the board
-        mirrored_bb = self.board.mirror_bitboard(bitboard, 2)
-        augumented.append([mirrored_bb, pi, side])
+        mirrored_bb = self.board.mirror_bitboard(bitboard)
+        mirrored_pi = self.mcts.mirror_pi(pi)
+        augumented.append([mirrored_bb, mirrored_pi, side])
 
         eps_data.extend(augumented)
         
@@ -50,7 +62,7 @@ class SelfPlay:
         where s is the state represented
         
         as set of bitboards, pi is the probability distribution returned by MCTS, for v see above.
-        :param training_examples: used for multiprocessing, a ```mp.Manager().list()``` object, 
+        :param training_examples: used for multiprocessing, a ``mp.Manager().list`` object, 
         shared memory containing the training examples from episode's self-play iteration
         """
         board = board or self.board
@@ -66,6 +78,7 @@ class SelfPlay:
             side = board.moving_side
 
             self.augument_data([bb, pi, side], training_data)
+
             move = MCTS.best_action_from_pi(board, pi)
             move = MCTS.random_action_from_pi(board, pi)
 
@@ -90,9 +103,9 @@ class SelfPlay:
 
     def train(self, parallel=False):
         """
-        Performs self-play for ```PlayConfig.training_iterations``` iterations of 
-        ```PlayConfig.self_play_eps``` episodes  each. The maximum length of training data is the 
-        examples from the last ```PlayConfig.max_training_data_length```  iterations. After each 
+        Performs self-play for ``PlayConfig.training_iterations`` iterations of 
+        ``PlayConfig.self_play_eps`` episodes  each. The maximum length of training data is the 
+        examples from the last ``PlayConfig.max_training_data_length``  iterations. After each 
         iteration, the neural  network is retrained.
 
         :param parallel: If True, each episode is executed on a a separate process
