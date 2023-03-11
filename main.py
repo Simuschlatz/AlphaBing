@@ -9,7 +9,9 @@ def main():
     fen += (" w " if red_moves_first else " b ") + "- - 0 1"
     Clock.init(600)
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    board = Board(fen, play_as_red)
+    board = Board("r1eakaehr/9/1ch/p1p3p1p/4p2c/1C4P1P/P1P1P/7C/4A/RHE1KAEHR b - - 0 4", play_as_red)
+    bb = board.piecelist_to_bitboard(adjust_perspective=True)
+    mirrored = board.mirror_bitboard(bb)
     # Set up move generator
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
@@ -21,19 +23,10 @@ def main():
     # sp.train()
     
     # ------To run perft search------
-    start_search(board)
+    # start_search(board)
     # -------------------------------#
 
-    if len(sys.argv) > 1:
-        agent = sys.argv[1]
-    else: agent = "ab"
-
-    if agent not in {"ab", "az", "abz"}:
-        logger.error(f"Unknown agent '{agent}'. Selected Agent must be in 'ab', 'az', 'abz'.")
-        logger.info("Using Alpha-Beta agent as default.")
-        agent = "ab"
-    logger.info(f"You selected agent '{agent}'.")
-
+    agent = select_agent()
     ui = UI(board, agent=agent)
     ui.run()
 
@@ -44,7 +37,7 @@ if __name__ == "__main__":
     import sys
     from core.engine import Board, LegalMoveGenerator, Clock
     from core.engine.UI import UI
-    from core.utils import start_search
+    from core.utils import start_search, select_agent
     from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlay
     from core.visualizations.move_ordering_analysis import run_benchmarks
     import logging
