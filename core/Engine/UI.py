@@ -173,7 +173,8 @@ class UI:
 
     def update_info(self):
         self.fen = self.board.load_fen_from_board()
-        # print(self.fen)
+        print(self.fen)
+        print(len(self.board.repetition_history))
         self.zobrist_off = (UIConfig.WIDTH - len(bin(self.board.zobrist_key)) * UIConfig.FONT_WIDTH_SMALL) / 2
         
     def drop_update(self):
@@ -202,6 +203,7 @@ class UI:
             return -1
         self.move_to = square
         move = (self.move_from, self.move_to)
+        print(self.board.mirror_move(move))
         self.update_move_str(move)
         is_capture = self.board.make_move(move)
         self.drop_update()
@@ -269,7 +271,7 @@ class UI:
         self.play_sfx(is_capture)
         # See if there is a mate or stalemate
         LegalMoveGenerator.load_moves()
-        print(self.board.piecelist_to_bitboard(adjust_perspective=True))
+        # print(self.board.piecelist_to_bitboard()[:2, 0])
         GameManager.check_game_state()
         return True
     
@@ -374,7 +376,7 @@ class UI:
         """
         self.window.fill(UIConfig.BG_COLOR)
         self.window.blit(self.BOARD_IMG, UIConfig.OFFSETS)
-        # self.show_square_ids()
+        self.show_square_ids()
         self.move_responsiveness()
 
         self.render_game_state()

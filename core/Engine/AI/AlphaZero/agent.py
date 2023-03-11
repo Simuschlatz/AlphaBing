@@ -17,7 +17,7 @@ class AlphaZeroAgent(Agent):
     
     def get_mcts_pi(self, board: Board):
         print(board)
-        bitboards = list(board.piecelist_to_bitboard(adjust_perspective=True))
+        bitboards = list(board.piecelist_to_bitboard())
         pi = self.mcts.get_probability_distribution(board, bitboards=bitboards)
         return pi
 

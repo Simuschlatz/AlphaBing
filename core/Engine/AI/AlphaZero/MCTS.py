@@ -84,7 +84,7 @@ class MCTS():
 
         # Check if position was expanded
         if s not in self.Ps:
-            state_planes = bitboards or board.piecelist_to_bitboard(adjust_perspective=True)
+            state_planes = bitboards or board.piecelist_to_bitboard()
             # leaf node
             p, v = self.nnet.predict(state_planes)
             self.Ps[s] = p[0] # CNN output is two-dimensional

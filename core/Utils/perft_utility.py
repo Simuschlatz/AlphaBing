@@ -22,7 +22,7 @@ def start_search(board: Board):
     for d in depths:
         get_num_positions(d, board)
 
-def get_perft_result(depth, board):
+def get_perft_result(depth, board: Board):
     """
     A performance test for move generation algorithms by calculating the number
     of board configurations found for a given number of moves in the future
@@ -35,21 +35,21 @@ def get_perft_result(depth, board):
         num_positions += len(moves)
         return num_positions
     for move in moves:
-        board.make_move(move)
+        board.make_move(move, search_state=True)
         num_positions += get_perft_result(depth - 1, board)
-        board.reverse_move()
+        board.reverse_move(search_state=True)
     return num_positions
 
-def multiprocess_perft(depth, board):
+def multiprocess_perft(depth, board: Board):
     moves = LegalMoveGenerator.load_moves()
     num_positions = 0
     if not depth - 1:
         num_positions += len(moves)
         return num_positions
     for move in moves:
-        board.make_move(move)
+        board.make_move(move, search_state=True)
         num_positions += get_perft_result(depth - 1, board)
-        board.reverse_move()
+        board.reverse_move(search_state=True)
     return num_positions
 
 def get_num_positions(depth, board):

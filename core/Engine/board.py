@@ -191,7 +191,7 @@ class Board:
     def flip_moves(moves): 
         return [(89 - move[0], 89 - move[1]) for move in moves]
 
-    def piecelist_to_bitboard(self, adjust_perspective: bool=False):
+    def piecelist_to_bitboard(self, adjust_perspective: bool=True):
         """
         :param adjust_perspective: if True, each side's bitboards are adjusted to 
         that side's perspective and the two sides' bitboard planes are occasionally
@@ -232,7 +232,7 @@ class Board:
     def is_repetition(self):
         return self.zobrist_key in self.repetition_history
     
-    def make_move(self, move, search_state=True):
+    def make_move(self, move, search_state=False):
         moved_from, moved_to = move
         moved_piece = self.squares[moved_from]
         piece_type = Piece.get_type_no_check(moved_piece)
@@ -261,8 +261,8 @@ class Board:
 
         # Update zobrist key
         self.lazo_update(piece_type, captured_piece, *move)
-        if not search_state:
-            self.repetition_history.add(self.zobrist_key)
+        # if not search_state:
+        #     self.repetition_history.add(self.zobrist_key)
         # print(self.zobrist_key)
 
         self.switch_moving_color()
@@ -270,7 +270,7 @@ class Board:
         # Used for quiescene search
         return bool(captured_piece)
         
-    def reverse_move(self, search_state=True):
+    def reverse_move(self, search_state=False):
         # Accessing the previous game state data
         previous_square, moved_to, captured_piece = self.game_history.pop()
 
@@ -295,9 +295,9 @@ class Board:
 
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
         self.lazo_update(piece_type, captured_piece, previous_square, moved_to)
-        if not search_state:
-            self.repetition_history.pop()
-            return 
+        # if not search_state:
+        #     self.repetition_history.pop()
+        #     return 
         # print(self.zobrist_key)
 
     def get_previous_configs(self, depth):

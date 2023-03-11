@@ -70,7 +70,7 @@ class SelfPlay:
         training_data = []
         plies, tau = 0, 1
         while True:
-            bb = list(board.piecelist_to_bitboard(adjust_perspective=True))
+            bb = list(board.piecelist_to_bitboard())
             if plies > PlayConfig.tau_decay_threshold:
                 tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
             # tau = plies < PlayConfig.tau_decay_threshold

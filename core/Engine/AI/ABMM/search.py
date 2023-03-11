@@ -57,14 +57,14 @@ class Dfs:
         return best_move
 
     @classmethod
-    def search_for_move(cls, move, move_evals, depth, board):
+    def search_for_move(cls, move, move_evals, depth, board: Board):
         """
         :return: best eval from current position for current player
         :param move_evals: dict shared between child processes
         """
-        board.make_move(move)
+        board.make_move(move, search_state=True)
         evaluation = -cls.alpha_beta_opt(board, depth-1, 1, cls.negative_infinity, cls.positive_infinity, 250)
-        board.reverse_move()
+        board.reverse_move(search_state=True)
         move_evals[move] = evaluation
 
     @classmethod
@@ -84,7 +84,7 @@ class Dfs:
         current_pos_moves = order_moves(LegalMoveGenerator.load_moves(board), board, m=m)
         cls.mate_found = False
         for move in current_pos_moves:
-            board.make_move(move)
+            board.make_move(move, search_state=True)
             match algorithm:
                 case "optalphabeta":
                     evaluation = -cls.alpha_beta_opt(board, cls.search_depth - 1, 0, beta, alpha, m)
@@ -92,7 +92,7 @@ class Dfs:
                     evaluation = cls.alpha_beta(board, cls.search_depth - 1, beta, alpha)
                 case "minimax":
                     evaluation = cls.minimax(board, cls.search_depth - 1)
-            board.reverse_move()
+            board.reverse_move(search_state=True)
             if evaluation > best_eval:
                 best_eval = evaluation
                 best_move = move
@@ -135,9 +135,9 @@ class Dfs:
 
         for move in moves:
             # traversing down the tree
-            board.make_move(move)
+            board.make_move(move, search_state=True)
             evaluation = -cls.alpha_beta_opt(board, depth - 1, plies + 1, -beta, -alpha, m)
-            board.reverse_move()
+            board.reverse_move(search_state=True)
 
             # Move is even better than best eval before,
             # opponent won't choose this move anyway so PRUNE YESSIR
@@ -177,9 +177,9 @@ class Dfs:
                 return cls.draw
 
         for move in moves:
-            board.make_move(move)
+            board.make_move(move, search_state=True)
             evaluation = -cls.quiescene(-beta, -alpha)
-            board.reverse_move()
+            board.reverse_move(search_state=True)
             # Move is even better than best eval before,
             # opponent won't choose move anyway so PRUNE YESSIR
             if evaluation >= beta:
@@ -212,10 +212,10 @@ class Dfs:
 
         best_evaluation = float("-inf")
         for move in moves:
-            board.make_move(move)
+            board.make_move(move, search_state=True)
             evaluation = -cls.minimax(board, depth - 1)
             best_evaluation = max(evaluation, best_evaluation)
-            board.reverse_move()
+            board.reverse_move(search_state=True)
 
         return best_evaluation
     
@@ -235,9 +235,9 @@ class Dfs:
             return float("-inf")
 
         for move in moves:
-            board.make_move(move)
+            board.make_move(move, search_state=True)
             evaluation = -cls.alpha_beta(board, depth - 1, -beta, -alpha)
-            board.reverse_move()
+            board.reverse_move(search_state=True)
             # Move is even better than best eval before,
             # opponent won't choose move anyway so PRUNE YESSIR
             if evaluation >= beta:
@@ -256,9 +256,9 @@ class Dfs:
         for move in current_pos_moves:
             if cls.abort_search:
                 return best_eval
-            board.make_move(move)
+            board.make_move(move, search_state=True)
             evaluation = -cls.alpha_beta_opt(board, depth - 1, 0, beta, alpha)
-            board.reverse_move()
+            board.reverse_move(search_state=True)
             best_eval = max(evaluation, best_eval)
         return best_eval
             
