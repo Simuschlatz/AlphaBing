@@ -206,7 +206,6 @@ class Board:
             for piece_type, squares in enumerate(piece_lists):
                 # adjust the squares to current side's perspective
                 if flip: squares = [89 - square for square in squares]
-                print(squares)
                 np.put(bitboards[color][piece_type], squares, 1)
         # put the moving side's board first (only needs adjustment if lower side is moving)
         if self.moving_color != self.is_red_up and adjust_perspective: bitboards = np.flipud(bitboards)        
@@ -219,10 +218,11 @@ class Board:
         """
         return np.flip(bitboard, axis)
 
-    def mirror_move(self, move):
+    @staticmethod
+    def mirror_move(move):
         start, target = move
-        start_file, start_rank = self.get_file_and_rank(start)
-        target_file, target_rank = self.get_file_and_rank(target)
+        start_file, start_rank = Board.get_file_and_rank(start)
+        target_file, target_rank = Board.get_file_and_rank(target)
 
         mirrored_start = start_rank * 9 + 8 - start_file
         mirrored_target = target_rank * 9 + 8 - target_file
