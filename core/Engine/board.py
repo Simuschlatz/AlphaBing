@@ -212,6 +212,23 @@ class Board:
         if self.moving_color != self.is_red_up and adjust_perspective: bitboards = np.flipud(bitboards)        
         return bitboards
 
+    @staticmethod
+    def mirror_bitboard(bitboard, axis=2):
+        """
+        axis: 0 for mirroring along x-axis (vertical mirroring), 2 for horizontal mirroring
+        """
+        return np.flip(bitboard, axis)
+
+    def mirror_move(self, move):
+        start, target = move
+        start_file, start_rank = self.get_file_and_rank(start)
+        target_file, target_rank = self.get_file_and_rank(target)
+
+        mirrored_start = start_rank * 9 + 8 - start_file
+        mirrored_target = target_rank * 9 + 8 - target_file
+
+        return (mirrored_start, mirrored_target)
+
     def is_repetition(self):
         return self.zobrist_key in self.repetition_history
     
