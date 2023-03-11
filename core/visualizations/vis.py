@@ -22,13 +22,13 @@ import matplotlib.pyplot as plt
 # br2 = [x + barWidth for x in br1]
  
 # # Make the plot
-# plt.bar(br1, best_case, color ='#2CBDFE', width = barWidth, label ='Obergrenze')
-# plt.bar(br2, worst_case, color ='#F5B14C', width = barWidth, label ='Untergrenze')
+# plt.bar(br2, worst_case, color ='#F5B14C', width = barWidth, label ='Obergrenze')
+# plt.bar(br1, best_case, color ='#2CBDFE', width = barWidth, label ='Untergrenze')
 
  
 # # Adding Xticks
 # plt.xlabel('Methode', fontweight ='bold')
-# plt.ylabel('Anzahl bitweiser XOR Operationen', fontweight ='bold')
+# plt.ylabel('Anzahl XOR-Operationen für jeden Zug', fontweight ='bold')
 # plt.xticks([r + barWidth / 2 for r in range(2)],
 #         ["Zobrist Hashing", "LaZo"])
  
@@ -36,33 +36,54 @@ import matplotlib.pyplot as plt
 # plt.show()
 
 
-times = [
-    7.8,
-    4.9,
-    4.4,
-    4.1,
-    3.9,
-    3.17,
-    3.11,
-    3.07,
-    3.05,
-    2.98
-    ]
+mpl.style.use('seaborn-v0_8')
 
-iterations = range(1, len(times) + 1)
+xiangqi = 150
+chess = 123
+ttt = 5
+values = [xiangqi, chess, ttt]
+labels = ["Xiangqi", "Schach", "TicTacToe"]
+colors = ["#4E31AA", "#2F58CD", "#3795BD"]
 
-mpl.style.use('bmh')
-fig, ax = plt.subplots(figsize=(7, 6))
+fig = plt.figure(figsize=(6, 5))
+ 
+# Make the plot
+plt.bar(labels, values, color=colors)
 
-ax.plot(iterations, times)
-ax.fill_between(iterations, 0, times, alpha=.3)
-ax.set_xlim(1, 10)
-ax.set_ylim(2, 8)
-plt.title("Performance-Vergleich der Versionen bei Suchtiefe 4", fontweight="bold")
-plt.xlabel("Versionen", fontweight="bold")
-plt.ylabel("Zeit in s", fontweight="bold")
-ax.legend()
+# Adding Xticks
+plt.xlabel('Spiel', fontweight='bold')
+plt.ylabel('Suchbaum-Komplexität als log zur Basis 10', fontweight='bold')
+
 plt.show()
+
+
+# times = [
+#     7.8,
+#     4.9,
+#     4.4,
+#     4.1,
+#     3.9,
+#     3.17,
+#     3.11,
+#     3.07,
+#     3.05,
+#     2.98
+#     ]
+
+# iterations = range(1, len(times) + 1)
+
+# mpl.style.use('bmh')
+# fig, ax = plt.subplots(figsize=(7, 6))
+
+# ax.plot(iterations, times)
+# ax.fill_between(iterations, 0, times, alpha=.3)
+# ax.set_xlim(1, 10)
+# ax.set_ylim(2, 8)
+# plt.title("Performance-Vergleich der Versionen bei Suchtiefe 4", fontweight="bold")
+# plt.xlabel("Versionen", fontweight="bold")
+# plt.ylabel("Zeit in s", fontweight="bold")
+# ax.legend()
+# plt.show()
 
 # mpl.style.use('bmh')
 # loss_1 = [
