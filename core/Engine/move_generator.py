@@ -131,8 +131,8 @@ class LegalMoveGenerator:
         """
         :return: precise direction index 0 to 4 between two squares from square_1's perspective
         """
-        rank_1, file_1 = divmod(square_1, 9)
-        rank_2, file_2 = divmod(square_2, 9)
+        file_1, rank_1 = cls.board.get_file_and_rank(square_1)
+        file_2, rank_2 = cls.board.get_file_and_rank(square_2)
         d_file = file_2 - file_1
         d_rank = rank_2 - rank_1
         if d_file and d_rank or not d_file and not d_rank:
@@ -151,8 +151,8 @@ class LegalMoveGenerator:
         :return: roughly estimated direction index 0 to 4 between two squares from square_1's perspective
         NOTE: Not used right now
         """
-        rank_1, file_1 = divmod(square_1, 9)
-        rank_2, file_2 = divmod(square_2, 9)
+        file_1, rank_1 = cls.board.get_file_and_rank(square_1)
+        file_2, rank_2 = cls.board.get_file_and_rank(square_2)
         d_file = file_2 - file_1
         d_rank = rank_2 - rank_1
         # On same file
@@ -167,12 +167,12 @@ class LegalMoveGenerator:
         return cls.dir_offsets.index(d_rank // abs(d_rank) * 9), cls.dir_offsets.index(d_file // abs(d_file))
 
     @staticmethod
-    def get_slope(square_1, square_2):
+    def get_slope(cls, square_1, square_2):
         """
         NOTE: Not used right now
         """
-        rank_1, file_1 = divmod(square_1, 9)
-        rank_2, file_2 = divmod(square_2, 9)
+        file_1, rank_1 = cls.board.get_file_and_rank(square_1)
+        file_2, rank_2 = cls.board.get_file_and_rank(square_2)
         return (file_2 - file_1) / (rank_2 - rank_1)
 
 
@@ -275,9 +275,9 @@ class LegalMoveGenerator:
                 if blocks_all_checks and cls.checks and not cause_cannon_defect:
                     break
     
-    @staticmethod
-    def get_elephant_block(elephant, target_square):
-        d_file, d_rank = Board.get_dists(target_square, elephant)
+    @classmethod
+    def get_elephant_block(cls, elephant, target_square):
+        d_file, d_rank = cls.board.get_dists(target_square, elephant)
         block = elephant + d_rank // 2 * 9 + d_file // 2 
         return block
 
@@ -344,10 +344,8 @@ class LegalMoveGenerator:
 
     @staticmethod
     def get_horse_block(current_square, target_square):
-        current_rank, current_file = Board.get_rank_and_file(current_square)
-        target_rank, target_file = Board.get_rank_and_file(target_square)
-        d_rank = target_rank - current_rank
-        d_file = target_file - current_file
+        d_rank = target_square // 9 - current_square // 9
+        d_file = target_square % 9 - current_square % 9
 
         if abs(d_rank) > abs(d_file):
             return current_square + d_rank // 2 * 9

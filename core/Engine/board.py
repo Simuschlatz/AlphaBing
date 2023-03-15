@@ -7,7 +7,6 @@ from core.engine.zobrist_hashing import ZobristHashing
 import numpy as np
 from collections import deque
 
-
 class Board:
     max_plies = 60
 
@@ -49,8 +48,8 @@ class Board:
         self.repetition_history = {self.zobrist_key}
 
     @staticmethod
-    def get_rank_and_file(square):
-        return square // 9, square % 9
+    def get_file_and_rank(square):
+        return square % 9, square // 9
     
     @staticmethod
     def get_fr_d(square_1, square_2):
@@ -59,7 +58,7 @@ class Board:
         from square_1's perspective
         """
         d = square_2 - square_1
-        return divmod(d, 9)
+        return d % 9, d // 9
     
     @staticmethod
     def get_square(file, rank):
@@ -115,7 +114,7 @@ class Board:
                 color, piece_type = piece
                 letter = Piece.letters[color * 7 + piece_type]
                 config += letter
-            rank, file = self.get_rank_and_file(i)
+            file, rank = self.get_file_and_rank(i)
             if empty_files_in_rank == 9:
                 config += "9"
                 empty_files_in_rank = 0
@@ -150,10 +149,8 @@ class Board:
         """
         :return: absolute distance between two squares in each axis (dcolumns, drows)
         """
-        rank_1, file_1 = divmod(square_1, 9)
-        rank_2, file_2 = divmod(square_2, 9)
-        dist_x = abs(file_1 - file_2)
-        dist_y = abs(rank_1 - rank_2)
+        dist_x = abs(square_1 % 9 - square_2 % 9)
+        dist_y = abs(square_1 // 9 - square_2 // 9)
         return dist_x, dist_y
 
     @staticmethod
@@ -161,10 +158,8 @@ class Board:
         """
         :return: manhattan distance between two squares in each axis (dcolumns, drows)
         """
-        rank_1, file_1 = divmod(square_1, 9)
-        rank_2, file_2 = divmod(square_2, 9)
-        dist_x = abs(file_1 - file_2)
-        dist_y = abs(rank_1 - rank_2)
+        dist_x = abs(square_1 % 9 - square_2 % 9)
+        dist_y = abs(square_1 // 9 - square_2 // 9)
         return dist_x + dist_y
 
     @staticmethod
@@ -172,10 +167,8 @@ class Board:
         """
         :return: x- and y-distance between two squares in each axis (dcolumns, drows)
         """
-        rank_1, file_1 = divmod(square_1, 9)
-        rank_2, file_2 = divmod(square_2, 9)
-        dist_x = int(file_1 - file_2)
-        dist_y = rank_1 - rank_2
+        dist_x = int(square_1 % 9 - square_2 % 9)
+        dist_y = square_1 // 9 - square_2 // 9
         return dist_x, dist_y
 
     def lazo_update(self, moved_piece_type, captured_piece, moved_from, moved_to):
@@ -228,8 +221,8 @@ class Board:
     @staticmethod
     def mirror_move(move):
         start, target = move
-        start_rank, start_file = divmod(start, 9)
-        target_rank, target_file = divmod(target, 9)
+        start_file, start_rank = Board.get_file_and_rank(start)
+        target_file, target_rank = Board.get_file_and_rank(target)
 
         mirrored_start = start_rank * 9 + 8 - start_file
         mirrored_target = target_rank * 9 + 8 - target_file
@@ -329,8 +322,8 @@ class Board:
 
     def get_move_notation(self, move):
         former_square, new_square = move
-        former_rank, former_file = self.get_rank_and_file(former_square)
-        new_rank, new_file = self.get_rank_and_file(new_square)
+        former_rank, former_file = self.get_file_and_rank(former_square)
+        new_rank, new_file = self.get_file_and_rank(new_square)
         piece = self.squares[former_square]
         color, piece_type = piece
         letter = Piece.letters[color * 7 + piece_type]
