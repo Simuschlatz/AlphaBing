@@ -15,13 +15,11 @@ class Clock:
     @staticmethod
     def get_ftime_string(secs):
         total_secs = round(secs)
-        mins = total_secs // 60
-        seconds = total_secs % 60
+        mins, seconds = divmod(total_secs, 60)
 
-        min_tens = mins // 10
-        min_ones = mins % 10
-        sec_tens = seconds // 10
-        sec_ones = seconds % 10
+        min_tens, min_ones = divmod(mins, 10)
+        
+        sec_tens, sec_ones = divmod(seconds, 10)
 
         ftime = f"{min_tens}{min_ones}:{sec_tens}{sec_ones}"
         return ftime
