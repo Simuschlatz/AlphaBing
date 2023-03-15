@@ -83,7 +83,7 @@ class UI:
         for square, piece in enumerate(self.ui_board):
             if not piece:
                 continue
-            file, rank = self.board.get_file_and_rank(square)
+            rank, file = self.board.get_rank_and_file(square)
             pos = BoardUtility.get_display_coords(file, rank, UIConfig.UNIT, *UIConfig.OFFSETS)
             color, piece_type = piece
             self.render_piece(color, piece_type, pos)
@@ -101,7 +101,7 @@ class UI:
         pygame.draw.ellipse(self.window, color, (x, y, diameter, diameter))
     
     def highlight_move(self, square, color, large: bool):
-        file, rank = self.board.get_file_and_rank(square)
+        rank, file = self.board.get_rank_and_file(square)
         coordinates = BoardUtility.get_display_coords(file, rank, UIConfig.UNIT, *UIConfig.OFFSETS)
         d = UIConfig.BIG_CIRCLE_D if large else UIConfig.SMALL_CIRCLE_D
         self.render_circle(coordinates, d, color)
@@ -376,7 +376,7 @@ class UI:
         """
         self.window.fill(UIConfig.BG_COLOR)
         self.window.blit(self.BOARD_IMG, UIConfig.OFFSETS)
-        self.show_square_ids()
+        # self.show_square_ids()
         self.move_responsiveness()
 
         self.render_game_state()
