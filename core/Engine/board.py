@@ -45,7 +45,7 @@ class Board:
         self.game_history = deque() # Stack(:previous square, :target square :captured piece)
         # DON'T EVER DO THIS IT TOOK ME AN HOUR TO FIX: self.piece_list = [[set()] * 7] * 2 
         self.zobrist_key = ZobristHashing.digest(self.moving_side, self.piece_lists)
-        self.repetition_history = {self.zobrist_key}
+        self.repetition_history = {self.zobrist_key: 1}
 
     @staticmethod
     def get_file_and_rank(square):
@@ -261,8 +261,9 @@ class Board:
 
         # Update zobrist key
         self.lazo_update(piece_type, captured_piece, *move)
-        # if not search_state:
-        #     self.repetition_history.add(self.zobrist_key)
+        if not search_state:
+            self.repetition_history[self.zobrist_key] = self.repetition_history.get(self.zobrist_key, 0) + 1
+            print(self.repetition_history)
         # print(self.zobrist_key)
 
         self.switch_moving_color()
@@ -294,9 +295,11 @@ class Board:
         self.plies = self.plies_history.pop() if piece_type == Piece.pawn else self.plies - 1
 
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
+        if not search_state:
+            self.repetition_history[self.zobrist_key] -= 1
+            print(self.repetition_history)
         self.lazo_update(piece_type, captured_piece, previous_square, moved_to)
-        # if not search_state:
-        #     self.repetition_history.pop()
+
         #     return 
         # print(self.zobrist_key)
 
