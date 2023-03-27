@@ -34,7 +34,6 @@ def main():
     ui = UI(board, agent=agent)
     ui.run()
 
-
 if __name__ == "__main__":
     import pygame
     pygame.init()
