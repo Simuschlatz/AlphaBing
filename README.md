@@ -10,3 +10,4 @@ On a superficial level, the idea of CheapChess is the amalgamation of traditiona
 ## Next Steps in the dev process
 * [ ] elo system
 * [ ] evaluation of networks
+* [ ] repetition rules

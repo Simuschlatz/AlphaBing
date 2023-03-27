@@ -9,15 +9,18 @@ def main():
     fen += (" w " if red_moves_first else " b ") + "- - 0 1"
     Clock.init(600)
     # If you play as red, red pieces are gonna be at the bottom, else they're at the top
-    board = Board("CRH1k1e2/3ca4/4ea3/9/2hr5/9/9/4E4/4A4/4KA3 w - - 0 1", play_as_red)
+    # "r1ea1kehr/4a/1ch/p1p1p1p1p/c/1C/P1P1P1P1P/E1H3HC/4A/R3KAE1R w - - 10 6"
+    board = Board("4k/6R/3R/9/9/9/9/4E/9/3K w - - 0 1", play_as_red)
     bb = board.piecelist_to_bitboard()
     mirrored = board.mirror_bitboard(bb)
+    print(bb[:, 4])
     # Set up move generator
     LegalMoveGenerator.init_board(board)
     LegalMoveGenerator.load_moves()
 
-    m = CNN()
-    evaluate_worker("CRH1k1e2/3ca4/4ea3/9/2hr5/9/9/4E4/4A4/4KA3 w - - 0 1", m)
+    # m = CNN()
+    # m.model.summary()
+    # evaluate_worker("CRH1k1e2/3ca4/4ea3/9/2hr5/9/9/4E4/4A4/4KA3 w - - 0 1", m)
     # m.load_checkpoint()
     # sp = SelfPlay(m, board)
     # sp.load_training_data()

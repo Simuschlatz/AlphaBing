@@ -376,7 +376,7 @@ class UI:
         """
         self.window.fill(UIConfig.BG_COLOR)
         self.window.blit(self.BOARD_IMG, UIConfig.OFFSETS)
-        self.show_square_ids()
+        # self.show_square_ids()
         self.move_responsiveness()
 
         self.render_game_state()

@@ -55,7 +55,7 @@ class AlphaZeroModel:
 
     def _value_head(self, input):
         """
-        :return: the value head of the AlphaZero model 
+        :return: the value head of the AlphaZero model
         The value head consists of one convolutional filter, BatchNorm, ReLu, 
         two fc layers with ReLu and tanh activation and outputs a scalar value in number range [-1, 1]
         """
