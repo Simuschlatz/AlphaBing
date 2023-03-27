@@ -2,16 +2,14 @@
 Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
-# import os
-# import sys
-# import shutil
-# from collections import deque
-# from concurrent.futures import ProcessPoolExecutor, wait
+
+from concurrent.futures import ProcessPoolExecutor, wait
+from multiprocessing import Value
 # from datetime import datetime
 from logging import getLogger
 from random import randint, choice
 from core.engine import Board, LegalMoveGenerator
-from core.engine.AI.AlphaZero import CNN, MCTS
+from core.engine.AI.AlphaZero import CNN, MCTS, EvaluationConfig
 # from multiprocessing import Manager
 # from threading import Thread
 # from time import time, sleep
@@ -30,9 +28,9 @@ R_PRI = 40
 def compute_elo(r0, r1, w):
     '''
     Compute the elo rating with method from https://www.xqbase.com/protocol/elostat.htm
-    :param r0: red player's elo rating
-    :param r1: black player's elo rating
-    :param w: game result: 1 = red win, 0.5 = draw, 0 = black win
+    :param r0: player's elo rating
+    :param r1: opponent elo rating
+    :param w: game result: 1 = player wins, 0.5 = draw, 0 = opponent wins
     '''
     relative_elo = r1 - r0 - R_PRI
     we = 1 / (1 + 10 ** (relative_elo / 400))
@@ -50,7 +48,7 @@ def pit_against_random(board: Board, mcts: MCTS, worker_score, random_score=200)
     plies = 0
 
     while True:
-        moves = LegalMoveGenerator.load_moves()
+        moves = LegalMoveGenerator.load_moves(board)
         game_over = board.is_terminal_state(len(moves))
 
         is_random_turn = plies % 2 == random_turn
@@ -75,17 +73,29 @@ def pit_against_random(board: Board, mcts: MCTS, worker_score, random_score=200)
             pi = mcts.get_probability_distribution(board, bitboards, moves=moves)
             move = mcts.best_action_from_pi(board, pi)
 
-        print(f"plies: {plies}, move: {move}")
+        print(f"{plies=}, {move=}")
         board.make_move(move)
         plies += 1
 
-def evaluate_worker(fen, nnet: CNN):
-    nnet_ranking = 0
+class Evaluator:
+    def __init__(self, config: EvaluationConfig):
+        self.config = config
+
+    def evaluate_worker(self, fen, nnet: CNN):
+        nnet_ranking = 0
+        with ProcessPoolExecutor(max_workers=self.config.max_processes) as executor:
+            futures = []
+            for i in range(10):
+                print(f"starting evaluation iteration n. {i}")
+                board = Board(fen)
+                mcts = MCTS(nnet)
+                nnet_ranking = pit_against_random(board, mcts, nnet_ranking)
+
+def evaluate_worker(self, fen, nnet: CNN):
     for i in range(10):
         print(f"starting evaluation iteration n. {i}")
         board = Board(fen)
         mcts = MCTS(nnet)
         nnet_ranking = pit_against_random(board, mcts, nnet_ranking)
-
 
 
