@@ -8,6 +8,8 @@ from core.engine.AI.ABMM.eval_utility import Evaluation
 from core.engine.AI.ABMM import order_moves, order_moves_pst
 from core.utils.timer import time_benchmark
 import multiprocessing as mp
+import logging
+logger = logging.getLogger(__name__)
 
 class Dfs:
     checkmate_value = 9998
@@ -68,6 +70,7 @@ class Dfs:
         move_evals[move] = evaluation
 
     @classmethod
+    @time_benchmark
     def search(cls, board: Board, m=250, algorithm: str="optalphabeta"):
         """
         Starts traversal of board's possible configurations
@@ -127,9 +130,10 @@ class Dfs:
         status = board.get_terminal_status(num_moves)
         if status != -1:
             if status:
+                # logging.info(f"MATE, {depth=}")
                 # Return checkmated value instead of negative infinity so the ai still chooses a move even if it only detects
                 # checkmates, as the checkmate value still is better than the initial beta of -infinity
-                return -cls.checkmate_value
+                return -cls.checkmate_value - depth
             # if terminal state but not mate, must be draw
             return cls.draw
 
@@ -196,7 +200,7 @@ class Dfs:
         A brute force dfs-like algorithm traversing every node of the game's 
         possible-outcome-tree of given depth
         with branching factor b and depth d time-complexity is O(b^d)
-        :return: best move possible
+        :return: best move possible at initial state according to evaluation function
         """
         # leaf node, return the static evaluation of current board
         if not depth:
