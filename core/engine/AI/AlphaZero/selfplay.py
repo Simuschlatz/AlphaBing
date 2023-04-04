@@ -146,7 +146,7 @@ class SelfPlay:
             self.nnet.train(train_examples)
             self.nnet.save_checkpoint()
             
-    def save_training_data(self, folder="core/checkpoints", filename="examples"):
+    def save_training_data(self, folder="core/Engine/AI/AlphaZero/checkpoints", filename="examples"):
         if not os.path.exists(folder):
             logger.info("Making folder for training data...")
             os.mkdir(folder)
@@ -156,7 +156,7 @@ class SelfPlay:
             Pickler(f).dump(self.training_data)
         logger.info("Done!")
 
-    def load_training_data(self, folder="core/checkpoints", filename="examples"):
+    def load_training_data(self, folder="core/Engine/AI/AlphaZero/checkpoints", filename="examples"):
         filepath = os.path.join(folder, filename)
         if not os.path.isfile(filepath):
             logger.warning(f"Training data file {filepath} does not exist yet. Try running one iteration of self-play first.")
