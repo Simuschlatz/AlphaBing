@@ -565,6 +565,7 @@ class LegalMoveGenerator:
                     if is_move_check:
                         cls.checks += 1
                         cls.block_check_hash[block_square] = cls.block_check_hash.get(block_square, 0) + 1
+                        cls.block_check_hash[square] = cls.block_check_hash.get(square, 0) + 1
                     continue
                 # Move is blocked by opponent piece or wouldn't threaten friendly king anyways
                 if Piece.is_color_no_check(block_piece, cls.board.opponent_color) or not is_move_check:
