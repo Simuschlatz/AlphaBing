@@ -176,7 +176,7 @@ class MCTS():
         # Choose best move ...
         # ... deterministically for competition
         if not tau:
-            best_a = np.random.choice(np.argmax(visit_counts))
+            best_a = np.random.choice(np.argmax(visit_counts).flatten())
             print(f"{best_a=}")
             probs = [0] * len(visit_counts)
             probs[best_a] = 1
@@ -193,7 +193,7 @@ class MCTS():
         :return: the move corresponding to the maximum value in the probability distribution of search
         NOTE: the perspective-dependent move is readjusted to the absolute squares
         """
-        a = np.random.choice(np.argmax(pi))
+        a = np.random.choice(np.argmax(pi).flatten())
         move = PrecomputingMoves.action_space_vector[a]
         return board.flip_move(move) if board.moving_side else move
 
