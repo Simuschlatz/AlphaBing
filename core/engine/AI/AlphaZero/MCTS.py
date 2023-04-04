@@ -141,9 +141,9 @@ class MCTS():
         # Flipping the move back around. Much more efficient than using bigger architecture, 
         # more labels, masking those labels...
         if board.moving_side: move = board.flip_move(move)
-        board.make_move(move)
+        board.make_move(move, search_state=True)
         v = self.search(board)
-        board.reverse_move()
+        board.reverse_move(search_state=True)
 
         # Update Qsa, Nsa and Ns
         if (s, a) in self.Qsa:
@@ -176,12 +176,13 @@ class MCTS():
         # Choose best move ...
         # ... deterministically for competition
         if not tau:
-            best_a = np.random.choice(np.argmax(visit_counts).flatten())
+            best_a = np.random.choice(np.argmax(visit_counts))
+            print(f"{best_a=}")
             probs = [0] * len(visit_counts)
             probs[best_a] = 1
             return probs
         # ... stochastically for exploration
-        visit_counts = [c ** round(1. / tau, 2) for c in visit_counts]
+        visit_counts = [n ** round(1. / tau, 2) for n in visit_counts]
         counts_sum = float(sum(visit_counts))
         probs = [c / counts_sum for c in visit_counts]# renormalize
         return probs
@@ -192,18 +193,7 @@ class MCTS():
         :return: the move corresponding to the maximum value in the probability distribution of search
         NOTE: the perspective-dependent move is readjusted to the absolute squares
         """
-        a = np.random.choice(np.argmax(pi).flatten())
-        move = PrecomputingMoves.action_space_vector[a]
-        return board.flip_move(move) if board.moving_side else move
-    
-    @staticmethod
-    def random_action_from_pi(board: Board, pi):
-        """
-        :return: a random move where the corresponding value in the probability distribution of search 
-        is not 0.
-        NOTE: the perspective-dependent move is readjusted to the absolute squares
-        """
-        a = np.random.choice(np.argwhere(pi).flatten())
+        a = np.random.choice(np.argmax(pi))
         move = PrecomputingMoves.action_space_vector[a]
         return board.flip_move(move) if board.moving_side else move
 
