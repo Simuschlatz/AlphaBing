@@ -111,7 +111,7 @@ class Dfs:
         TODO: Transposition tables
         """
         if not depth:
-            # return cls.quiescene(alpha, beta)
+            # return cls.quiescence(board, alpha, beta)
             cls.evaluated_nodes += 1
             return Evaluation.pst_shef(board)
 
@@ -154,7 +154,7 @@ class Dfs:
         return alpha
         
     @classmethod
-    def quiescene(cls, board: Board, alpha, beta):
+    def quiescence(cls, board: Board, alpha, beta):
         """
         A dfs-like algorithm used for chess searches, only considering captureing moves, thus helping the conventional
         search with misjudgment of situations when significant captures could take place in a depth below the search depth.
@@ -171,18 +171,29 @@ class Dfs:
         alpha = max(eval, alpha)
 
         moves = order_moves_pst(LegalMoveGenerator.load_moves(generate_quiets=False), board)
-        # Check- or Stalemate, meaning game is lost
-        # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
-        if board.is_terminal_state():
-            status = board.get_status()
-            if status:
-                return -cls.checkmate_value
-            if status == 0: 
-                return cls.draw
+        num_moves = len(moves)
+        # Reached quiet position
+        if not num_moves:
+            print("QUIET")
+            # All possible moves
+            num_moves = LegalMoveGenerator.load_moves(board)
+            # Check- or Stalemate, meaning game is lost
+            # NOTE: Unlike international chess, Xiangqi sees stalemate as equivalent to losing the game
+            if board.is_terminal_state(num_moves):
+                status = board.get_terminal_status(len(moves))
+                if status:
+                    return -cls.checkmate_value
+                if status == 0: 
+                    return cls.draw
+
+            eval = Evaluation.pst_shef(board)
+            if eval >= beta:
+                return beta
+            alpha = max(eval, alpha)
 
         for move in moves:
             board.make_move(move, search_state=True)
-            evaluation = -cls.quiescene(-beta, -alpha)
+            evaluation = -cls.quiescence(board, -beta, -alpha)
             board.reverse_move(search_state=True)
             # Move is even better than best eval before,
             # opponent won't choose move anyway so PRUNE YESSIR
