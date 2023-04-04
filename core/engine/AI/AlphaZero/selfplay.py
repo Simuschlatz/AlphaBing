@@ -25,7 +25,7 @@ class SelfPlay:
         self.mcts = MCTS(nnet)
         self.training_data = []
 
-    def augument_data(self, example, eps_data):
+    def augment_data(self, example):
         """
         Scales training data without additional MCTS search by:
         1. flipping bitboards and pi
@@ -33,7 +33,7 @@ class SelfPlay:
         
         adds augmented examples to :param eps_data:"""
 
-        augumented = [example]
+        augmented = [example]
         bitboard, pi, side = example
 
         # NOTE flipping the board only works if the model takes in an input plane. This is due to the
@@ -47,9 +47,9 @@ class SelfPlay:
         # Mirroring the board
         mirrored_bb = self.board.mirror_bitboard(bitboard)
         mirrored_pi = self.mcts.mirror_pi(pi)
-        augumented.append([mirrored_bb, mirrored_pi, side])
+        augmented.append([mirrored_bb, mirrored_pi, side])
 
-        eps_data.extend(augumented)
+        return augmented
         
     def execute_episode(self, moves, training_examples=None, board: Board=None, mcts: MCTS=None):
         """
@@ -71,16 +71,20 @@ class SelfPlay:
         plies, tau = 0, 1
         while True:
             bb = list(board.piecelist_to_bitboard())
+
+            # more exploitation in the beginning
             if plies > PlayConfig.tau_decay_threshold:
                 tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
             # tau = plies < PlayConfig.tau_decay_threshold
             pi = mcts.get_probability_distribution(board, bitboards=bb, moves=moves, tau=tau)
             side = board.moving_side
 
-            self.augument_data([bb, pi, side], training_data)
+            # add the augmented examples from current position
+            augmented_move_data = self.augment_data([bb, pi, side])
+            training_data.extend(augmented_move_data)
 
             move = MCTS.best_action_from_pi(board, pi)
-            move = MCTS.random_action_from_pi(board, pi)
+            # move = MCTS.random_action_from_pi(board, pi)
 
             board.make_move(move, search_state=False)
             plies += 1
@@ -167,7 +171,14 @@ class SelfPlay:
             logger.info("Done!")
 
             
-            
+### JUST FOR TESTING ###         
 
+import sys
+import os
+root = os.environ.get("CHEAPCHESS")
+sys.path.append(root)
+print(sys.path)
 
+if __name__ == "__main__":
+    mp.freeze_support()
     
