@@ -26,10 +26,11 @@ sorted_evaluated = sorted(evaluated_nodes)
 colors = [colors[sorted_evaluated.index(n)] for n in evaluated_nodes]
 
 with sns.axes_style("darkgrid"):
-    plt.figure(figsize=(6, 5))
+    fig = plt.figure(figsize=(8, 6))
     plt.ticklabel_format(style='scientific', axis='x', scilimits=(0,0))
     plt.bar(algorithms, evaluated_nodes, color=colors)
-    plt.title("Vergleich der Performance unterschiedlicher Suchalgorithmen", fontweight="bold")
-    plt.xlabel('Algorithmus', fontweight='bold')
-    plt.ylabel('Evaluierte Positionen', fontweight="bold")
+    # plt.title("Vergleich der Performance unterschiedlicher Suchalgorithmen", fontweight="bold")
+    plt.xlabel('Algorithmus')
+    plt.ylabel('Evaluierte Positionen')
 plt.show()
+fig.savefig("assets/imgs/vis/algComparison.pdf")
