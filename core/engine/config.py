@@ -13,7 +13,7 @@ class UIConfig:
     WHITE = (255, 255, 255)
     GREY = (40, 40, 40)
     MOVE_RESPONSE_COLOR = (217, 255, 255)
-    MOVE_HIGHLIGHT_COLORS = ((100, 100, 240), RED)
+    MOVE_HIGHLIGHT_COLORS = ((100, 100, 240), (255, 0, 0))
 
     WIDTH = 1200
     HEIGHT = 800
@@ -27,7 +27,7 @@ class UIConfig:
 
     FPS = 45
     # Style of piece images
-    piece_style_western = True
+    piece_style_western = False
 
     IMGS = init_imgs(UNIT, 
                     (WIDTH, HEIGHT), 
@@ -53,4 +53,4 @@ class UIConfig:
 
 
     BIG_CIRCLE_D = UNIT * 1.1
-    SMALL_CIRCLE_D = UNIT // 6
+    SMALL_CIRCLE_D = UNIT // 5

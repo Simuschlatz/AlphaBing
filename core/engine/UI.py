@@ -216,7 +216,7 @@ class UI:
         mouse_pos = pygame.mouse.get_pos()
         piece_pos = self.get_circle_center(mouse_pos, UIConfig.UNIT, factor=-1)
         color, piece_type = self.selected_piece
-        self.render_circle(piece_pos, UIConfig.BIG_CIRCLE_D, UIConfig.RED)
+        self.render_circle(piece_pos, UIConfig.BIG_CIRCLE_D, UIConfig.MOVE_HIGHLIGHT_COLORS[1-color])
         self.render_piece(color, piece_type, piece_pos)
 
     def move_responsiveness(self):
@@ -238,7 +238,7 @@ class UI:
                 self.highlight_move(square, UIConfig.MOVE_HIGHLIGHT_COLORS[piece_color], True)
                 continue
             # draw black's moves in red and red's moves in blue
-            self.highlight_move(square, UIConfig.MOVE_HIGHLIGHT_COLORS[1-piece_color], False)
+            self.highlight_move(square, UIConfig.MOVE_HIGHLIGHT_COLORS[piece_color], False)
     
     @staticmethod
     def audio_player(audiofile):
