@@ -16,6 +16,7 @@ class ModelConfig:
     l2_reg_const = 1e-4
     value_fc_layer_size = 256
     distributed = False
+    checkpoint_location = "core/Engine/AI/AlphaZero/checkpoints"
 
 class PlayConfig:
     simulations_per_move = 25
@@ -27,7 +28,7 @@ class PlayConfig:
     enable_resign_rate = 0.5
 
     tau_decay_rate = .9
-    tau_decay_threshold = 20 # threshold of plies when tau starts to decay
+    tau_decay_threshold = 30 # threshold of plies when tau starts to decay
     self_play_eps = 1
     training_iterations = 10
     steps_per_save = 2
@@ -43,6 +44,7 @@ class TrainingConfig:
         ]
     epochs = 40
     batch_size = 64
+
 
 class EvaluationConfig:
     max_processes = cpu_count()
