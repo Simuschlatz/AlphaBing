@@ -3,14 +3,19 @@ Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights R
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
 from .model import AlphaZeroModel
-from . import TrainingConfig
+from . import TrainingConfig, ModelConfig
 
 import tensorflow as tf
 from keras.utils import plot_model
+from keras.models import load_model
 from keras.optimizers import SGD
 import keras.backend
 import numpy as np
 import os, datetime
+
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 class CNN(AlphaZeroModel):
     def __init__(self):
@@ -62,29 +67,37 @@ class CNN(AlphaZeroModel):
             if iterations >= threshold:
                 keras.backend.set_value(self.opt.learning_rate, lr)
 
-    def save_checkpoint(self, folder="core/Engine/AI/AlphaZero/checkpoints", filename="checkpoint"):
+    def save_checkpoint(self, folder=ModelConfig.checkpoint_location, filename="checkpoint.h5"):
         # change file type / extension
         if not filename.endswith(".h5"):
-            filename = filename.split(".")[0] + ".h5"
+            filename = filename.split(".")
+            filename = ".".join(filename) + ".h5"
         filepath = os.path.join(folder, filename)
         if not os.path.exists(folder):
-            print(f"Making checkpoint directory {folder}...")
+            logger.info(f"Making checkpoint directory {folder}...")
             os.mkdir(folder)
         else:
-            print("Checkpoint Directory exists!")
-        print("Saving checkpoint...")
+            logger.info("Checkpoint Directory exists!")
+        logger.info("Saving checkpoint...")
         self.model.save_weights(filepath)
 
-    def load_checkpoint(self, folder="core/Engine/AI/AlphaZero/checkpoints", filename="checkpoint"):
+    def load_checkpoint(self, folder=ModelConfig.checkpoint_location, filename="checkpoint.h5", save_model_if_no_file=True):
         # change file type / extension
         if not filename.endswith(".h5"):
-            filename = filename.split(".")[0] + ".h5"
+            filename = filename.split(".")
+            filename = ".".join(filename) + ".h5"
         filepath = os.path.join(folder, filename)
         if not os.path.exists(filepath):
+            if save_model_if_no_file:
+                logger.warning("404 target checkpoint file not found. Doing a workaround...")
+                self.save_checkpoint()
+                return
             raise FileNotFoundError(f"No model in path '{filepath}")
-        print("Loading checkpoint...")
+        logger.info("Loading checkpoint...")
         self.model.load_weights(filepath)
+        logger.info("Done loading!")
 
     def visualize(self, filepath="assets/imgs/ML"):
         filepath = os.path.join(filepath, "model" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png")
         plot_model(self.model, filepath, show_shapes=True, show_layer_names=True)
+        
