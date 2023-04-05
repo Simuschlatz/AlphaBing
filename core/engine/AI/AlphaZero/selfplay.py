@@ -13,9 +13,12 @@ from random import shuffle
 from tqdm import tqdm
 from pickle import Pickler, Unpickler
 import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from copy import deepcopy
 import logging
 
+import keras
+import tensorflow as tf
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +26,6 @@ class SelfPlay:
     def __init__(self, board: Board) -> None:
         self.board = board
         self.training_data = []
-        self.nnet = None
-        self.mcts = None
-
-    def start(self):
-        nnet = CNN()
-        nnet.load_checkpoint()
-
-        mcts = MCTS(nnet)
 
         
     # @time_benchmark
@@ -55,12 +50,12 @@ class SelfPlay:
 
         # Mirroring the board
         mirrored_bb = self.board.mirror_bitboard(bitboard)
-        mirrored_pi = self.mcts.mirror_pi(pi)
+        mirrored_pi = MCTS.mirror_pi(pi)
         augmented.append([mirrored_bb, mirrored_pi, side])
 
         return augmented
         
-    def execute_episode(self, moves, training_examples=None, board: Board=None, nnet: CNN()=None):
+    def execute_episode(self, moves, training_examples=None, board: Board=None):
         """
         Execute one episode of self-play. The game is played until the end, simultaneously 
         collecting training data. when a terminal state is reached, each training example's
@@ -75,7 +70,8 @@ class SelfPlay:
         shared memory containing the training examples from episode's self-play iteration
         """
         board = board or self.board
-        nnet = nnet or self.nnet
+        nnet = CNN()
+        nnet.load_checkpoint()
         mcts = MCTS(nnet)
 
         training_data = []
@@ -89,8 +85,8 @@ class SelfPlay:
             #     tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
             # tau = plies < PlayConfig.tau_decay_threshold
             pi = mcts.get_pi(board, bitboards=bb, moves=moves)
-            logger.debug(mcts.Nsa)
-            logger.debug("-" * 20)
+            # logger.debug(mcts.Nsa)
+            # logger.debug("-" * 20)
             side = board.moving_side
 
             # add the augmented examples from current position
@@ -102,8 +98,8 @@ class SelfPlay:
 
             board.make_move(move)
             plies += 1
-            logger.debug(f"plies of current episode: {plies}")
-            logger.debug(f"{len(training_data)=}")
+            print(f"plies of current episode: {plies}")
+            print(f"{len(training_data)=}")
             moves = LegalMoveGenerator.load_moves(board)
             status = board.get_terminal_status(len(moves))
             if status == -1: continue
@@ -129,26 +125,23 @@ class SelfPlay:
 
         :param parallel: If True, each episode is executed on a a separate process
         """
-        self.nnet = CNN()
-        self.nnet.load_checkpoint()
         fen = self.board.load_fen_from_board()
-        
         moves = LegalMoveGenerator.load_moves(self.board)
         for i in range(1, PlayConfig.training_iterations + 1):
             logger.debug(f"starting self-play iteration no. {i}")
             iteration_training_data = []
-
+            print(PlayConfig.max_processes)
             if parallel:
-                iteration_data = mp.Manager().list() # Shared list
-                jobs = [mp.Process(target=self.execute_episode(moves, iteration_data, deepcopy(self.board))) for _ in range(PlayConfig.self_play_eps)]
-                for processes in tqdm(self.batch(jobs, PlayConfig.max_processes)):
-                    print("------starting process-------")
-                    for p in processes: p.start()
-                    for p in processes: p.join()
+                with ProcessPoolExecutor(PlayConfig.max_processes) as executor:
+                    futures = []
+                    for _ in range(PlayConfig.max_processes):
+                        futures.append(executor.submit(self.execute_episode, moves, board=Board(fen)))
+                results = [future.result() for future in as_completed(futures)]
+                for res in results:
+                    iteration_training_data.extend(res)
             else:
                 for _ in tqdm(range(PlayConfig.self_play_eps), desc="Episodes"):
                     print("Starting episode...")
-                    self.mcts = MCTS(self.nnet)
                     self.board = Board(fen)
                     eps_training_data = self.execute_episode(moves)
                     iteration_training_data.extend(eps_training_data)
