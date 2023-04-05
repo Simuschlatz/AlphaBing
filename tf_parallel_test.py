@@ -68,28 +68,54 @@
 
 import concurrent.futures
 import tensorflow as tf
+import keras
 import multiprocessing
+import sys, os
+from contextlib import contextmanager
 
+@contextmanager
+def silence_function():
+    """
+    surpresses console output of a function called within the context manager
+    """
+    with open(os.devnull, "w") as devNull:
+        initial = sys.stdout
+        sys.stdout = devNull
+        try: yield
+        finally: sys.stdout = initial
 # Define the worker function
 def worker(input_data):
-    # Load the model
     model = tf.keras.Sequential([
         tf.keras.layers.InputLayer(1, dtype=tf.float32),
         tf.keras.layers.Dense(100, activation=tf.keras.activations.relu),
         tf.keras.layers.Dense(100, activation=tf.keras.activations.relu),
         tf.keras.layers.Dense(1)
     ])
+    model.load_weights("test_weights")
+    # # Load the model
+    # with silence_function():
+    #     model = keras.models.load_model("test_weights")
     # Make a prediction on the input data
-    predictions = model.predict(tf.expand_dims(input_data, 0))
+    predictions = model.predict(input_data)
     # Sort the output data
     sorted_data = tf.sort(predictions, direction='DESCENDING')
     return sorted_data
+
 if __name__ == '__main__':
+    from time import time
     import tensorflow as tf
     multiprocessing.freeze_support()
     # Define some input data
-    input_data = tf.range(0, 8)
+    input_data = tf.reshape(tf.range(0, 80), (8, 10))
+    model = tf.keras.Sequential([
+            tf.keras.layers.InputLayer(1, dtype=tf.float32),
+            tf.keras.layers.Dense(100, activation=tf.keras.activations.relu),
+            tf.keras.layers.Dense(100, activation=tf.keras.activations.relu),
+            tf.keras.layers.Dense(1)
+        ])
 
+    model.save_weights("test_weights")
+    t = time()
     # Create a ThreadPoolExecutor with the desired number of workers
     with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
         # Submit the worker function to the executor for each input data
@@ -97,7 +123,7 @@ if __name__ == '__main__':
         concurrent.futures.wait(futures)
         # Get the results from the futures as they complete
         results = [future.result() for future in concurrent.futures.as_completed(futures)]
-
-    # Print the sorted output data
-    for result in results:
-        print(result.numpy())
+    print(time() - t)
+    # # Print the sorted output data
+    # for result in results:
+    #     print(result.numpy())

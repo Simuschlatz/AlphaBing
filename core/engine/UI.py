@@ -43,7 +43,7 @@ class UI:
         self.ui_board = board.squares[:]
 
         # All the images
-        self.PIECES_IMGS, self.BOARD_IMG, self.BG_IMG, self.BTN_ACTIVATE_IMG, self.BTN_DEACTIVATE_IMG = UIConfig.IMGS 
+        self.PIECES_IMGS, self.BOARD_IMG, self.BTN_ACTIVATE_IMG, self.BTN_DEACTIVATE_IMG = UIConfig.IMGS 
 
         # Move logics
         self.move_from = None
