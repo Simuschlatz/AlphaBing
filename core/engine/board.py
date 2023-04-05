@@ -6,6 +6,8 @@ from core.engine.piece import Piece
 from core.engine.zobrist_hashing import ZobristHashing
 import numpy as np
 from collections import deque
+from logging import getLogger
+logger = getLogger(__name__)
 
 class Board:
     max_plies = 60
@@ -263,7 +265,7 @@ class Board:
         self.lazo_update(piece_type, captured_piece, *move)
         if not search_state:
             self.repetition_history[self.zobrist_key] = self.repetition_history.get(self.zobrist_key, 0) + 1
-            print(self.repetition_history)
+            # print(self.repetition_history)
         # print(self.zobrist_key)
 
         self.switch_moving_color()
@@ -296,8 +298,11 @@ class Board:
 
         # Update Zobrist key, as moving side is switched the same method can be used for reversing the zobrist changes
         if not search_state:
-            self.repetition_history[self.zobrist_key] -= 1
-            print(self.repetition_history)
+            if self.repetition_history[self.zobrist_key] == 1:
+                del self.repetition_history[self.zobrist_key]
+            else:
+                self.repetition_history[self.zobrist_key] -= 1
+            logger.info(self.repetition_history)
         self.lazo_update(piece_type, captured_piece, previous_square, moved_to)
 
         #     return 
