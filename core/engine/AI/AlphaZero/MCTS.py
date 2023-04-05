@@ -42,6 +42,9 @@ class MCTS():
     def __init__(self, nnet: CNN, config=PlayConfig):
         self.nnet = nnet
         self.config = config
+        self.reset()
+
+    def reset(self):
         # W Values aren't stored because they are only of temporary use in each interation
         self.Qsa = {}  # stores Q values for s,a (as defined in the paper)
         self.Nsa = {}  # stores #times edge s,a was visited
@@ -157,38 +160,38 @@ class MCTS():
         return -v
 
     # @time_benchmark
-    def get_probability_distribution(self, board: Board, bitboards: list, moves=None, tau=1):
+    def get_pi(self, board: Board, bitboards: list, moves=None):
         """
-        This function performs numMCTSSims simulations of MCTS on ``board``.
-        :return: probs: a policy vector where the probability of the ith action is proportional to 
-        ``Nsa[(s,a)]**(1./temp)``
-        :param tau: parameter controlling exploration
-        :param bitboards: bitboards of current state
+        Performs a number of MCTS simulations with root state of current ``board``.
+        :return: The probability distribution π used for policy iteration and to choose moves
         """
         for i in range(self.config.simulations_per_move):
             # logger.info(f"starting simulation n. {i}")
             self.search(board, is_root=True, bitboards=bitboards, moves=moves)
 
         s = board.zobrist_key
-        # Selcting valid moves from current board position
-        visit_counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)]
+        # storing the visit counts
+        visit_counts = np.array([self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)])
+        sum_visit_counts = np.sum(visit_counts)
+        pi = visit_counts / sum_visit_counts # normalize
+        return pi
 
         # Choose best move ...
         # ... deterministically for competition
-        if not tau:
-            best_a = np.random.choice(np.argmax(visit_counts).flatten())
-            print(f"{best_a=}")
-            probs = [0] * len(visit_counts)
-            probs[best_a] = 1
-            return probs
-        # ... stochastically for exploration
-        visit_counts = [n ** round(1. / tau, 2) for n in visit_counts]
-        counts_sum = float(sum(visit_counts))
-        probs = [c / counts_sum for c in visit_counts]# renormalize
-        return probs
+        # if not tau:
+        #     best_a = np.random.choice(np.argmax(visit_counts).flatten())
+        #     print(f"{best_a=}")
+        #     probs = [0] * len(visit_counts)
+        #     probs[best_a] = 1
+        #     return probs
+        # # ... stochastically for exploration
+        # visit_counts = [n ** round(1. / tau, 2) for n in visit_counts]
+        # counts_sum = float(sum(visit_counts))
+        # probs = [c / counts_sum for c in visit_counts]# renormalize
+        # return probs
 
     @staticmethod
-    def best_action_from_pi(board: Board, pi):
+    def best_action_from_pi(board: Board, pi, tau=0):
         """
         :return: the move corresponding to the maximum value in the probability distribution of search
         NOTE: the perspective-dependent move is readjusted to the absolute squares

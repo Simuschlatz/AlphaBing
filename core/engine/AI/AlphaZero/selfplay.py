@@ -2,10 +2,11 @@
 Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
 You may use, distribute and modify this code under the terms of the GNU General Public License
 """
+
 import os
 from . import CNN, MCTS, PlayConfig
 from core.engine import Board, LegalMoveGenerator
-
+from core.utils import time_benchmark
 import numpy as np
 from random import shuffle
 
@@ -19,12 +20,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 class SelfPlay:
-    def __init__(self, nnet: CNN, board: Board) -> None:
-        self.nnet = nnet
+    def __init__(self, board: Board) -> None:
         self.board = board
-        self.mcts = MCTS(nnet)
         self.training_data = []
+        self.nnet = None
+        self.mcts = None
 
+    def start(self):
+        nnet = CNN()
+        nnet.load_checkpoint()
+
+        mcts = MCTS(nnet)
+
+        
+    # @time_benchmark
     def augment_data(self, example):
         """
         Scales training data without additional MCTS search by:
@@ -51,7 +60,7 @@ class SelfPlay:
 
         return augmented
         
-    def execute_episode(self, moves, training_examples=None, board: Board=None, mcts: MCTS=None):
+    def execute_episode(self, moves, training_examples=None, board: Board=None, nnet: CNN()=None):
         """
         Execute one episode of self-play. The game is played until the end, simultaneously 
         collecting training data. when a terminal state is reached, each training example's
@@ -66,17 +75,22 @@ class SelfPlay:
         shared memory containing the training examples from episode's self-play iteration
         """
         board = board or self.board
-        mcts = mcts or self.mcts
+        nnet = nnet or self.nnet
+        mcts = MCTS(nnet)
+
         training_data = []
-        plies, tau = 0, 1
+        plies, tau = 0, 0
         while True:
+            mcts.reset()
             bb = list(board.piecelist_to_bitboard())
 
             # more exploitation in the beginning
-            if plies > PlayConfig.tau_decay_threshold:
-                tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
+            # if plies > PlayConfig.tau_decay_threshold:
+            #     tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
             # tau = plies < PlayConfig.tau_decay_threshold
-            pi = mcts.get_probability_distribution(board, bitboards=bb, moves=moves, tau=tau)
+            pi = mcts.get_pi(board, bitboards=bb, moves=moves)
+            logger.debug(mcts.Nsa)
+            logger.debug("-" * 20)
             side = board.moving_side
 
             # add the augmented examples from current position
@@ -86,9 +100,10 @@ class SelfPlay:
             move = MCTS.best_action_from_pi(board, pi)
             # move = MCTS.random_action_from_pi(board, pi)
 
-            board.make_move(move, search_state=False)
+            board.make_move(move)
             plies += 1
             logger.debug(f"plies of current episode: {plies}")
+            logger.debug(f"{len(training_data)=}")
             moves = LegalMoveGenerator.load_moves(board)
             status = board.get_terminal_status(len(moves))
             if status == -1: continue
@@ -114,7 +129,10 @@ class SelfPlay:
 
         :param parallel: If True, each episode is executed on a a separate process
         """
+        self.nnet = CNN()
+        self.nnet.load_checkpoint()
         fen = self.board.load_fen_from_board()
+        
         moves = LegalMoveGenerator.load_moves(self.board)
         for i in range(1, PlayConfig.training_iterations + 1):
             logger.debug(f"starting self-play iteration no. {i}")
@@ -122,7 +140,7 @@ class SelfPlay:
 
             if parallel:
                 iteration_data = mp.Manager().list() # Shared list
-                jobs = [mp.Process(target=self.execute_episode(moves, iteration_data, deepcopy(self.board), deepcopy(self.mcts))) for _ in range(PlayConfig.self_play_eps)]
+                jobs = [mp.Process(target=self.execute_episode(moves, iteration_data, deepcopy(self.board))) for _ in range(PlayConfig.self_play_eps)]
                 for processes in tqdm(self.batch(jobs, PlayConfig.max_processes)):
                     print("------starting process-------")
                     for p in processes: p.start()
@@ -171,14 +189,5 @@ class SelfPlay:
             logger.info("Done!")
 
             
-### JUST FOR TESTING ###         
 
-import sys
-import os
-root = os.environ.get("CHEAPCHESS")
-sys.path.append(root)
-print(sys.path)
-
-if __name__ == "__main__":
-    mp.freeze_support()
     
