@@ -70,7 +70,7 @@ def pit_against_random(board: Board, mcts: MCTS, worker_score, random_score=200)
             move = choice(moves)
         else:
             bitboards = list(board.piecelist_to_bitboard())
-            pi = mcts.get_pi(board, bitboards, moves=moves)
+            pi = mcts.get_probability_distribution(board, bitboards, moves=moves)
             move = mcts.best_action_from_pi(board, pi)
 
         print(f"{plies=}, {move=}")
