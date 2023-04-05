@@ -17,7 +17,7 @@ class AlphaZeroAgent(Agent):
     
     def get_mcts_pi(self, board: Board):
         bitboards = list(board.piecelist_to_bitboard())
-        pi = self.mcts.get_probability_distribution(board, bitboards=bitboards)
+        pi = self.mcts.get_pi(board, bitboards=bitboards)
         return pi
 
     def choose_action(self, board: Board, pi=[]):
