@@ -1,4 +1,4 @@
-from .model import Model
+from .model import ModelArch
 from . import TrainingConfig, ModelConfig
 
 import tensorflow as tf
@@ -12,7 +12,7 @@ import os, datetime
 from logging import getLogger
 logger = getLogger(__name__)
 
-class CNN(Model):
+class CNN(ModelArch):
     def __init__(self):
         self._build()
         self.opt = SGD(learning_rate=TrainingConfig.initial_lr, momentum=TrainingConfig.momentum)
@@ -99,12 +99,12 @@ class CNN(Model):
         logger.info("Done loading!")
 
     @staticmethod
-    def load_current_model(folder=ModelConfig.checkpoint_location, filename="checkpoint.h5"):
+    def load_current_model():
         """
         :return: The current model from the checkpoint file specified in ``CNN.load_checkpoint()``
         """
         model = CNN()
-        model.load_weights()
+        model.load_checkpoint()
         return model
 
     def visualize(self, filepath="assets/imgs/ML"):

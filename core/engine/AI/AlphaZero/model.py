@@ -7,7 +7,7 @@ from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, Acti
 from keras.regularizers import l2
 
 
-class Model:
+class ModelArch:
     
     def _conv_layer(self, input, num_filters: int, kernel_size: int, name:str=None, prefix: str=""):
         """
