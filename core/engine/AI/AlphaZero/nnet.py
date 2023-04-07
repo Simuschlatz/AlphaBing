@@ -10,7 +10,6 @@ import numpy as np
 import os, datetime
 
 from logging import getLogger
-
 logger = getLogger(__name__)
 
 class CNN(AlphaZeroModel):
@@ -23,13 +22,13 @@ class CNN(AlphaZeroModel):
         return self.model.predict(self.bitboard_to_input(inp), verbose=False)
 
     @staticmethod
-    def bitboard_to_input(bitboard, axis=0):
+    def bitboard_to_input(bitboards, axis=0):
         """
         Converts array-like object with shape ``CNN.config.input_shape`` to tensor, 
         expands dimension along axis ``axis``, making it suitable as input to model
         :return: tensor of bitboard
         """
-        return tf.expand_dims(bitboard, axis=axis)
+        return tf.expand_dims(bitboards, axis=axis)
     
     def process_training_data(self, training_data):
         """
@@ -58,12 +57,15 @@ class CNN(AlphaZeroModel):
             epochs=TrainingConfig.epochs
             )
 
-    def update_lr(self, iterations):
+    def update_lr(self, iterations: int):
         for threshold, lr in TrainingConfig.iter_to_lr:
             if iterations >= threshold:
                 keras.backend.set_value(self.opt.learning_rate, lr)
 
     def save_checkpoint(self, folder=ModelConfig.checkpoint_location, filename="checkpoint.h5"):
+        """
+        Saves checkpoint of current model
+        """
         # change file type / extension
         if not filename.endswith(".h5"):
             filename = filename.split(".")
@@ -78,6 +80,9 @@ class CNN(AlphaZeroModel):
         self.model.save_weights(filepath)
 
     def load_checkpoint(self, folder=ModelConfig.checkpoint_location, filename="checkpoint.h5", save_model_if_no_file=True):
+        """
+        Loads a checkpoint file and updates weights of current model
+        """
         # change file type / extension
         if not filename.endswith(".h5"):
             filename = filename.split(".")

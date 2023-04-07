@@ -2,7 +2,6 @@
 from concurrent.futures import ProcessPoolExecutor, wait
 from multiprocessing import Value
 # from datetime import datetime
-from logging import getLogger
 from random import randint, choice
 from core.engine import Board, LegalMoveGenerator
 from core.engine.AI.AlphaZero import CNN, MCTS, EvaluationConfig
@@ -14,6 +13,7 @@ from core.engine.AI.AlphaZero import CNN, MCTS, EvaluationConfig
 # from random import random, randint
 # import numpy as np
 
+from logging import getLogger
 logger = getLogger(__name__)
 
 # 0 ~ 999: K = 30; 1000 ~ 1999: K = 15; 2000 ~ 2999: K = 10; 3000 ~ : K = 5

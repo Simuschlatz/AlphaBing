@@ -38,7 +38,7 @@ class ZobristHashing:
         return int(num, 2)
 
     @classmethod
-    def digest(cls, moving_side, piece_lists):
+    def digest(cls, moving_side: int, piece_lists: list):
         """
         :return: The zobrist key for the current board
         """

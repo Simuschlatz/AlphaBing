@@ -9,13 +9,12 @@ from keras.regularizers import l2
 
 class AlphaZeroModel:
     
-    def _conv_layer(self, input, num_filters, kernel_size, name=None, index=None):
+    def _conv_layer(self, input, num_filters: int, kernel_size: int, name:str=None):
         """
         builds a convolutional layer with given parameters. Applies BatchNorm and ReLu Activation.
         :param index: (0, ∞]
         """
-        if name is None:
-            name = "conv_layer" + str(index) if index != None else "conv_layer"
+        name = name or "_conv1"
 
         x = Conv2D(
             filters=num_filters, 
@@ -25,15 +24,15 @@ class AlphaZeroModel:
             use_bias=False, 
             kernel_regularizer=l2(ModelConfig.l2_reg_const), 
             name=name)(input)
-        x = BatchNormalization(axis=1, name=name+"_BN")(x)
-        x = Activation("relu", name=name+"_ReLu")(x)
+        x = BatchNormalization(axis=1, name=name+"_bn")(x)
+        x = Activation("relu", name=name+"_relu")(x)
 
         return x
 
-    def _residual_block(self, input, index):
-        name = "Res" + str(index)
+    def _residual_block(self, input, index: int):
+        name = "res" + str(index)
 
-        x = self._conv_layer(input, ModelConfig.num_filters, ModelConfig.kernel_size, index=index)
+        x = self._conv_layer(input, ModelConfig.num_filters, ModelConfig.kernel_size)
 
         x = Conv2D(
             filters=ModelConfig.num_filters, 
@@ -42,11 +41,11 @@ class AlphaZeroModel:
             data_format="channels_first", 
             use_bias=False, 
             kernel_regularizer=l2(ModelConfig.l2_reg_const), 
-            name=name)(x)
+            name=name+"_conv2")(x)
 
-        x = BatchNormalization(axis=1, name="res"+str(index)+"_batchnorm2")(x)
+        x = BatchNormalization(axis=1, name="res"+str(index)+"_bn")(x)
         x = Add(name=name+"_add")([input, x])
-        x = Activation("relu", name=name+"_relu2")(x)
+        x = Activation("relu", name=name+"_reLu")(x)
         return x
 
     def _value_head(self, input):
@@ -64,7 +63,7 @@ class AlphaZeroModel:
         x = Dense(1, 
             kernel_regularizer=l2(ModelConfig.l2_reg_const), 
             activation="tanh", 
-            name="value_head")(x)
+            name="value_out")(x)
         return x
     
     def _policy_head(self, input):
@@ -73,7 +72,7 @@ class AlphaZeroModel:
         x = Dense(ModelConfig.policy_output_size, 
             kernel_regularizer=l2(ModelConfig.l2_reg_const), 
             activation="softmax", 
-            name="policy_head")(x)
+            name="policy_out")(x)
         return x
 
     def _build(self) -> Model:
@@ -89,4 +88,4 @@ class AlphaZeroModel:
         value_head = self._value_head(x)
         policy_head = self._policy_head(x)
 
-        self.model = Model(in_x, [policy_head, value_head], name="alphazero_model")
+        self.model = Model(in_x, [policy_head, value_head], name="Model")

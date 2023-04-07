@@ -1,11 +1,11 @@
-import logging
 import math
 import numpy as np
 from core.engine import Board, LegalMoveGenerator, PrecomputingMoves
 from core.engine.AI.AlphaZero import PlayConfig, CNN
 from core.utils import time_benchmark
 
-logger = logging.getLogger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 '''
 - statically evaluate node, if terminal node: return -value
@@ -50,7 +50,7 @@ class MCTS():
         self.Es = {}  # stores each state s where the terminal code has been evaluated
         self.Vs = {}  # stores legal moves for board s
 
-    def search(self, board: Board, is_root=False, bitboards=None, moves=None):
+    def search(self, board: Board, is_root=False, bitboards: list=None, moves: list[tuple]=None):
         """
         This function performs one iteration of MCTS. It recursively calls itself until a leaf node 
         is found. The move chosen at each point maximizes the upper confidence bound (Q(s|a) + U(s|a))
@@ -64,7 +64,7 @@ class MCTS():
         determined by finding the move in the action space vector corresponding to the policy vector index
 
         :param is_root: True if current state is the root state
-        :param bitboards: bitboards of current state. If None, they're generated
+        :param bitboards: bitboards of current state as a list. If None, they're generated
         """
 
         # NOTE: the term 'action' is synonymous with 'move' in this method for congruence with the paper

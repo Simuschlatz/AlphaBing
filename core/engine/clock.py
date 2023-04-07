@@ -2,14 +2,14 @@ import time
 
 class Clock:
     @classmethod
-    def init(cls, duration) -> None:
-        cls.duration = [duration, duration]
+    def init(cls, duration_s: int) -> None:
+        cls.duration = [duration_s, duration_s]
         cls.p_time = time.perf_counter()
         # Formatted time strings
-        cls.ftime = [cls.get_ftime_string(duration) for _ in range(2)]
+        cls.ftime = [cls.get_ftime_string(duration_s) for _ in range(2)]
 
     @staticmethod
-    def get_ftime_string(secs):
+    def get_ftime_string(secs: int):
         total_secs = round(secs)
         mins, seconds = divmod(total_secs, 60)
 

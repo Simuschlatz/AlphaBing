@@ -24,7 +24,7 @@ def print_formatted_code():
 		print("    ],")
 	print("]")
 	
-# Piece square tables I got from https://github.com/xqbase/xqwlight
+# Piece-square-tables from https://github.com/xqbase/xqwlight
 PIECE_VALUE = [
 		[
 			0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,

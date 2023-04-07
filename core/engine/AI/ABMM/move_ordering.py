@@ -20,7 +20,7 @@ def order_moves(moves, board, m=250):
     return sorted(move_value_estimates, key=lambda move: move_value_estimates[move], reverse=True)
 
 
-def order_moves_pst(moves, board, m=200):
+def order_moves_pst(moves: list[tuple], board, m=200):
     """
     orders moves heuristically based on piece-square-tables
     for the best ones to be up front

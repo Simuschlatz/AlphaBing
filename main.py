@@ -40,8 +40,8 @@ if __name__ == "__main__":
     from core.engine.AI.EvaluateAgent.compute_elo import evaluate_worker
     import logging
     logging.basicConfig(level=logging.DEBUG)
-
     logger = logging.getLogger(__name__)
+    
     INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
     INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
     main()

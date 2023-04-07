@@ -12,10 +12,12 @@ import multiprocessing as mp
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from copy import deepcopy
-import logging
 
+import logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+
+
 class SelfPlay:
     def __init__(self, board: Board) -> None:
         self.board = board
@@ -23,7 +25,7 @@ class SelfPlay:
 
         
     # @time_benchmark
-    def augment_data(self, example):
+    def augment_data(self, example: list):
         """
         Scales training data without additional MCTS search by:
         1. flipping bitboards and pi
@@ -32,7 +34,7 @@ class SelfPlay:
         adds augmented examples to :param eps_data:"""
 
         augmented = [example]
-        bitboard, pi, side = example
+        bitboards, pi, side = example
 
         # NOTE flipping the board only works if the model takes in an input plane. This is due to the
         # fact that pi can't be flipped like the bitboards as pi's value changes with the moving side
@@ -43,9 +45,9 @@ class SelfPlay:
         # augumented.append([flipped, pi, 1-side])
 
         # Mirroring the board
-        mirrored_bb = self.board.mirror_bitboard(bitboard)
+        mirrored_bbs = self.board.mirror_bitboard(bitboards)
         mirrored_pi = MCTS.mirror_pi(pi)
-        augmented.append([mirrored_bb, mirrored_pi, side])
+        augmented.append([mirrored_bbs, mirrored_pi, side])
 
         return augmented
         
@@ -110,7 +112,7 @@ class SelfPlay:
             return
 
     @staticmethod
-    def batch(iterable, batch_size):
+    def batch(iterable, batch_size: int):
         for ndx in range(0, len(iterable), batch_size):
             yield iterable[ndx:min(len(iterable), ndx+batch_size)]
 
@@ -135,7 +137,7 @@ class SelfPlay:
                     for process_id in range(PlayConfig.max_processes):
                         component_logger = logger.getChild(f"process_{process_id}")
                         futures.append(executor.submit(self.execute_episode, moves, board=Board(fen), component_logger=component_logger))
-                results = [future.result() for future in as_completed(futures)]
+                results = tqdm([future.result() for future in as_completed(futures)])
                 for res in results:
                     iteration_training_data.extend(res)
             else:

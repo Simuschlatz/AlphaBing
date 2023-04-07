@@ -1,9 +1,9 @@
 import http.client as httplib
 from contextlib import contextmanager
-import logging
 import sys, os, warnings
-
+import logging
 logger = logging.getLogger(__name__)
+
 
 try:
     import speech_recognition as sr

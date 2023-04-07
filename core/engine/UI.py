@@ -67,12 +67,13 @@ class UI:
         self.select_agent(agent)
 
     def select_agent(self, agent_str: str):
+        assert agent_str, "Agent must be str"
         match agent_str.lower():
             case "ab": self.agent = AlphaBetaAgent()
             case "az": self.agent = AlphaZeroAgent()
             case "abz": self.agent = AlphaBetaZeroAgent()
 
-    def render_piece(self, color, piece_type, coords):
+    def render_piece(self, color: int, piece_type: int, coords):
         self.window.blit(self.PIECES_IMGS[color * 7 + piece_type], coords)
     
     def render_pieces(self):
@@ -84,14 +85,14 @@ class UI:
             color, piece_type = piece
             self.render_piece(color, piece_type, pos)
 
-    def get_circle_center(self, rect_coord, diameter, factor=1):
+    def get_circle_center(self, rect_coord, diameter: int, factor=1):
         """
         centers a rectangle coordinate to the circle center
         :param factor: -1 or 1 => subtract or add half of diameter
         """
         return [pos + factor * diameter // 2 for pos in rect_coord]
 
-    def render_circle(self, upper_left_corner_pos, diameter, color):
+    def render_circle(self, upper_left_corner_pos, diameter: int, color):
         centered_coords = self.get_circle_center(upper_left_corner_pos, UIConfig.UNIT)
         x, y = (pos - diameter // 2 for pos in centered_coords)
         pygame.draw.ellipse(self.window, color, (x, y, diameter, diameter))

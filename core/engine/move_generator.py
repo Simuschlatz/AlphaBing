@@ -9,7 +9,7 @@ import numpy as np
 # Also, no defaultdicts were used because it significantly reduces performance
 class LegalMoveGenerator:
     """
-    Generates legal moves from pseudo-legal-move-maps \n
+    Generates legal moves from pseudo-legal-move-maps. \n
     call load_moves() to receive a list of all legal moves for the current state of the game.
     """
     PrecomputingMoves.init()
@@ -19,7 +19,7 @@ class LegalMoveGenerator:
     @classmethod
     def init_board(cls, board: Board):
         cls.board = board
-        # PrecomputingMoves.mhd = board.get_man
+
     @classmethod
     def load_moves(cls, board: Board=None, generate_quiets=True) -> list:
         """

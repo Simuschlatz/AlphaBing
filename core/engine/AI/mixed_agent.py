@@ -29,10 +29,14 @@ class AlphaBetaZeroAgent(Agent):
         if aza_action == aba_action:
             return aba_action
         
-        aba_action_space_index = PrecomputingMoves.move_index_hash[aba_action if board.opponent_side else board.flip_move(aba_action)]
+        if board.opponent_side:
+            aba_action = board.flip_move(aba_action)
+            aza_action = board.flip_move(aza_action)
+            
+        aba_action_space_index = PrecomputingMoves.move_index_hash[aba_action]
         aba_value = aza_probs[aba_action_space_index] * self.m + aba_eval_table[aba_action]
         
-        aza_action_space_index = PrecomputingMoves.move_index_hash[aza_action if board.opponent_side else board.flip_move(aza_action)]
+        aza_action_space_index = PrecomputingMoves.move_index_hash[aza_action]
         aza_value = aza_probs[aza_action_space_index] * self.m + aba_eval_table[aza_action]
         
         print(f"AlphaBeta Action: {aba_action}")

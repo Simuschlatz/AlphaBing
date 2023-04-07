@@ -11,7 +11,7 @@ class AlphaBetaAgent(Agent):
         # return Dfs.search(board, algorithm="minimax")
 
     @staticmethod
-    def choose_action(board, eval_table: dict=None):
+    def choose_action(board: Board, eval_table: dict=None):
         """
         NOTE: This agent uses multiprocess search. To run single-process search,
         don't use the AlphaBetaAgent class, but Dfs.search instead.

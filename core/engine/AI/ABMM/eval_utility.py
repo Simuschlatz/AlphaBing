@@ -23,7 +23,7 @@ class Evaluation:
         return friendly_eval - opponent_eval
 
     @staticmethod  
-    def pst_material_eval(moving_side, board):
+    def pst_material_eval(moving_side: int, board: Board):
         """
         :return: Piece-square-table-based evaluation of moving side's material
         """

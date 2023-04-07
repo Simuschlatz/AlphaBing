@@ -1,7 +1,6 @@
 from time import perf_counter
-import logging
-
-logger = logging.getLogger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 def time_benchmark(func):
     def wrapper(*args, **kwargs):

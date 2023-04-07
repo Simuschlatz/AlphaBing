@@ -46,11 +46,11 @@ class Board:
         self.repetition_history = {self.zobrist_key: 1}
 
     @staticmethod
-    def get_file_and_rank(square):
+    def get_file_and_rank(square: int):
         return square % 9, square // 9
     
     @staticmethod
-    def get_fr_d(square_1, square_2):
+    def get_fr_d(square_1: int, square_2: int):
         """
         :return: distance between two squares in files and ranks 
         from square_1's perspective
@@ -59,7 +59,7 @@ class Board:
         return d % 9, d // 9
     
     @staticmethod
-    def get_square(file, rank):
+    def get_square(file: int, rank: int):
         return rank * 9 + file
 
     def switch_moving_color(self):
@@ -123,10 +123,10 @@ class Board:
         fen = " ".join([config, color, "- -", str(self.plies), str(self.fullmoves)])
         return fen
 
-    def get_piece_list(self, color, piece_type: int):
+    def get_piece_list(self, color: int, piece_type: int):
         return self.piece_lists[color][piece_type - 1]
     
-    def is_capture(self, square):
+    def is_capture(self, square: int):
         return self.squares[square]
 
     def is_terminal_state(self, num_moves: int):
@@ -143,7 +143,7 @@ class Board:
         # return not num_moves, self.plies >= self.max_plies
             
     @staticmethod
-    def get_abs_dist(square_1, square_2):
+    def get_abs_dist(square_1: int, square_2: int):
         """
         :return: absolute distance between two squares in each axis (dcolumns, drows)
         """
@@ -152,7 +152,7 @@ class Board:
         return dist_x, dist_y
 
     @staticmethod
-    def get_manhattan_dist(square_1, square_2):
+    def get_manhattan_dist(square_1: int, square_2: int):
         """
         :return: manhattan distance between two squares in each axis (dcolumns, drows)
         """
@@ -161,7 +161,7 @@ class Board:
         return dist_x + dist_y
 
     @staticmethod
-    def get_dists(square_1, square_2):
+    def get_dists(square_1: int, square_2: int):
         """
         :return: x- and y-distance between two squares in each axis (dcolumns, drows)
         """
@@ -169,7 +169,7 @@ class Board:
         dist_y = square_1 // 9 - square_2 // 9
         return dist_x, dist_y
 
-    def lazo_update(self, moved_piece_type, captured_piece, moved_from, moved_to):
+    def lazo_update(self, moved_piece_type: int, captured_piece: tuple, moved_from: int, moved_to: int):
         """
         Lazy zobrist, modifies exisiting zobrist key instead of creating a new one
         """
@@ -189,7 +189,7 @@ class Board:
     def flip_moves(moves): 
         return [(89 - move[0], 89 - move[1]) for move in moves]
 
-    def piecelist_to_bitboard(self, adjust_perspective: bool=True):
+    def piecelist_to_bitboard(self, adjust_perspective=True):
         """
         :param adjust_perspective: if True, each side's bitboards are adjusted to 
         that side's perspective and the two sides' bitboard planes are occasionally
@@ -210,14 +210,15 @@ class Board:
         return bitboards
 
     @staticmethod
-    def mirror_bitboard(bitboard, axis=2):
+    def mirror_bitboard(bitboards, axis=2):
         """
-        axis: 0 for mirroring along x-axis (vertical mirroring), 2 for horizontal mirroring
+        :param bitboards: bitboard of current state, 3-dimensional array
+        :param axis: 0 for mirroring along x-axis (vertical mirroring), 2 for horizontal mirroring
         """
-        return np.flip(bitboard, axis)
+        return np.flip(bitboards, axis)
 
     @staticmethod
-    def mirror_move(move):
+    def mirror_move(move: tuple):
         start, target = move
         start_file, start_rank = Board.get_file_and_rank(start)
         target_file, target_rank = Board.get_file_and_rank(target)
@@ -230,7 +231,7 @@ class Board:
     def is_repetition(self):
         return self.zobrist_key in self.repetition_history
     
-    def make_move(self, move, search_state=False):
+    def make_move(self, move: tuple, search_state=False):
         moved_from, moved_to = move
         moved_piece = self.squares[moved_from]
         piece_type = Piece.get_type_no_check(moved_piece)
@@ -304,7 +305,7 @@ class Board:
         #     return 
         # print(self.zobrist_key)
 
-    def get_previous_configs(self, depth):
+    def get_previous_configs(self, depth: int):
         depth = min(len(self.game_history), depth)
         print(f"depth: {depth}")
         prefix = "----"
@@ -324,7 +325,7 @@ class Board:
             print(msg)
             # print(separation)
 
-    def get_move_notation(self, move):
+    def get_move_notation(self, move: tuple):
         former_square, new_square = move
         former_rank, former_file = self.get_file_and_rank(former_square)
         new_rank, new_file = self.get_file_and_rank(new_square)

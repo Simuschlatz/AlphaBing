@@ -4,8 +4,8 @@ from core.engine.AI.ABMM.eval_utility import Evaluation
 from core.engine.AI.ABMM import order_moves, order_moves_pst
 from core.utils.timer import time_benchmark
 import multiprocessing as mp
-import logging
-logger = logging.getLogger(__name__)
+from logging import getLogger
+logger = getLogger(__name__)
 
 class Dfs:
     checkmate_value = 9998
@@ -25,7 +25,7 @@ class Dfs:
 
     @classmethod
     @time_benchmark
-    def multiprocess_search(cls, board, batch: bool=False, get_evals=False, moves=None) -> tuple:
+    def multiprocess_search(cls, board: Board, batch: bool=False, get_evals=False, moves: list[tuple]=None) -> tuple:
         """
         Runs a search for board position leveraging multiple processors.
         :return: best move from current position
@@ -55,7 +55,7 @@ class Dfs:
         return best_move
 
     @classmethod
-    def search_for_move(cls, move, move_evals, depth, board: Board):
+    def search_for_move(cls, move: tuple, move_evals: dict, depth: int, board: Board):
         """
         :return: best eval from current position for current player
         :param move_evals: dict shared between child processes
@@ -67,7 +67,7 @@ class Dfs:
 
     @classmethod
     @time_benchmark
-    def search(cls, board: Board, m=250, algorithm: str="optalphabeta"):
+    def search(cls, board: Board, m=250, algorithm="optalphabeta"):
         """
         Starts traversal of board's possible configurations
         :param algorithm: "minimax", "alphabeta", optalphabeta"
@@ -150,7 +150,7 @@ class Dfs:
         return alpha
         
     @classmethod
-    def quiescence(cls, board: Board, alpha, beta):
+    def quiescence(cls, board: Board, alpha: int, beta: int):
         """
         A dfs-like algorithm used for chess searches, only considering captureing moves, thus helping the conventional
         search with misjudgment of situations when significant captures could take place in a depth below the search depth.
@@ -202,7 +202,7 @@ class Dfs:
 
 
     @classmethod
-    def minimax(cls, board: Board, depth):
+    def minimax(cls, board: Board, depth: int):
         """
         A brute force dfs-like algorithm traversing every node of the game's 
         possible-outcome-tree of given depth
@@ -231,7 +231,7 @@ class Dfs:
         return best_evaluation
     
     @classmethod
-    def alpha_beta(cls, board: Board, depth, alpha, beta):
+    def alpha_beta(cls, board: Board, depth: int, alpha: int, beta: int):
         """
         Minimax with alpha-beta pruning
         """
@@ -258,7 +258,7 @@ class Dfs:
         return alpha
 
     @classmethod
-    def get_best_eval(cls, board: Board, depth):
+    def get_best_eval(cls, board: Board, depth: int):
         alpha = cls.positive_infinity
         beta = cls.negative_infinity
         best_eval = beta
