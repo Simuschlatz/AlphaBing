@@ -9,12 +9,12 @@ from keras.regularizers import l2
 
 class AlphaZeroModel:
     
-    def _conv_layer(self, input, num_filters: int, kernel_size: int, name:str=None):
+    def _conv_layer(self, input, num_filters: int, kernel_size: int, name:str=None, prefix: str=""):
         """
         builds a convolutional layer with given parameters. Applies BatchNorm and ReLu Activation.
         :param index: (0, ∞]
         """
-        name = name or "_conv1"
+        name = name or prefix + "_conv1"
 
         x = Conv2D(
             filters=num_filters, 
@@ -32,7 +32,7 @@ class AlphaZeroModel:
     def _residual_block(self, input, index: int):
         name = "res" + str(index)
 
-        x = self._conv_layer(input, ModelConfig.num_filters, ModelConfig.kernel_size)
+        x = self._conv_layer(input, ModelConfig.num_filters, ModelConfig.kernel_size, prefix=name)
 
         x = Conv2D(
             filters=ModelConfig.num_filters, 
