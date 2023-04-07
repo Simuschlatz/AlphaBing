@@ -1,4 +1,4 @@
-from .model import AlphaZeroModel
+from .model import Model
 from . import TrainingConfig, ModelConfig
 
 import tensorflow as tf
@@ -12,7 +12,7 @@ import os, datetime
 from logging import getLogger
 logger = getLogger(__name__)
 
-class CNN(AlphaZeroModel):
+class CNN(Model):
     def __init__(self):
         self._build()
         self.opt = SGD(learning_rate=TrainingConfig.initial_lr, momentum=TrainingConfig.momentum)
@@ -97,6 +97,15 @@ class CNN(AlphaZeroModel):
         logger.info("Loading checkpoint...")
         self.model.load_weights(filepath)
         logger.info("Done loading!")
+
+    @staticmethod
+    def load_current_model(folder=ModelConfig.checkpoint_location, filename="checkpoint.h5"):
+        """
+        :return: The current model from the checkpoint file specified in ``CNN.load_checkpoint()``
+        """
+        model = CNN()
+        model.load_weights()
+        return model
 
     def visualize(self, filepath="assets/imgs/ML"):
         filepath = os.path.join(filepath, "model" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png")

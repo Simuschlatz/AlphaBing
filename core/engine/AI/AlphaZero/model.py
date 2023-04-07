@@ -7,7 +7,7 @@ from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, Acti
 from keras.regularizers import l2
 
 
-class AlphaZeroModel:
+class Model:
     
     def _conv_layer(self, input, num_filters: int, kernel_size: int, name:str=None, prefix: str=""):
         """
@@ -45,7 +45,7 @@ class AlphaZeroModel:
 
         x = BatchNormalization(axis=1, name="res"+str(index)+"_bn")(x)
         x = Add(name=name+"_add")([input, x])
-        x = Activation("relu", name=name+"_reLu")(x)
+        x = Activation("relu", name=name+"_relu")(x)
         return x
 
     def _value_head(self, input):
