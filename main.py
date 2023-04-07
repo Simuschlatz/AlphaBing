@@ -17,7 +17,7 @@ def main():
     # m.model.summary()
     # evaluate_worker("CRH1k1e2/3ca4/4ea3/9/2hr5/9/9/4E4/4A4/4KA3 w - - 0 1", m)
     # m.load_checkpoint()
-    sp = SelfPlay(board)
+    sp = SelfPlayPipeline(board)
     # sp.load_training_data()
     sp.start_pipeline(parallel=True)
     
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     from core.engine import Board, LegalMoveGenerator, Clock
     from core.engine.UI import UI
     from core.utils import start_search, select_agent
-    from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlay
+    from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlayPipeline
     from core.engine.AI.EvaluateAgent.compute_elo import evaluate_worker
     import logging
     logging.basicConfig(level=logging.DEBUG)

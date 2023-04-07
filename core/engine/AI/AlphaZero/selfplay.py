@@ -1,6 +1,6 @@
 
 import os
-from . import CNN, MCTS, PlayConfig
+from . import CNN, MCTS, PlayConfig, TrainingConfig
 from core.engine import Board, LegalMoveGenerator
 from core.utils import time_benchmark
 import numpy as np
@@ -10,13 +10,14 @@ from tqdm import tqdm
 from pickle import Pickler, Unpickler
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing as mp
 
 import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-class SelfPlay:
+class SelfPlayPipeline:
     def __init__(self, board: Board) -> None:
         self.board = board
 
@@ -67,8 +68,9 @@ class SelfPlay:
         logger = component_logger or logger
         board = board or self.board
 
-        nnet = CNN()
-        nnet.load_checkpoint()
+        # Initialize the current tf graph for each process and start a separate session (defining the
+        # session explicitly isn't required in tf 2.x thanks to eager execution)
+        nnet = CNN.load_current_model()
         mcts = MCTS(nnet)
 
         training_data = []
@@ -114,6 +116,15 @@ class SelfPlay:
         for ndx in range(0, len(iterable), batch_size):
             yield iterable[ndx:min(len(iterable), ndx+batch_size)]
 
+
+
+    def training_episode(training_examples):
+        model = CNN.load_current_model()
+        model.train(training_examples)
+
+    def hybrid_pipeline(folder=TrainingConfig.checkpoint_location, filename=PlayConfig.examples_filename):
+        return os.path.exists(os.path.join(folder, filename))
+
     def start_pipeline(self, parallel=False):
         """
         Performs self-play for ``PlayConfig.training_iterations`` iterations of 
@@ -122,22 +133,32 @@ class SelfPlay:
         iteration, the neural  network is retrained.
 
         :param parallel: If True, each episode is executed on a a separate process
+
+        NOTE: This function should only be called from the main process
         """
+        assert __name__ != '__main__', "This function should only be called from the main process"
+
         fen = self.board.load_fen_from_board()
         moves = LegalMoveGenerator.load_moves(self.board)
-
+        
         for i in range(PlayConfig.training_iterations):
             logger.info(f"starting self-play iteration no. {i + 1}")
             iteration_training_data = []
+            hybrid_pipeline = self.hybrid_pipeline()
 
             print(f"{PlayConfig.max_processes=}")
 
             if parallel:
                 with ProcessPoolExecutor(PlayConfig.max_processes) as executor:
                     futures = []
+                    if hybrid_pipeline:
+                        prev_training_data = self.load_training_data()
+                        model = executor.submit(self.training_episode, prev_training_data).result()
+                        
                     for eps in range(PlayConfig.self_play_eps):
                         component_logger = logger.getChild(f"process_{eps % PlayConfig.max_processes}")
                         futures.append(executor.submit(self.execute_episode, moves, component_logger=component_logger))
+                
                 results = [future.result() for future in as_completed(futures)]
                 for res in results:
                     iteration_training_data.extend(res)
@@ -148,30 +169,35 @@ class SelfPlay:
                     eps_training_data = self.execute_episode(moves)
                     iteration_training_data.extend(eps_training_data)
 
-            shuffle(iteration_training_data)
-
+            # shuffle(iteration_training_data)
             self.save_training_data()
-            print(np.asarray(iteration_training_data, dtype=object).shape)
+            logger.info(f"{iteration_training_data=}")
             
-    def save_training_data(self, folder="core/Engine/AI/AlphaZero/checkpoints", filename="examples"):
+            # Update the versions at the end, so that self-play agents of current iteration don't load new model
+            if hybrid_pipeline:
+                CNN.update_checkpoint_versions(model)
+
+    @staticmethod
+    def save_training_data(training_data: list, folder=TrainingConfig.checkpoint_location, filename=PlayConfig.examples_filename):
         if not os.path.exists(folder):
             logger.info("Making folder for training data...")
             os.mkdir(folder)
         filepath = os.path.join(folder, filename)
         logger.info("Saving training data...")
         with open(filepath, "wb+") as f:
-            Pickler(f).dump(self.training_data)
+            Pickler(f).dump(training_data)
         logger.info("Done!")
 
-    def load_training_data(self, folder="core/Engine/AI/AlphaZero/checkpoints", filename="examples"):
+    def load_training_data(self, folder=TrainingConfig.checkpoint_location, filename=PlayConfig.examples_filename):
         filepath = os.path.join(folder, filename)
         if not os.path.isfile(filepath):
             logger.warning(f"Training data file {filepath} does not exist yet. Try running one iteration of self-play first.")
-            return
+            return []
         with open(filepath, "rb") as f:
             logger.info("Training examples file found. Loading content...")
-            self.training_data = Unpickler(f).load()
+            training_data = Unpickler(f).load()
             logger.info("Done!")
+            return training_data
 
             
 
