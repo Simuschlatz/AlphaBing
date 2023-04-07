@@ -62,7 +62,7 @@ class CNN(ModelArch):
                 keras.backend.set_value(self.opt.learning_rate, lr)#
 
     @staticmethod
-    def update_checkpoints(new_network, 
+    def update_checkpoint_versions(new_network, 
                         folder=ModelConfig.checkpoint_location, 
                         old_cp=ModelConfig.old_model_checkpoint, 
                         new_cp=ModelConfig.new_model_checkpoint):
@@ -71,7 +71,8 @@ class CNN(ModelArch):
         updates the filename of previous weights and saves the new model's weights as the current ones
         """
         new_checkpoint, old_checkpoint = os.path.join(folder, new_cp), os.path.join(folder, old_cp)
-        assert os.path.exists(new_checkpoint), "404 no checkpoint file found"
+        if not os.path.exists(new_checkpoint)
+            logger.warning("404 no model version checkpoint found. If it's the first iteration of self-play, everything's good")
         os.rename(new_checkpoint, old_checkpoint)
         new_network.save_checkpoint()
 
