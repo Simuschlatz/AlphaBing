@@ -25,11 +25,11 @@ class PlayConfig:
 
     tau_decay_rate = .9
     tau_decay_threshold = 30 # threshold of plies when tau starts to decay
-    self_play_eps = 1
+    self_play_eps = 7
     training_iterations = 10
     steps_per_save = 2
     max_training_data_length = 100
-    max_processes = cpu_count()
+    max_processes = cpu_count() - 1
 
 class TrainingConfig:
     initial_lr = .01

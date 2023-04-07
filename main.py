@@ -19,7 +19,7 @@ def main():
     # m.load_checkpoint()
     sp = SelfPlay(board)
     # sp.load_training_data()
-    sp.train(parallel=True)
+    sp.start_pipeline(parallel=True)
     
     # ------To run perft search------
     # start_search(board)
