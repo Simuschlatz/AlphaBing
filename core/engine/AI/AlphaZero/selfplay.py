@@ -13,15 +13,13 @@ from random import shuffle
 from tqdm import tqdm
 from pickle import Pickler, Unpickler
 import multiprocessing as mp
+
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from copy import deepcopy
 import logging
 
-import keras
-import tensorflow as tf
-
 logger = logging.getLogger(__name__)
-
+logging.basicConfig(level=logging.DEBUG)
 class SelfPlay:
     def __init__(self, board: Board) -> None:
         self.board = board
@@ -55,7 +53,7 @@ class SelfPlay:
 
         return augmented
         
-    def execute_episode(self, moves, training_examples=None, board: Board=None):
+    def execute_episode(self, moves: list[tuple], training_examples=None, board: Board=None, component_logger:logging.Logger=None):
         """
         Execute one episode of self-play. The game is played until the end, simultaneously 
         collecting training data. when a terminal state is reached, each training example's
@@ -69,6 +67,8 @@ class SelfPlay:
         :param training_examples: used for multiprocessing, a ``mp.Manager().list`` object, 
         shared memory containing the training examples from episode's self-play iteration
         """
+        logger = component_logger or logger
+
         board = board or self.board
         nnet = CNN()
         nnet.load_checkpoint()
@@ -98,8 +98,10 @@ class SelfPlay:
 
             board.make_move(move)
             plies += 1
-            print(f"plies of current episode: {plies}")
-            print(f"{len(training_data)=}")
+
+            logger.debug(f"plies of current episode: {plies}")
+            logger.debug(f"{len(training_data)=}")
+
             moves = LegalMoveGenerator.load_moves(board)
             status = board.get_terminal_status(len(moves))
             if status == -1: continue
@@ -134,8 +136,9 @@ class SelfPlay:
             if parallel:
                 with ProcessPoolExecutor(PlayConfig.max_processes) as executor:
                     futures = []
-                    for _ in range(PlayConfig.max_processes):
-                        futures.append(executor.submit(self.execute_episode, moves, board=Board(fen)))
+                    for process_id in range(PlayConfig.max_processes):
+                        component_logger = logger.getChild(f"process_{process_id}")
+                        futures.append(executor.submit(self.execute_episode, moves, board=Board(fen), component_logger=component_logger))
                 results = [future.result() for future in as_completed(futures)]
                 for res in results:
                     iteration_training_data.extend(res)
