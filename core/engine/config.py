@@ -27,7 +27,7 @@ class UIConfig:
 
     FPS = 45
     # Style of piece images
-    piece_style_western = False
+    piece_style_western = True
 
     IMGS = init_imgs(UNIT, 
                     (WIDTH, HEIGHT), 

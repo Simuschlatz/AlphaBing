@@ -42,9 +42,6 @@ if __name__ == "__main__":
     from core.utils import start_search, select_agent
     from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlay
     from core.engine.AI.EvaluateAgent.compute_elo import evaluate_worker
-    from core.visualizations.move_ordering_analysis import run_benchmarks
-    import multiprocessing
-    multiprocessing.freeze_support()
     import logging
     logging.basicConfig(level=logging.DEBUG)
 
