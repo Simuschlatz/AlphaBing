@@ -1,7 +1,13 @@
 from multiprocessing import cpu_count
 from core.engine import PrecomputingMoves
 
-class ModelConfig:
+class BaseConfig:
+    checkpoint_location = "core/Engine/AI/AlphaZero/checkpoints"
+    new_model_checkpoint = "checkpoint_new.h5"
+    old_model_checkpoint = "checkpoint_old.h5"
+    max_processes = cpu_count()
+
+class ModelConfig(BaseConfig):
     input_depth = 14
     input_shape = (2, 7, 90)
     input_kernel_size = 5
@@ -12,9 +18,9 @@ class ModelConfig:
     l2_reg_const = 1e-4
     value_fc_layer_size = 256
     distributed = False
-    checkpoint_location = "core/Engine/AI/AlphaZero/checkpoints"
+    
 
-class PlayConfig:
+class PlayConfig(BaseConfig):
     simulations_per_move = 25
     cpuct = 1.5
     noise_eps = .15
@@ -28,10 +34,12 @@ class PlayConfig:
     self_play_eps = 7
     training_iterations = 10
     steps_per_save = 2
-    max_training_data_length = 100
-    max_processes = cpu_count() - 1
+    max_training_data = 5000 # Max number of training examples
 
-class TrainingConfig:
+    examples_filename = "examples"
+
+
+class TrainingConfig(BaseConfig):
     initial_lr = .01
     momentum = .9
     iter_to_lr = [
@@ -41,7 +49,5 @@ class TrainingConfig:
     epochs = 40
     batch_size = 64
 
-
-class EvaluationConfig:
-    max_processes = cpu_count()
+class EvaluationConfig(BaseConfig):
     
