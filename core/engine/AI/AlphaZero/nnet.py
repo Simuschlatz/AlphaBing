@@ -54,15 +54,28 @@ class CNN(ModelArch):
             x=x_train, 
             y=y_train, 
             batch_size=TrainingConfig.batch_size, 
-            epochs=TrainingConfig.epochs
-            )
+            epochs=TrainingConfig.epochs)
 
     def update_lr(self, iterations: int):
         for threshold, lr in TrainingConfig.iter_to_lr:
             if iterations >= threshold:
-                keras.backend.set_value(self.opt.learning_rate, lr)
+                keras.backend.set_value(self.opt.learning_rate, lr)#
 
-    def save_checkpoint(self, folder=ModelConfig.checkpoint_location, filename="checkpoint.h5"):
+    @staticmethod
+    def update_checkpoints(new_network, 
+                        folder=ModelConfig.checkpoint_location, 
+                        old_cp=ModelConfig.old_model_checkpoint, 
+                        new_cp=ModelConfig.new_model_checkpoint):
+        """
+        :param new_network: a CNN object trained with data from self play gathered with the current network
+        updates the filename of previous weights and saves the new model's weights as the current ones
+        """
+        new_checkpoint, old_checkpoint = os.path.join(folder, new_cp), os.path.join(folder, old_cp)
+        assert os.path.exists(new_checkpoint), "404 no checkpoint file found"
+        os.rename(new_checkpoint, old_checkpoint)
+        new_network.save_checkpoint()
+
+    def save_checkpoint(self, folder=ModelConfig.checkpoint_location, filename=ModelConfig.new_model_checkpoint):
         """
         Saves checkpoint of current model
         """
@@ -79,7 +92,7 @@ class CNN(ModelArch):
         logger.info("Saving checkpoint...")
         self.model.save_weights(filepath)
 
-    def load_checkpoint(self, folder=ModelConfig.checkpoint_location, filename="checkpoint.h5", save_model_if_no_file=True):
+    def load_checkpoint(self, folder=ModelConfig.checkpoint_location, filename=ModelConfig.new_model_checkpoint, save_model_if_no_file=True):
         """
         Loads a checkpoint file and updates weights of current model
         """
