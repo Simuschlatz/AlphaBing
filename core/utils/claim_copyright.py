@@ -1,7 +1,3 @@
-"""
-Copyright (C) 2022-2023 Simon Ma <https://github.com/Simuschlatz> - All Rights Reserved. 
-You may use, distribute and modify this code under the terms of the GNU General Public License
-"""
 import os
 
 copyright_text = '''"""
@@ -58,5 +54,5 @@ def delete_copyright_msg():
 all_file_paths = get_filepaths(".")
 
 # this_file = os.path.abspath(__file__)
-write_copyright_msg()
-# delete_copyright_msg()
+# write_copyright_msg()
+delete_copyright_msg()
