@@ -36,7 +36,7 @@ class Evaluator:
     def __init__(self, board):
         self.board = board
 
-    def nnet_vs_random(self, network_score, random_score=200, board: Board=None):
+    def nnet_vs_random(self, board: Board=None):
         board = board or self.board
         nnet = CNN()
         nnet.load_checkpoint()
@@ -54,13 +54,7 @@ class Evaluator:
                 status = board.get_terminal_status(len(moves)) # 0 or 1
                 z = max(1, status + .5)
                 # Update ratings
-                if is_randoms_turn: # Neural network won or draw
-                    network_score = compute_elo(network_score, random_score, z)
-                else: # Random agent won or draw
-                    adjusted_z = 1 - z # Outcome from network's perspective
-                    network_score = compute_elo(network_score, random_score, adjusted_z)
-                print(f"neural network score: {network_score}")
-                return network_score
+                return z if is_randoms_turn else 1-z
 
             if is_randoms_turn:
                 move = choice(moves)
@@ -74,10 +68,10 @@ class Evaluator:
             board.make_move(move)
             plies += 1
 
-    def nnet_vs_nnet(self, old_rating, board: Board=None):
+    def nnet_vs_nnet(self, board: Board=None):
         board = board or self.board
-        new_nnet = CNN.load_model()
-        previous_nnet = CNN.load_model(new_model=False)
+        new_nnet = CNN.load_nnet()
+        previous_nnet = CNN.load_nnet(new_model=False)
 
         new_mcts = MCTS(new_nnet)
         previous_mcts = MCTS(previous_nnet)
@@ -95,17 +89,8 @@ class Evaluator:
             if game_over:
                 status = board.get_terminal_status(len(moves)) # 0 or 1
                 z = max(1, status + .5)
-                # Update ratings
-                if is_prev_nets_turn: # Neural network won or draw
-                    # NOTE: The new network is assumed to play at least at the same level as
-                    # the old network to avoid having to run hundreds of evaluation games until
-                    # the new network's elo rating surpasses the old one's.
-                    new_nnet_score = compute_elo(old_rating, old_rating, z)
-                else: # Random agent won or draw
-                    adjusted_z = 1 - z # Outcome from network's perspective
-                    new_nnet_score = compute_elo(old_rating, old_rating, adjusted_z)
-                print(f"new network score: {new_nnet_score}")
-                return new_nnet_score
+                # Return 1 if new network won, 0 if old network won, .5 if draw
+                return z if is_prev_nets_turn else z-1
 
             
             bitboards = list(board.piecelist_to_bitboard())
@@ -152,7 +137,7 @@ class Evaluator:
         logger.info("Done!")
 
     @staticmethod
-    def get_eval_history(filename: str, folder=EvaluationConfig.checkpoint_location):
+    def get_eval_history(filename: str, folder=EvaluationConfig.checkpoint_location) -> list:
         """
         :return: list of elo ratings or win-rates recorded in previous iterations of evaluation. 
         If file does not exist, it returns an empty list
@@ -176,12 +161,26 @@ class Evaluator:
             # the subprocesses. and can't be passed as a parameter or as part of an agent parameter.
             # Hence two separate pit functions.
             if is_first_iteration:
+                # Get the rating of first network by using baseline agent
                 for eps in range(EvaluationConfig.episodes):
-                    futures.append(executor.submit(self.nnet_vs_random, 0))
+                    futures.append(executor.submit(self.nnet_vs_random))
+                # Set old elo to random agent's baseline rating
+                old_elo = EvaluationConfig.baseline_rating
+                new_elo = 0
             else:
                 for eps in range(EvaluationConfig.episodes):
-                    futures.append(executor.submit(self.nnet_vs_nnet, 0))
-        results = [future.result() for future in futures]
+                    futures.append(executor.submit(self.nnet_vs_nnet))
+                # NOTE: The new network is assumed to play at least at the same level as
+                # the old network to avoid having to run hundreds of evaluation games until
+                # the new network's elo rating surpasses the old one's.
+                old_elo = self.get_eval_history().pop()
+                new_elo = old_elo
+        outcomes = [future.result() for future in futures]
+        win_rate = self.compute_win_rate(outcomes)
+        updated_elo = self.update_elo(outcomes, new_elo, old_elo)
+        
+        self.save_eval(win_rate, EvaluationConfig.win_rate_filename)
+        self.save_eval(updated_elo, EvaluationConfig.elo_rating_filename)
 
 # def evaluate_worker(self, fen, nnet: CNN):
 #     for i in range(10):
