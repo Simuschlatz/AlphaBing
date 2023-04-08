@@ -1,4 +1,4 @@
-# CheapChess - making complex software accessible for everyone
+# CheapChess
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 
