@@ -1,6 +1,6 @@
 
 import os
-from . import CNN, MCTS, PlayConfig, TrainingConfig
+from . import CNN, MCTS, Evaluator, PlayConfig, TrainingConfig
 from core.engine import Board, LegalMoveGenerator
 from core.utils import time_benchmark
 import numpy as np
@@ -27,7 +27,8 @@ class SelfPlayPipeline:
         1. flipping bitboards and pi
         2. mirroring bitboards and pi
         
-        adds augmented examples to :param eps_data:"""
+        :return: augmented training data
+        """
 
         augmented = [example]
         bitboards, pi, side = example
@@ -70,7 +71,7 @@ class SelfPlayPipeline:
 
         # Initialize the current tf graph for each process and start a separate session (defining the
         # session explicitly isn't required in tf 2.x thanks to eager execution)
-        nnet = CNN.load_current_model()
+        nnet = CNN.load_nnet()
         mcts = MCTS(nnet)
 
         training_data = []
@@ -116,14 +117,17 @@ class SelfPlayPipeline:
         for ndx in range(0, len(iterable), batch_size):
             yield iterable[ndx:min(len(iterable), ndx+batch_size)]
 
+    def training_episode(training_examples, component_logger: logging.Logger=None):
+        logger = component_logger or logger
+        logger.info("Training episode started!")
+        nnet = CNN.load_nnet()
+        nnet.train(training_examples)
+        return nnet
 
-
-    def training_episode(training_examples):
-        model = CNN.load_current_model()
-        model.train(training_examples)
-
-    def hybrid_pipeline(folder=TrainingConfig.checkpoint_location, filename=PlayConfig.examples_filename):
-        return os.path.exists(os.path.join(folder, filename))
+    def is_first_iteration(folder=TrainingConfig.checkpoint_location, filename=PlayConfig.examples_filename):
+        """
+        Determines whether the current iteration can train a new network"""
+        return not os.path.exists(os.path.join(folder, filename))
 
     def start_pipeline(self, parallel=False):
         """
@@ -133,6 +137,11 @@ class SelfPlayPipeline:
         iteration, the neural  network is retrained.
 
         :param parallel: If True, each episode is executed on a a separate process
+
+        In the first iteration, only self-play workers are executed. There can't be any training because there
+        is no training data.
+        In the next iterations, the new network is trained while all other processes generate new training data
+        for the next iteration of training. 
 
         NOTE: This function should only be called from the main process
         """
@@ -144,19 +153,25 @@ class SelfPlayPipeline:
         for i in range(PlayConfig.training_iterations):
             logger.info(f"starting self-play iteration no. {i + 1}")
             iteration_training_data = []
-            hybrid_pipeline = self.hybrid_pipeline()
+            is_first_iteration = self.is_first_iteration()
 
             print(f"{PlayConfig.max_processes=}")
 
             if parallel:
                 with ProcessPoolExecutor(PlayConfig.max_processes) as executor:
                     futures = []
-                    if hybrid_pipeline:
+                    if not is_first_iteration:
+                        # Run the training on a separate process and not at the end of each iteration.
+                        # As training the network is a single-process job, it would leave all other 
+                        # processes unused. I decided not to run it parallel with the evaluatio workers,
+                        # although it would be more cronologically correct, because evaluation is optional
+                        # for the training pipeline and training itself is not.
+                        component_logger = logger.getChild(f"subprocess_training")
                         prev_training_data = self.load_training_data()
-                        model = executor.submit(self.training_episode, prev_training_data).result()
+                        nnet = executor.submit(self.training_episode, prev_training_data, component_logger=component_logger).result()
                         
                     for eps in range(PlayConfig.self_play_eps):
-                        component_logger = logger.getChild(f"process_{eps % PlayConfig.max_processes}")
+                        component_logger = logger.getChild(f"subprocess_{eps % PlayConfig.max_processes}")
                         futures.append(executor.submit(self.execute_episode, moves, component_logger=component_logger))
                 
                 results = [future.result() for future in as_completed(futures)]
@@ -170,13 +185,16 @@ class SelfPlayPipeline:
                     iteration_training_data.extend(eps_training_data)
 
             # shuffle(iteration_training_data)
-            self.save_training_data()
+            self.save_training_data(iteration_training_data)
             logger.info(f"{iteration_training_data=}")
             
             # Update the versions at the end, so that self-play agents of current iteration don't load new model
-            if hybrid_pipeline:
-                CNN.update_checkpoint_versions(model)
-
+            if not is_first_iteration:
+                CNN.update_checkpoint_versions(nnet)
+            
+            evaluator = Evaluator(self.board)
+            evaluator.evaluate_worker(is_first_iteration)
+            
     @staticmethod
     def save_training_data(training_data: list, folder=TrainingConfig.checkpoint_location, filename=PlayConfig.examples_filename):
         if not os.path.exists(folder):
@@ -188,13 +206,14 @@ class SelfPlayPipeline:
             Pickler(f).dump(training_data)
         logger.info("Done!")
 
-    def load_training_data(self, folder=TrainingConfig.checkpoint_location, filename=PlayConfig.examples_filename):
+    @staticmethod
+    def load_training_data(folder=TrainingConfig.checkpoint_location, filename=PlayConfig.examples_filename):
         filepath = os.path.join(folder, filename)
         if not os.path.isfile(filepath):
             logger.warning(f"Training data file {filepath} does not exist yet. Try running one iteration of self-play first.")
             return []
+        logger.info("Training examples file found. Loading content...")
         with open(filepath, "rb") as f:
-            logger.info("Training examples file found. Loading content...")
             training_data = Unpickler(f).load()
             logger.info("Done!")
             return training_data
