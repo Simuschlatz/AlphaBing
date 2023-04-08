@@ -41,6 +41,9 @@ class MCTS():
         self.reset()
 
     def reset(self):
+        """
+        Resets the MCTS search tree
+        """
         # W Values aren't stored because they are only of temporary use in each interation
         self.Qsa = {}  # stores Q values for s,a (as defined in the paper)
         self.Nsa = {}  # stores #times edge s,a was visited

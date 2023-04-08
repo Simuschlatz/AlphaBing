@@ -50,4 +50,6 @@ class TrainingConfig(BaseConfig):
     batch_size = 64
 
 class EvaluationConfig(BaseConfig):
-    
+    episodes = cpu_count()
+    elo_scores_filename = "elo"
+    win_rate_filename = "win_rate"
