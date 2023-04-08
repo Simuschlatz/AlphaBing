@@ -14,20 +14,18 @@ K_TABLE = [30, 15, 10, 5]
 
 R_PRI = 40
 
-def compute_elo(r0, r1, z):
+def compute_elo(player_elo, opponent_elo, z):
     '''
     Compute the elo rating with method from https://www.xqbase.com/protocol/elostat.htm
-    :param r0: player's elo rating
-    :param r1: opponent elo rating
-    :param z: game result: 1 = player wins, 0.5 = draw, 0 = opponent wins
+    :param z: game outcome: 1 = player wins, 0.5 = draw, 0 = opponent wins
 
     :return: The player's updated elo rating
     '''
-    relative_elo = r1 - r0 - R_PRI
+    relative_elo = opponent_elo - player_elo - R_PRI
     we = 1 / (1 + 10 ** (relative_elo / 400))
-    k0 = K_TABLE[min(r0, 3000) // 1000] # Limit highest coefficient K to 5
+    k0 = K_TABLE[min(player_elo, 3000) // 1000] # Limit highest coefficient K to 5
     # k1 = K_TABLE[min(r1, 3000) // 1000]
-    rn0 = int(r0 + k0 * (z - we))
+    rn0 = int(player_elo + k0 * (z - we))
     # rn1 = int(r1 + k1 * (we - z))
     rn0 = max(rn0, 0) # Can't get rating below 0
     # rn1 = max(rn1, 0)
@@ -120,18 +118,31 @@ class Evaluator:
             board.make_move(move)
             plies += 1
 
+    @staticmethod
+    def compute_win_rate(outcomes: list[int | float]):
+        return outcomes.count(1) / len(outcomes)
 
     @staticmethod
-    def save_rating(rating, folder=EvaluationConfig.checkpoint_location, filename=EvaluationConfig.elo_scores_filename):
+    def update_elo(outcomes: list[int | float], rating_1, rating_2):
         """
-        Adds rating to rating history
+        Updates ``rating_1``.
+        :param outcomes: list of game outcomes from player_1's perspective
+        """
+        for z in outcomes:
+            rating_1 = compute_elo(rating_1, rating_2, z)
+        return rating_1
+
+    @staticmethod
+    def save_eval(value, filename: str, folder=EvaluationConfig.checkpoint_location):
+        """
+        Adds value to elo rating or win-rate history
         """
 
         hist = Evaluator.get_rating_history(folder=folder, filename=filename)
-        hist.append(rating)
+        hist.append(value)
 
         if not os.path.exists(folder):
-            logger.info("Making folder for elo rating history...")
+            logger.info("Making folder for elo or win-rate rating history...")
             os.mkdir(folder)
 
         filepath = os.path.join(folder, filename)
@@ -141,17 +152,17 @@ class Evaluator:
         logger.info("Done!")
 
     @staticmethod
-    def get_rating_history(folder=EvaluationConfig.checkpoint_location, filename=EvaluationConfig.elo_scores_filename):
+    def get_eval_history(filename: str, folder=EvaluationConfig.checkpoint_location):
         """
-        :return: list of ratings recorded in previous iterations of evaluation. If file does not exist,
-        it returns an empty list
+        :return: list of elo ratings or win-rates recorded in previous iterations of evaluation. 
+        If file does not exist, it returns an empty list
         """
         filepath = os.path.join(folder, filename)
         if not os.path.isfile(filepath):
             logger.warning(f"Elo rating history file {filepath} does not exist yet.")
             return []
+        logger.info("Elo rating or win-rate history file found. Loading content...")
         with open(filepath, "rb") as f:
-            logger.info("Training examples file found. Loading content...")
             training_data = Unpickler(f).load()
             logger.info("Done!")
             return training_data
@@ -170,8 +181,8 @@ class Evaluator:
             else:
                 for eps in range(EvaluationConfig.episodes):
                     futures.append(executor.submit(self.nnet_vs_nnet, 0))
+        results = [future.result() for future in futures]
 
-            
 # def evaluate_worker(self, fen, nnet: CNN):
 #     for i in range(10):
 #         print(f"starting evaluation iteration n. {i}")
