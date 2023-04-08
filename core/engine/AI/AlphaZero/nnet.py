@@ -71,9 +71,12 @@ class CNN(ModelArch):
         updates the filename of previous weights and saves the new model's weights as the current ones
         """
         new_checkpoint, old_checkpoint = os.path.join(folder, new_cp), os.path.join(folder, old_cp)
-        if not os.path.exists(new_checkpoint)
-            logger.warning("404 no model version checkpoint found. If it's the first iteration of self-play, everything's good")
-        os.rename(new_checkpoint, old_checkpoint)
+        if not os.path.exists(new_checkpoint):
+            logger.warning("404 no model version checkpoint found. Doing a workaround...")
+        else:
+            logger.info("Updating model versions...")
+            os.rename(new_checkpoint, old_checkpoint)
+            logger.info("Done!")
         new_network.save_checkpoint()
 
     def save_checkpoint(self, folder=ModelConfig.checkpoint_location, filename=ModelConfig.new_model_checkpoint):
@@ -113,13 +116,14 @@ class CNN(ModelArch):
         logger.info("Done loading!")
 
     @staticmethod
-    def load_current_model():
+    def load_nnet(current_model=True):
         """
-        :return: The current model from the checkpoint file specified in ``CNN.load_checkpoint()``
+        :return: The model from the checkpoint file specified in 
         """
-        model = CNN()
-        model.load_checkpoint()
-        return model
+        nnet_filename = ModelConfig.new_model_checkpoint if current_model else ModelConfig.old_model_checkpoint
+        nnet = CNN()
+        nnet.load_checkpoint(filename=nnet_filename)
+        return nnet
 
     def visualize(self, filepath="assets/imgs/ML"):
         filepath = os.path.join(filepath, "model" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png")
