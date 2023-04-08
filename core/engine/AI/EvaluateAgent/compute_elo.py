@@ -121,6 +121,41 @@ class Evaluator:
             plies += 1
 
 
+    @staticmethod
+    def save_rating(rating, folder=EvaluationConfig.checkpoint_location, filename=EvaluationConfig.elo_scores_filename):
+        """
+        Adds rating to rating history
+        """
+
+        hist = Evaluator.get_rating_history(folder=folder, filename=filename)
+        hist.append(rating)
+
+        if not os.path.exists(folder):
+            logger.info("Making folder for elo rating history...")
+            os.mkdir(folder)
+
+        filepath = os.path.join(folder, filename)
+        logger.info("Saving rating...")
+        with open(filepath, "wb+") as f:
+            Pickler(f).dump(hist)
+        logger.info("Done!")
+
+    @staticmethod
+    def get_rating_history(folder=EvaluationConfig.checkpoint_location, filename=EvaluationConfig.elo_scores_filename):
+        """
+        :return: list of ratings recorded in previous iterations of evaluation. If file does not exist,
+        it returns an empty list
+        """
+        filepath = os.path.join(folder, filename)
+        if not os.path.isfile(filepath):
+            logger.warning(f"Elo rating history file {filepath} does not exist yet.")
+            return []
+        with open(filepath, "rb") as f:
+            logger.info("Training examples file found. Loading content...")
+            training_data = Unpickler(f).load()
+            logger.info("Done!")
+            return training_data
+
     def evaluate_worker(self, is_first_iteration: bool,):
         with ProcessPoolExecutor(max_workers=EvaluationConfig.max_processes) as executor:
             futures = []
