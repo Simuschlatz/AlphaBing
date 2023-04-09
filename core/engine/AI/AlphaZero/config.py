@@ -51,5 +51,6 @@ class TrainingConfig(BaseConfig):
 
 class EvaluationConfig(BaseConfig):
     episodes = cpu_count()
-    elo_scores_filename = "elo"
+    elo_rating_filename = "elo"
     win_rate_filename = "win_rate"
+    baseline_rating = 200 # Elo of random agent
