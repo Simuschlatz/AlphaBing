@@ -213,3 +213,4 @@ class MCTS():
             # Get action space index of mirrored move
             mirrored_index = PrecomputingMoves.move_index_hash[mirrored_move]
             mirrored_pi[mirrored_index] = v
+        return mirrored_pi
