@@ -3,6 +3,10 @@
 # CheapChess - Combining Algorithmic Powers With The Beauty of Machine Learning
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
+
+## Disclaimer
+Feel free to clone this repo at any time, but keep in mind that sometimes the code may not be completely bug-free. I try my best to only push commits when the program runs smoothly, but sometimes I forget.
+
 ## Summary
 CheapChess is a lightweight Engine for chinese Chess (Xiangqi), designed to run on normal consumer hardware.
 In summary, the idea of CheapChess is the amalgamation of traditional methods of AI with innovative concepts of reinforcement learning in order to create an agent that allows the strengths of each method to compensate for the detrimental weak points of the other. Its development is motivated by the inacccessibility of AlphaZero's codebase to the community and the unaffordable resources required just to run the system.
