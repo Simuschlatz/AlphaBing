@@ -6,8 +6,8 @@ from core.engine.AI.AlphaZero import CNN, MCTS, EvaluationConfig
 import os
 from pickle import Pickler, Unpickler
 
-from logging import getLogger
-logger = getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 # 0 ~ 999: K = 30; 1000 ~ 1999: K = 15; 2000 ~ 2999: K = 10; 3000 ~ : K = 5
 K_TABLE = [30, 15, 10, 5]   
@@ -36,7 +36,8 @@ class Evaluator:
     def __init__(self, board):
         self.board = board
 
-    def nnet_vs_random(self, board: Board=None):
+    def nnet_vs_random(self, board: Board=None, component_logger: logging.Logger=None):
+        logger = component_logger or logger
         board = board or self.board
         nnet = CNN()
         nnet.load_checkpoint()
@@ -64,14 +65,15 @@ class Evaluator:
                 move = mcts.best_action_from_pi(board, pi)
                 mcts.reset()
 
-            print(f"{plies=}, {move=}")
+            logger.info(f"{plies=}, {move=}")
             board.make_move(move)
             plies += 1
 
-    def nnet_vs_nnet(self, board: Board=None):
+    def nnet_vs_nnet(self, board: Board=None, component_logger: logging.Logger=None):
+        logger = component_logger or logger
         board = board or self.board
         new_nnet = CNN.load_nnet()
-        previous_nnet = CNN.load_nnet(new_model=False)
+        previous_nnet = CNN.load_nnet(current_model=False)
 
         new_mcts = MCTS(new_nnet)
         previous_mcts = MCTS(previous_nnet)
@@ -99,7 +101,7 @@ class Evaluator:
             move = mcts.best_action_from_pi(board, pi)
             mcts.reset()
 
-            print(f"{plies=}, {move=}")
+            logger.info(f"{plies=}, {move=}")
             board.make_move(move)
             plies += 1
 
@@ -123,7 +125,7 @@ class Evaluator:
         Adds value to elo rating or win-rate history
         """
 
-        hist = Evaluator.get_rating_history(folder=folder, filename=filename)
+        hist = Evaluator.get_rating_history(filename, folder=folder)
         hist.append(value)
 
         if not os.path.exists(folder):
@@ -145,7 +147,7 @@ class Evaluator:
         filepath = os.path.join(folder, filename)
         if not os.path.isfile(filepath):
             logger.warning(f"Elo rating history file {filepath} does not exist yet.")
-            return []
+            return [0]
         logger.info("Elo rating or win-rate history file found. Loading content...")
         with open(filepath, "rb") as f:
             training_data = Unpickler(f).load()
@@ -163,17 +165,19 @@ class Evaluator:
             if is_first_iteration:
                 # Get the rating of first network by using baseline agent
                 for eps in range(EvaluationConfig.episodes):
-                    futures.append(executor.submit(self.nnet_vs_random))
+                    component_logger = logger.getChild(f"subprocess_{eps % EvaluationConfig.max_processes}")
+                    futures.append(executor.submit(self.nnet_vs_random, component_logger=component_logger))
                 # Set old elo to random agent's baseline rating
                 old_elo = EvaluationConfig.baseline_rating
                 new_elo = 0
             else:
                 for eps in range(EvaluationConfig.episodes):
-                    futures.append(executor.submit(self.nnet_vs_nnet))
+                    component_logger = logger.getChild(f"subprocess_{eps % EvaluationConfig.max_processes}")
+                    futures.append(executor.submit(self.nnet_vs_nnet, component_logger=component_logger))
                 # NOTE: The new network is assumed to play at least at the same level as
                 # the old network to avoid having to run hundreds of evaluation games until
                 # the new network's elo rating surpasses the old one's.
-                old_elo = self.get_eval_history().pop()
+                old_elo = self.get_eval_history(EvaluationConfig.elo_rating_filename).pop()
                 new_elo = old_elo
         outcomes = [future.result() for future in futures]
         win_rate = self.compute_win_rate(outcomes)
