@@ -1,6 +1,6 @@
 
 import os
-from . import CNN, MCTS, Evaluator, PlayConfig, TrainingConfig
+from . import CNN, MCTS, PlayConfig, TrainingConfig
 from core.engine import Board, LegalMoveGenerator
 from core.utils import time_benchmark
 import numpy as np
@@ -15,7 +15,6 @@ import multiprocessing as mp
 import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-
 
 class SelfPlayPipeline:
     def __init__(self, board: Board) -> None:
@@ -48,7 +47,7 @@ class SelfPlayPipeline:
 
         return augmented
         
-    def execute_episode(self, moves: list[tuple], training_examples=None, board: Board=None, component_logger:logging.Logger=None):
+    def execute_episode(self, moves: list[tuple], board: Board=None, component_logger:logging.Logger=None):
         """
         Execute one episode of self-play. The game is played until the end, simultaneously 
         collecting training data with MCTS. when a terminal state is reached, each training 
@@ -76,54 +75,52 @@ class SelfPlayPipeline:
 
         training_data = []
         plies, tau = 0, 0
-        # while True:
-        mcts.reset()
-        bb = list(board.piecelist_to_bitboard())
+        while True:
+            mcts.reset()
+            bb = list(board.piecelist_to_bitboard())
 
-        # more exploitation in the beginning
-        # if plies > PlayConfig.tau_decay_threshold:
-        #     tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
-        # tau = plies < PlayConfig.tau_decay_threshold
-        pi = mcts.get_pi(board, bitboards=bb, moves=moves)
-        # logger.debug(mcts.Nsa)
-        # logger.debug("-" * 20)
-        side = board.moving_side
+            # more exploitation in the beginning
+            # if plies > PlayConfig.tau_decay_threshold:
+            #     tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
+            # tau = plies < PlayConfig.tau_decay_threshold
+            pi = mcts.get_pi(board, bitboards=bb, moves=moves)
+            # logger.debug(mcts.Nsa)
+            # logger.debug("-" * 20)
+            side = board.moving_side
 
-        # add the augmented examples from current position
-        augmented_move_data = self.augment_data([bb, pi, side])
-        training_data.extend(augmented_move_data)
+            # add the augmented examples from current position
+            augmented_move_data = self.augment_data([bb, pi, side])
+            training_data.extend(augmented_move_data)
 
-        move = MCTS.best_action_from_pi(board, pi)
-        # move = MCTS.random_action_from_pi(board, pi)
+            move = MCTS.best_action_from_pi(board, pi)
+            # move = MCTS.random_action_from_pi(board, pi)
 
-        board.make_move(move)
-        plies += 1
+            board.make_move(move)
+            plies += 1
 
-        logger.info(f"plies of current episode: {plies}")
+            logger.info(f"plies of current episode: {plies}")
 
-        moves = LegalMoveGenerator.load_moves(board)
-        status = board.get_terminal_status(len(moves))
-        # if status == -1: continue
-        logger.info("self-play episode ended")
-        # negative outcome for every example where the side was current (mated) moving side
-        if training_examples is None:
+            moves = LegalMoveGenerator.load_moves(board)
+            status = board.get_terminal_status(len(moves))
+            if status == -1: continue
+            logger.info("self-play episode ended")
+            # negative outcome for every example where the side was current (mated) moving side
             return [[ex[0], ex[1], 1 - 2 * ex[2] == board.moving_side] for ex in training_data]
-
-        training_examples.extend([[ex[0], ex[1], 1 - 2 * ex[2] == board.moving_side] for ex in training_data])
-        return
 
     @staticmethod
     def batch(iterable, batch_size: int):
         for ndx in range(0, len(iterable), batch_size):
             yield iterable[ndx:min(len(iterable), ndx+batch_size)]
-
+    @staticmethod
     def training_episode(training_examples, component_logger: logging.Logger=None):
+        print(training_examples)
         logger = component_logger or logger
         logger.info("Training episode started!")
         nnet = CNN.load_nnet()
         nnet.train(training_examples)
         return nnet
 
+    @staticmethod
     def is_first_iteration(folder=TrainingConfig.checkpoint_location, filename=PlayConfig.examples_filename):
         """
         Determines whether the current iteration can train a new network"""
@@ -145,8 +142,7 @@ class SelfPlayPipeline:
 
         NOTE: This function should only be called from the main process
         """
-        assert __name__ != '__main__', "This function should only be called from the main process"
-
+        from core.engine.AI.EvaluateAgent import Evaluator
         fen = self.board.load_fen_from_board()
         moves = LegalMoveGenerator.load_moves(self.board)
         
@@ -155,7 +151,7 @@ class SelfPlayPipeline:
             iteration_training_data = []
             is_first_iteration = self.is_first_iteration()
 
-            print(f"{PlayConfig.max_processes=}")
+            print(f"{PlayConfig.max_processes=} \n {is_first_iteration=}")
 
             if parallel:
                 with ProcessPoolExecutor(PlayConfig.max_processes) as executor:
@@ -168,12 +164,12 @@ class SelfPlayPipeline:
                         # for the training pipeline and training itself is not.
                         component_logger = logger.getChild(f"subprocess_training")
                         prev_training_data = self.load_training_data()
-                        nnet = executor.submit(self.training_episode, prev_training_data, component_logger=component_logger).result()
+                        future = executor.submit(self.training_episode, prev_training_data, component_logger=component_logger)
                         
                     for eps in range(PlayConfig.self_play_eps):
                         component_logger = logger.getChild(f"subprocess_{eps % PlayConfig.max_processes}")
                         futures.append(executor.submit(self.execute_episode, moves, component_logger=component_logger))
-                
+                nnet = future.result()
                 results = [future.result() for future in as_completed(futures)]
                 for res in results:
                     iteration_training_data.extend(res)
@@ -184,9 +180,9 @@ class SelfPlayPipeline:
                     eps_training_data = self.execute_episode(moves)
                     iteration_training_data.extend(eps_training_data)
 
-            # shuffle(iteration_training_data)
+            shuffle(iteration_training_data)
             self.save_training_data(iteration_training_data)
-            logger.info(f"{iteration_training_data=}")
+            logger.info(f"{len(iteration_training_data)=}")
             
             # Update the versions at the end, so that self-play agents of current iteration don't load new model
             if not is_first_iteration:
