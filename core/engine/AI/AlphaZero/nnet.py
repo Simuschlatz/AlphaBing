@@ -6,6 +6,7 @@ from keras.utils import plot_model
 from keras.models import load_model
 from keras.optimizers import SGD
 import keras.backend
+
 import numpy as np
 import os, datetime
 
@@ -16,7 +17,10 @@ class CNN(ModelArch):
     def __init__(self):
         self._build()
         self.opt = SGD(learning_rate=TrainingConfig.initial_lr, momentum=TrainingConfig.momentum)
-        self.model.compile(optimizer=self.opt, loss=['categorical_crossentropy', 'mean_squared_error'])
+        self.model.compile(optimizer=self.opt, 
+                        loss=['categorical_crossentropy', 'mean_squared_error'],
+                        metrics=['accuracy']
+                        )
     
     def predict(self, inp):
         return self.model.predict(self.bitboard_to_input(inp), verbose=False)
@@ -42,7 +46,7 @@ class CNN(ModelArch):
         y_train = [pi, v]
         return x_train, y_train
 
-    def train(self, inputs):
+    def train(self, inputs: list):
         """
         Trains the neural network using examples from self-play with batch size
         ``TrainingConfig.batch_size`` and ``TrainingConfig.epochs`` epochs.
@@ -50,11 +54,14 @@ class CNN(ModelArch):
         input shape: [[s, pi, v], [s', pi', v'], ...]
         """
         x_train, y_train = self.process_training_data(inputs)
+        
         self.model.fit(
             x=x_train, 
             y=y_train, 
             batch_size=TrainingConfig.batch_size, 
-            epochs=TrainingConfig.epochs)
+            epochs=TrainingConfig.epochs,
+            callbacks=[TrainingConfig.tensorboard_callback],
+            )
 
     def update_lr(self, iterations: int):
         for threshold, lr in TrainingConfig.iter_to_lr:
@@ -63,7 +70,7 @@ class CNN(ModelArch):
 
     @staticmethod
     def update_checkpoint_versions(new_network, 
-                        folder=ModelConfig.checkpoint_location, 
+                        folder=ModelConfig.checkpoint_location,
                         old_cp=ModelConfig.old_model_checkpoint, 
                         new_cp=ModelConfig.new_model_checkpoint):
         """

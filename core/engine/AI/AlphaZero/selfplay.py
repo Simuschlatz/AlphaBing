@@ -90,7 +90,7 @@ class SelfPlayPipeline:
 
             # add the augmented examples from current position
             augmented_move_data = self.augment_data([bb, pi, side])
-            training_data.extend(augmented_move_data)
+            training_data.extend(augmented_move_data) # check if data is unique for each process
 
             move = MCTS.best_action_from_pi(board, pi)
             # move = MCTS.random_action_from_pi(board, pi)
@@ -157,7 +157,7 @@ class SelfPlayPipeline:
                 with ProcessPoolExecutor(PlayConfig.max_processes) as executor:
                     futures = []
                     if not is_first_iteration:
-                        # Run the training on a separate process and not at the end of each iteration.
+                        # Run the training worker on a separate process and not at the end of each iteration.
                         # As training the network is a single-process job, it would leave all other 
                         # processes unused. I decided not to run it parallel with the evaluatio workers,
                         # although it would be more cronologically correct, because evaluation is optional

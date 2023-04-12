@@ -14,7 +14,7 @@ K_TABLE = [30, 15, 10, 5]
 
 R_PRI = 40
 
-def compute_elo(player_elo, opponent_elo, z):
+def compute_elo(player_elo: int, opponent_elo: int, z: float):
     '''
     Compute the elo rating with method from https://www.xqbase.com/protocol/elostat.htm
     :param z: game outcome: 1 = player wins, 0.5 = draw, 0 = opponent wins
@@ -70,6 +70,8 @@ class Evaluator:
             plies += 1
 
     def nnet_vs_nnet(self, board: Board=None, component_logger: logging.Logger=None):
+        """
+        """
         logger = component_logger or logger
         board = board or self.board
         new_nnet = CNN.load_nnet()
@@ -110,7 +112,7 @@ class Evaluator:
         return outcomes.count(1) / len(outcomes)
 
     @staticmethod
-    def update_elo(outcomes: list[int | float], rating_1, rating_2):
+    def update_elo(outcomes: list[int | float], rating_1: int, rating_2: int):
         """
         Updates ``rating_1``.
         :param outcomes: list of game outcomes from player_1's perspective

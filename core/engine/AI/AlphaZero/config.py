@@ -1,5 +1,9 @@
 from multiprocessing import cpu_count
 from core.engine import PrecomputingMoves
+import os
+import tensorflow as tf
+import keras
+from datetime import datetime
 
 class BaseConfig:
     checkpoint_location = "core/Engine/AI/AlphaZero/checkpoints"
@@ -39,18 +43,24 @@ class PlayConfig(BaseConfig):
     examples_filename = "examples"
 
 
-class TrainingConfig(BaseConfig):
+class TensorboardBaseConfig:
+    tensorboard_logdir = os.path.join(BaseConfig.checkpoint_location, "logs/scalars", datetime.now().strftime("%Y%m%d-%H%M%S"))
+    tensorboard_callback = keras.callbacks.TensorBoard(log_dir=tensorboard_logdir)
+
+class TrainingConfig(BaseConfig, TensorboardBaseConfig):
     initial_lr = .01
     momentum = .9
     iter_to_lr = [
         (150000, 3e-3),
         (400000, 1e-4)
         ]
-    epochs = 40
+    epochs = 20
     batch_size = 64
 
-class EvaluationConfig(BaseConfig):
+class EvaluationConfig(BaseConfig, TensorboardBaseConfig):
     episodes = cpu_count()
     elo_rating_filename = "elo"
     win_rate_filename = "win_rate"
     baseline_rating = 200 # Elo of random agent
+    eval_writer = tf.summary.create_file_writer(TensorboardBaseConfig.tensorboard_logdir + "/eval")
+    eval_writer.set_as_default()

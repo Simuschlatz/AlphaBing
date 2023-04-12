@@ -1,4 +1,17 @@
 def main():
+    import pygame
+    pygame.init()
+    import sys
+    from core.engine import Board, LegalMoveGenerator, Clock
+    from core.engine.UI import UI
+    from core.utils import start_search, select_agent
+    from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlayPipeline
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    
+    INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
+    INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
     play_as_red = True
     red_moves_first = True
     fen = INITIAL_FEN_RED_DOWN if play_as_red else INITIAL_FEN_BLACK_DOWN 
@@ -30,18 +43,4 @@ def main():
     ui.run()
 
 if __name__ == "__main__":
-    import pygame
-    pygame.init()
-    import sys
-    from core.engine import Board, LegalMoveGenerator, Clock
-    from core.engine.UI import UI
-    from core.utils import start_search, select_agent
-    from core.engine.AI.AlphaZero import CNN, MCTS, SelfPlayPipeline
-    from core.engine.AI.EvaluateAgent.compute_elo import evaluate_worker
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger(__name__)
-    
-    INITIAL_FEN_BLACK_DOWN = "RHEAKAEHR/9/1C5C/P1P1P1P1P/9/9/p1p1p1p1p/1c5c/9/rheakaehr"
-    INITIAL_FEN_RED_DOWN = "rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR"
     main()

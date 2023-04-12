@@ -1,1 +1,1 @@
-from .compute_elo import Evaluator
+from .evaluate import Evaluator
