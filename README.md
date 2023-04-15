@@ -14,21 +14,21 @@ In summary, the idea of CheapChess is the amalgamation of traditional methods of
 
 ## Installation
 ### Clone this repository:
-```console
+```bash
 git clone https://github.com/Simuschlatz/CheapChess
 cd CheapChess
 ```
 ### Setting up the Environment with Conda
 Mac, Windows & Linux:
-```console
+```bash
 conda env create -f environment.yml
 ```
 Apple Silicon:
-```console
+```bash
 conda env create -f metal.yml
 ```
 ## Running the Code
-```console
+```bash
 python3 main.py
 ```
 ## Configuration
@@ -39,11 +39,11 @@ python3 main.py
 | AlphaZero based Agent | az |
 | Alpha-Beta-Zero | abz |
 
-```console
+```bash
 python3 main.py [agent]
 ```
 ## File Structure Overview
-```console
+```bash
 ├── LICENSE
 ├── README.md
 ├── assets
