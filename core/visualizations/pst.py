@@ -2,7 +2,7 @@ import os
 import sys
 root = os.environ.get("CHEAPCHESS")
 sys.path.append(root)
-from core.engine.AI.ABMM import PieceSquareTable
+from core.engine.ai.alphabeta import PieceSquareTable
 import numpy as np
 import seaborn as sns
 sns.set_theme(style="ticks")

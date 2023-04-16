@@ -1,9 +1,11 @@
 import pygame
-from core.engine import Piece, LegalMoveGenerator, GameManager, Clock, GameManager, Board#, NLPCommandHandler
-from core.engine.AI.ABMM import Dfs, AlphaBetaAgent
-from core.engine.AI.AlphaZero import AlphaZeroAgent
-from core.engine.AI.mixed_agent import AlphaBetaZeroAgent
-from core.engine.AI.SLEF import TrainingDataCollector
+from core.engine import Piece, LegalMoveGenerator, Board#, NLPCommandHandler
+from core.engine.clock import Clock
+from core.engine.game_manager import GameManager
+from core.engine.ai.alphabeta import Dfs, AlphaBetaAgent
+from core.engine.ai.selfplay_rl import AlphaZeroAgent
+from core.engine.ai.mixed_agent import AlphaBetaZeroAgent
+from core.engine.ai.slef import TrainingDataCollector
 from core.utils import BoardUtility
 from core.engine.config import UIConfig
 from core.utils import time_benchmark

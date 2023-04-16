@@ -1,7 +1,7 @@
 from .agent_interface import Agent
-from .ABMM.agent import AlphaBetaAgent
-from .AlphaZero.agent import AlphaZeroAgent
-from .ABMM.piece_square_tables import PieceSquareTable
+from .alphabeta.agent import AlphaBetaAgent
+from .selfplay_rl.agent import AlphaZeroAgent
+from .alphabeta.piece_square_tables import PieceSquareTable
 from core.engine import Board, LegalMoveGenerator, PrecomputingMoves
 
 class AlphaBetaZeroAgent(Agent):

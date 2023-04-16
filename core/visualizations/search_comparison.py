@@ -18,7 +18,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from core.engine.AI.ABMM import Dfs
+from core.engine.ai.alphabeta import Dfs
 from core.engine import Board, LegalMoveGenerator
 
 from time import perf_counter

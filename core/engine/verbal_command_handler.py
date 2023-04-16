@@ -1,9 +1,8 @@
 import http.client as httplib
-from contextlib import contextmanager
-import sys, os, warnings
+import warnings
 import logging
 logger = logging.getLogger(__name__)
-
+from core.utils import silence_function
 
 try:
     import speech_recognition as sr
@@ -26,16 +25,6 @@ def is_internet_connected(ip_adresses: tuple=("8.8.8.8", "8.8.4.4")) -> bool:
         finally:
             connection.close()
 
-@contextmanager
-def silence_function():
-    """
-    surpresses console output of a function called within the context manager
-    """
-    with open(os.devnull, "w") as devNull:
-        initial = sys.stdout
-        sys.stdout = devNull
-        try: yield
-        finally: sys.stdout = initial
 
 class NLPCommandHandler:
     """

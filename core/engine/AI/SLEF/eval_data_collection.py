@@ -1,6 +1,6 @@
 import csv
 import os
-from core.engine.AI.ABMM import Dfs
+from core.engine.ai.alphabeta import Dfs
 import pandas as pd
 
 class TrainingDataCollector:
