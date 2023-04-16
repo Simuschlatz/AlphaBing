@@ -27,21 +27,29 @@ Apple Silicon:
 ```bash
 conda env create -f metal.yml
 ```
-## Running the Code
+## Running the code
 ```bash
 python3 main.py
 ```
-## Configuration
-### Selecting the Agent
-| Agent | Command-Line-Argument |
-|:--- |:--- |
-| Alpha-Beta-Search (standard) | ab |
-| AlphaZero based Agent | az |
-| Alpha-Beta-Zero | abz |
-
+## Usage
 ```bash
-python3 main.py [agent]
+usage: main.py [-h] [--chinese] [--perft] [--pipeline] [--eval] [--nui] [cores] [{ab,az,abz}] [time]
+
+positional arguments:
+  cores        maximum number of processors to use for pipeline (default: multiprocessing.cpu_count())
+  {ab,az,abz}  AI-agent playing in interactive environment (ab: Alpha-Beta, az: AlphaZero, abz: Alpha-Beta-Zero) (default: ab)
+  time         time on the clock in minutes (default: 5)
+
+options:
+  -h, --help   show this help message and exit
+  --chinese    rendering chinese style UI
+  --perft      run performance tests for move generation speed and accuracy
+  --pipeline   run the self-play and training pipeline (to evaluate, see --eval)
+  --eval       add evaluation to the pipeline
+  --nui        no UI
+
 ```
+
 ## File Structure Overview
 ```bash
 ├── LICENSE
