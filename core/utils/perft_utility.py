@@ -1,5 +1,7 @@
 from core.engine import LegalMoveGenerator, Board
 from time import perf_counter
+from logging import getLogger
+logger = getLogger(__name__)
 
 def start_search(board: Board):
     depth = str()
@@ -10,7 +12,7 @@ def start_search(board: Board):
         depth = int(depth)
         if depth > 0:
             break
-    print("starting perft search... This might take some time")
+    logger.info("starting perft search... This might take some time")
     iterative = False
     depths = [depth]
     if iterative:
@@ -52,6 +54,6 @@ def get_num_positions(depth: int, board: Board):
     p_t = perf_counter()
     num_positions = get_perft_result(depth, board)
     time = perf_counter() - p_t
-    print(f"depth: {depth} || nodes searched: {num_positions} || time: {round(time, 2)}")
+    logger.info(f"depth: {depth} || nodes searched: {num_positions} || time: {round(time, 2)}")
 
     
