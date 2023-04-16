@@ -19,13 +19,17 @@ git clone https://github.com/Simuschlatz/CheapChess
 cd CheapChess
 ```
 ### Setting up the Environment with Conda
-Mac, Windows & Linux:
+Mac, Windows & Linux
 ```bash
 conda env create -f environment.yml
 ```
-Apple Silicon:
+Apple Silicon
 ```bash
 conda env create -f metal.yml
+```
+Activate the environment
+```bash
+conda activate cheapchess
 ```
 ## Running the code
 ```bash

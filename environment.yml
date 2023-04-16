@@ -1,4 +1,4 @@
-name: itschessnotcheckers
+name: cheapchess
 channels:
   - defaults
 dependencies:

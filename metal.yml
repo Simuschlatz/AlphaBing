@@ -1,4 +1,4 @@
-name: cheapchessmetal
+name: cheapchess
 channels:
   - apple
   - conda-forge
