@@ -23,6 +23,7 @@ class PrecomputingMoves:
         cls.pawn_mm = cls.get_pawn_move_map()
 
         cls.action_space = len(cls.action_space_vector)
+        cls.action_space_range = range(cls.action_space)
         cls.move_index_hash = {move: index for index, move in enumerate(cls.action_space_vector)}
         # exit(0)
 

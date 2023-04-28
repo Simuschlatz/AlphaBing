@@ -25,5 +25,5 @@ class AlphaZeroAgent(Agent):
         :param pi: MCTS probability distribution for current state of ``board``. If None, it's generated.
         """
         pi = list(pi) or self.get_mcts_pi(board)
-        action = self.mcts.best_action_from_pi(board, pi)
+        action = self.mcts.select_action(board, pi)
         return action

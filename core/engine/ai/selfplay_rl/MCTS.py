@@ -3,7 +3,7 @@ import numpy as np
 from core.engine import Board, LegalMoveGenerator, PrecomputingMoves
 from core.engine.ai.selfplay_rl import PlayConfig, CNN
 from core.utils import time_benchmark
-
+from typing import Iterable
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -38,12 +38,7 @@ class MCTS():
     def __init__(self, nnet: CNN, config=PlayConfig):
         self.nnet = nnet
         self.config = config
-        self.reset()
 
-    def reset(self):
-        """
-        Resets the MCTS search tree
-        """
         # W Values aren't stored because they are only of temporary use in each interation
         self.Qsa = {}  # stores Q values for s,a (as defined in the paper)
         self.Nsa = {}  # stores #times edge s,a was visited
@@ -52,8 +47,29 @@ class MCTS():
 
         self.Es = {}  # stores each state s where the terminal code has been evaluated
         self.Vs = {}  # stores legal moves for board s
+        
+        # Just for reset optimization
+        self.subtree = {} # stores all reached sub-states from each state at depth 1
+        self.saved_sims = 0
 
-    def search(self, board: Board, is_root=False, bitboards: list=None, moves: list[tuple]=None):
+    def opt_reset(self, moved_to: int):
+        """
+        Resets the MCTS search tree
+        """
+        subtree_to_keep = self.subtree[moved_to]
+        self.saved_sims = len(subtree_to_keep)
+
+        self.Qsa = {(s, a): q for (s, a), q in self.Qsa.items() if s in subtree_to_keep}
+        self.Nsa = {(s, a): n for (s, a), n in self.Nsa.items() if s in subtree_to_keep} 
+
+        self.Ns = {s: self.Ns[s] for s in subtree_to_keep} 
+        self.Ps = {s: self.Ps[s] for s in subtree_to_keep} 
+        self.Es = {s: self.Es[s] for s in subtree_to_keep} 
+        self.Vs = {s: self.Vs[s] for s in subtree_to_keep} 
+    
+        self.subtree = {moved_to: subtree_to_keep}
+
+    def search(self, board: Board, is_root=False, subtree_root=False, bitboards: list=None, moves: list[tuple]=None):
         """
         This function performs one iteration of MCTS. It recursively calls itself until a leaf node 
         is found. The move chosen at each point maximizes the upper confidence bound (Q(s|a) + U(s|a))
@@ -74,6 +90,9 @@ class MCTS():
         s = board.zobrist_key
         moves = moves or LegalMoveGenerator.load_moves(board)
 
+        if not is_root:
+            self.subtree[subtree_root] = self.subtree.get(subtree_root, []) + [s]
+
         # Check if position was already statically evaluated
         if s not in self.Es:
             status = board.get_terminal_status(len(moves))
@@ -86,8 +105,8 @@ class MCTS():
 
         # Check if position was expanded
         if s not in self.Ps:
-            state_planes = bitboards or board.piecelist_to_bitboard()
             # leaf node
+            state_planes = bitboards or board.piecelist_to_bitboard()
             p, v = self.nnet.predict(state_planes)
             self.Ps[s] = p[0] # CNN output is two-dimensional
 
@@ -127,8 +146,7 @@ class MCTS():
             a = PrecomputingMoves.move_index_hash[move]
             if (s, a) in self.Qsa:
                 q = self.Qsa[(s, a)]
-                u = self.config.cpuct * \
-                    ((1-eps) * self.Ps[s][a] + eps * noise[i]) * \
+                u = self.config.cpuct * ((1-eps) * self.Ps[s][a] + eps * noise[i]) * \
                     math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
             else:
                 q = 0
@@ -144,7 +162,11 @@ class MCTS():
         # more labels, masking those labels...
         if board.moving_side: move = board.flip_move(move)
         board.make_move(move, search_state=True)
-        v = self.search(board)
+        # If we're at root state, we specify the next state (depth 1), then it stays the same
+        if is_root:
+            subtree_root = board.zobrist_key
+        v = self.search(board, subtree_root=subtree_root)
+
         board.reverse_move(search_state=True)
 
         # Update Qsa, Nsa and Ns
@@ -158,44 +180,69 @@ class MCTS():
         self.Ns[s] += 1
         return -v
 
-    # @time_benchmark
-    def get_pi(self, board: Board, bitboards: list, moves=None):
+    @time_benchmark
+    def get_visit_counts(self, board: Board, bitboards: list, moves=None):
         """
         Performs a number of MCTS simulations with root state of current ``board``.
-        :return: The probability distribution π used for policy iteration and to choose moves
+        :return: The visit counts at depth 1 used to calculate π and to apply exploration
+        temperature to π
+
+        The reason why this method does not return π is because the visit counts are needed 
+        to apply the temperature when selecting a move and to calculate π where each action 
+        prob is directly proportional to its visit count (used to train the network). As the 
+        network learns the improved probabilities of MCTS, it cannot be trained using π with 
+        tau applied (inconsistent and inefficient for training), therefore both probabilities
+        have to be calculated.
         """
-        for i in range(self.config.simulations_per_move):
+        for i in range(self.config.simulations_per_move - self.saved_sims):
             # logger.info(f"starting simulation n. {i}")
             self.search(board, is_root=True, bitboards=bitboards, moves=moves)
 
         s = board.zobrist_key
         # storing the visit counts
-        visit_counts = np.array([self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(PrecomputingMoves.action_space)])
-        sum_visit_counts = np.sum(visit_counts)
-        pi = visit_counts / sum_visit_counts # normalize
-        return pi
-
-        # Choose best move ...
-        # ... deterministically for competition
-        # if not tau:
-        #     best_a = np.random.choice(np.argmax(visit_counts).flatten())
-        #     print(f"{best_a=}")
-        #     probs = [0] * len(visit_counts)
-        #     probs[best_a] = 1
-        #     return probs
-        # # ... stochastically for exploration
-        # visit_counts = [n ** round(1. / tau, 2) for n in visit_counts]
-        # counts_sum = float(sum(visit_counts))
-        # probs = [c / counts_sum for c in visit_counts]# renormalize
-        # return probs
+        visit_counts = np.array([self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in PrecomputingMoves.action_space_range])
+        return visit_counts
 
     @staticmethod
-    def best_action_from_pi(board: Board, pi, tau=0):
+    def get_pi(visit_counts):
         """
-        :return: the move corresponding to the maximum value in the probability distribution of search
+        Normalizes the visit counts
+        :return: π where π_a ∝ N(s|a): The probability distribution used for policy iteration
+        """
+        return visit_counts / np.sum(visit_counts)
+
+    @staticmethod
+    def apply_tau(visit_counts: np.ndarray, tau=1):
+        """
+        :param tau: Exploration temperature - high: exploration, low: exploitation
+        :return: π where π_a ∝ N(s|a)^(1/tau): The probability distribution used for move selection
+        """
+        # Choose best move ...
+        # ... deterministically for exploitation
+        if not tau: 
+            # Infinitesimal temperature -> asymptotically 0 -> one-hot encode
+            best_a = np.random.choice(np.argmax(visit_counts).flatten())
+            print(f"{best_a=}")
+            probs = np.zeros(PrecomputingMoves.action_space)
+            probs[best_a] = 1
+            return probs
+        # ... stochastically for exploration
+        visit_counts = visit_counts ** (1. / tau)
+        visis_counts_sum = float(np.sum(visit_counts))
+        probs = visit_counts / visis_counts_sum # renormalize
+        return probs
+
+    @staticmethod
+    def select_action(board: Board, pi: np.ndarray):
+        """
+        :return: A move chosen from the action space where each action is associated 
+        with its corresponding value in the probability distribution pi
         NOTE: the perspective-dependent move is readjusted to the absolute squares
         """
-        a = np.random.choice(np.argmax(pi).flatten())
+        # If tau in the search was high, pi will allow for more stocasticity
+        # If tau in the search was low, the selection of a move will be fully deterministic as pi is one-hot encoded
+        # print(*pi[np.argwhere(pi)])
+        a = np.random.choice(PrecomputingMoves.action_space_range, p=pi)
         move = PrecomputingMoves.action_space_vector[a]
         return board.flip_move(move) if board.moving_side else move
 
@@ -204,7 +251,7 @@ class MCTS():
         """
         Mirrors probability distribution
         """
-        mirrored_pi = np.zeros(len(PrecomputingMoves.action_space_vector))
+        mirrored_pi = np.zeros(PrecomputingMoves.action_space)
         for a, v in enumerate(pi):
             # Skip illegal moves
             if not v: continue

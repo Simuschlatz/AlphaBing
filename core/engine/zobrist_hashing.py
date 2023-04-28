@@ -11,7 +11,7 @@ class ZobristHashing:
     ### leading toa lot of redudancy
 
     # Set the seed to wedding anniversary of my parents for good luck :)
-    np.random.seed(110697)
+    # np.random.seed(110697) # Had to take this out for uniqueness of multiprocess training pipeline
     largest_64 = "1" * 63
     highest_value = int(largest_64, 2)
     lowest_value = -highest_value

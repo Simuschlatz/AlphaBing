@@ -1,4 +1,6 @@
 import pygame
+pygame.font.init()
+pygame.mixer.init()
 from core.engine.data_init import init_imgs
 
 class UIConfig:

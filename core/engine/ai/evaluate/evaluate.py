@@ -62,7 +62,7 @@ class Evaluator:
             else:
                 bitboards = list(board.piecelist_to_bitboard())
                 pi = mcts.get_pi(board, bitboards, moves=moves)
-                move = mcts.best_action_from_pi(board, pi)
+                move = mcts.select_action(board, pi)
                 mcts.reset()
 
             logger.info(f"{plies=}, {move=}")
@@ -100,7 +100,7 @@ class Evaluator:
             bitboards = list(board.piecelist_to_bitboard())
             mcts = both_mcts[is_prev_nets_turn]
             pi = mcts.get_pi(board, bitboards, moves=moves)
-            move = mcts.best_action_from_pi(board, pi)
+            move = mcts.select_action(board, pi)
             mcts.reset()
 
             logger.info(f"{plies=}, {move=}")

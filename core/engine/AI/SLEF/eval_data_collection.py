@@ -4,7 +4,11 @@ from core.engine.ai.alphabeta import Dfs
 import pandas as pd
 
 class TrainingDataCollector:
-    dir_path = "core/engine/AI/SLEF"
+    """
+    My initial idea to expand the search depth of alpha-beta-search, stopped building on it as soon as I started working
+    on the Alpha-Zero based approach
+    """
+    dir_path = "core/engine/ai/slef"
     filepaths = [os.path.join(dir_path, "eval_data_black.csv"), os.path.join(dir_path, "eval_data_red.csv")]
     num_plies_ahead = 3
 

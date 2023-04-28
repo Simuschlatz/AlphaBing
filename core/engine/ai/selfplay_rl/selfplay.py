@@ -13,7 +13,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 class Pipeline:
     """
@@ -65,6 +65,7 @@ class Pipeline:
         """
 
         logger = component_logger or logger
+        logger.info("Starting episode")
 
         # Initialize the current tf graph for each process and start a separate session (defining the
         # session explicitly isn't required in tf 2.x thanks to eager execution)
@@ -72,18 +73,15 @@ class Pipeline:
         mcts = MCTS(nnet)
 
         training_data = []
-        plies, tau = 0, 0
+        plies, tau = 0, 1
         while True:
-            mcts.reset()
             # Can use self.board because each process creates its own instance of the Pipeline class
             # each with its own memory allocated for board object
             bb = list(self.board.piecelist_to_bitboard())
 
             # more exploitation in the beginning
-            # if plies > PlayConfig.tau_decay_threshold:
-            #     tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
-            # tau = plies < PlayConfig.tau_decay_threshold
-            pi = mcts.get_pi(self.board, bitboards=bb, moves=moves)
+            visit_counts = mcts.get_visit_counts(self.board, bitboards=bb, moves=moves)
+            pi = mcts.get_pi(visit_counts)
             # logger.debug(mcts.Nsa)
             # logger.debug("-" * 20)
             side = self.board.moving_side
@@ -91,14 +89,22 @@ class Pipeline:
             # add the augmented examples from current position
             augmented_move_data = self.augment_data([bb, pi, side])
             training_data.extend(augmented_move_data) # check if data is unique for each process
+            
+            # if plies > PlayConfig.tau_decay_threshold:
+            #     tau = round(PlayConfig.tau_decay_rate ** (plies - PlayConfig.tau_decay_threshold), 2)
+            tau = plies < PlayConfig.tau_decay_threshold
+            # Apply temperature
+            pi = mcts.apply_tau(visit_counts, tau=tau)
 
-            move = MCTS.best_action_from_pi(self.board, pi)
-            # move = MCTS.random_action_from_pi(board, pi)
+            move = MCTS.select_action(self.board, pi)
 
             self.board.make_move(move)
             plies += 1
 
-            logger.info(f"plies of current episode: {plies}")
+            logger.info(f"{plies=} | {move=}")
+
+            mcts.opt_reset(self.board.zobrist_key)
+            logger.info(f"{mcts.subtree=}, {mcts.saved_sims=}")
 
             moves = LegalMoveGenerator.load_moves(self.board)
             status = self.board.get_terminal_status(len(moves))
@@ -149,17 +155,17 @@ class Pipeline:
 
             print(f"{PlayConfig.max_processes=} \n {is_first_iteration=}")
 
-            with ProcessPoolExecutor(PlayConfig.max_processes) as executor:
+            with ProcessPoolExecutor(max_workers=PlayConfig.max_processes) as executor:
                 futures = []
-                if not is_first_iteration:
-                    # Run the training worker on a separate process and not at the end of each iteration.
-                    # As training the network is a single-process job, it would leave all other 
-                    # processes unused. I decided not to run it parallel with the evaluatio workers,
-                    # although it would be more cronologically correct, because evaluation is optional
-                    # for the training pipeline and training itself is not.
-                    component_logger = logger.getChild(f"subprocess_training")
-                    prev_training_data = self.load_training_data()
-                    future = executor.submit(self.training_episode, prev_training_data, component_logger=component_logger)
+                # if not is_first_iteration:
+                #     # Run the training worker on a separate process and not at the end of each iteration.
+                #     # As training the network is a single-process job, it would leave all other 
+                #     # processes unused. I decided not to run it parallel with the evaluatio workers,
+                #     # although it would be more cronologically correct, because evaluation is optional
+                #     # for the training pipeline and training itself is not.
+                #     component_logger = logger.getChild(f"subprocess_training")
+                #     prev_training_data = self.load_training_data()
+                #     future = executor.submit(self.training_episode, prev_training_data, component_logger=component_logger)
                     
                 for eps in range(PlayConfig.self_play_eps):
                     component_logger = logger.getChild(f"subprocess_{eps % PlayConfig.max_processes}")
