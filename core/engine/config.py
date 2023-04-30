@@ -27,12 +27,6 @@ class UIConfig:
     # Style of piece images
     piece_style_western = True
 
-    IMGS = init_imgs(UNIT, 
-                    (WIDTH, HEIGHT), 
-                    (BOARD_WIDTH, BOARD_HEIGHT), 
-                    BUTTON_DIMS, 
-                    piece_style_western)
-
     # Font stuff
     FONT_SIZE_LARGE = UNIT // 2
     FONT_SIZE_SMALL = UNIT // 3
@@ -52,3 +46,11 @@ class UIConfig:
 
     BIG_CIRCLE_D = UNIT * 1.1
     SMALL_CIRCLE_D = UNIT // 5
+
+    @classmethod
+    def init_imgs(cls):
+        cls.IMGS = init_imgs(cls.UNIT, 
+                            (cls.WIDTH, cls.HEIGHT), 
+                            (cls.BOARD_WIDTH, cls.BOARD_HEIGHT), 
+                            cls.BUTTON_DIMS, 
+                            cls.piece_style_western)
