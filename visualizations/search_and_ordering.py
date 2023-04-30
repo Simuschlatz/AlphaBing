@@ -1,10 +1,3 @@
-
-import sys
-import os
-root = os.environ.get("CHEAPCHESS")
-sys.path.append(root)
-print(sys.path)
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 mpl.style.use('bmh')
