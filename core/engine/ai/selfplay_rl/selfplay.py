@@ -103,7 +103,7 @@ class Pipeline:
 
             logger.info(f"{plies=} | {move=}")
 
-            mcts.opt_reset(self.board.zobrist_key)
+            mcts.reset(self.board.zobrist_key)
             logger.info(f"{mcts.subtree=}, {mcts.saved_sims=}")
 
             moves = LegalMoveGenerator.load_moves(self.board)
@@ -117,6 +117,7 @@ class Pipeline:
     def batch(iterable, batch_size: int):
         for ndx in range(0, len(iterable), batch_size):
             yield iterable[ndx:min(len(iterable), ndx+batch_size)]
+
     @staticmethod
     def training_episode(training_examples, component_logger: logging.Logger=None):
         # print(training_examples)
@@ -157,15 +158,15 @@ class Pipeline:
 
             with ProcessPoolExecutor(max_workers=PlayConfig.max_processes) as executor:
                 futures = []
-                # if not is_first_iteration:
-                #     # Run the training worker on a separate process and not at the end of each iteration.
-                #     # As training the network is a single-process job, it would leave all other 
-                #     # processes unused. I decided not to run it parallel with the evaluatio workers,
-                #     # although it would be more cronologically correct, because evaluation is optional
-                #     # for the training pipeline and training itself is not.
-                #     component_logger = logger.getChild(f"subprocess_training")
-                #     prev_training_data = self.load_training_data()
-                #     future = executor.submit(self.training_episode, prev_training_data, component_logger=component_logger)
+                if not is_first_iteration:
+                    # Run the training worker on a separate process and not at the end of each iteration.
+                    # As training the network is a single-process job, it would leave all other 
+                    # processes unused. I decided not to run it parallel with the evaluatio workers,
+                    # although it would be more cronologically correct, because evaluation is optional
+                    # for the training pipeline and training itself is not.
+                    component_logger = logger.getChild(f"subprocess_training")
+                    prev_training_data = self.load_training_data()
+                    future = executor.submit(self.training_episode, prev_training_data, component_logger=component_logger)
                     
                 for eps in range(PlayConfig.self_play_eps):
                     component_logger = logger.getChild(f"subprocess_{eps % PlayConfig.max_processes}")
@@ -211,7 +212,4 @@ class Pipeline:
             training_data = Unpickler(f).load()
             logger.info("Done!")
             return training_data
-
             
-
-    
