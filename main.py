@@ -1,26 +1,32 @@
 
 def apply_config(config):
     from core.engine.ai.selfplay_rl import BaseConfig
-    from core.engine.config import UIConfig
     from core.engine.clock import Clock
+
     BaseConfig.max_processes = config.cores
-    UIConfig.piece_style_western = not config.chinese_style
     Clock.init(config.time * 60)
 
+    if not config.no_ui:
+        from core.utils import silence_function
+        with silence_function():
+            import pygame
+            pygame.init()
+        from core.engine.config import UIConfig
+        UIConfig.piece_style_western = not config.chinese_style
+        UIConfig.init_imgs()
+
 def main():
-    from core.utils import silence_function
-    with silence_function():
-        import pygame
-        pygame.init()
-
     from manager import config
-    apply_config(config) # Not in manager.py so that ``python3 main.py -h`` terminates faster
-
+    # Not in manager.py so that ``python3 main.py -h`` terminates faster as all modules below aren't imported 
+    apply_config(config) 
+    print(config)
     from core.engine import Board, LegalMoveGenerator
-    from core.engine.UI import UI
-    from core.engine.ai.selfplay_rl import CNN, MCTS, Pipeline
+    from core.engine.ai.selfplay_rl import Pipeline
     from core.utils.perft_utility import start_search
 
+    if not config.no_ui:
+        print("IMPORTING UI")
+        from core.engine.UI import UI
     # import logging
     # logging.basicConfig(level=logging.DEBUG)
     # logger = logging.getLogger(__name__)
