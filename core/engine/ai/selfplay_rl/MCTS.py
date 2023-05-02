@@ -201,7 +201,7 @@ class OldMCTS():
         if not tau: 
             # Infinitesimal temperature -> asymptotically 0 -> one-hot encode
             best_a = np.random.choice(np.argmax(visit_counts).flatten())
-            print(f"{best_a=}")
+            # print(f"{best_a=}")
             probs = np.zeros(PrecomputingMoves.action_space)
             probs[best_a] = 1
             return probs
