@@ -37,11 +37,11 @@ python3 main.py
 ```
 ## Usage
 ```bash
-usage: main.py [-h] [--chinese] [--perft] [--pipeline] [--eval] [--nui] [cores] [{ab,az,abz}] [time]
+usage: main.py [-h] [--chinese] [--perft] [--pipeline] [--eval] [--nui] [--black] [--second] [{ab,az,abz}] [cores] [time]
 
 positional arguments:
-  cores        maximum number of processors to use for pipeline (default: multiprocessing.cpu_count())
   {ab,az,abz}  AI-agent playing in interactive environment (ab: Alpha-Beta, az: AlphaZero, abz: Alpha-Beta-Zero) (default: ab)
+  cores        maximum number of processors to use for pipeline (default: multiprocessing.cpu_count())
   time         time on the clock in minutes (default: 5)
 
 options:
@@ -51,7 +51,8 @@ options:
   --pipeline   run the self-play and training pipeline (to evaluate, see --eval)
   --eval       add evaluation to the pipeline
   --nui        no UI
-
+  --black      play black
+  --second     move second
 ```
 
 ## File Structure Overview
