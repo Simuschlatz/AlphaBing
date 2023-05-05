@@ -16,7 +16,7 @@ class AlphaZeroAgent(Agent):
         Get the MCTS probability distribution for current state of ``board``
         """
         bitboards = list(board.piecelist_to_bitboard())
-        pi = self.mcts.get_pi(board, bitboards=bitboards)
+        pi = self.mcts.get_visit_counts(board, bitboards=bitboards)
         return pi
 
     def choose_action(self, board: Board, pi=[]):
@@ -24,6 +24,6 @@ class AlphaZeroAgent(Agent):
         Chooses the best action from pi.
         :param pi: MCTS probability distribution for current state of ``board``. If None, it's generated.
         """
-        pi = list(pi) or self.get_mcts_pi(board)
+        pi = list(pi) or self.mcts.apply_tau(self.get_mcts_pi(board))
         action = self.mcts.select_action(board, pi)
         return action
