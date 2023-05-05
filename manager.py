@@ -10,13 +10,13 @@ def init_parser():
                                     description=program_descr,
                                     epilog="Have fun ;)")
 
-    parser.add_argument("cores", type=int, nargs="?", default=mp.cpu_count(),
-                        help="maximum number of processors to use for pipeline \
-                            (default: multiprocessing.cpu_count())")
     parser.add_argument("agent", type=str, nargs="?", default="ab", choices=["ab", "az", "abz"],
                         help="AI-agent playing in interactive environment \
                             (ab: Alpha-Beta, az: AlphaZero, abz: Alpha-Beta-Zero) \
                             (default: ab)")
+    parser.add_argument("cores", type=int, nargs="?", default=mp.cpu_count(),
+                        help="maximum number of processors to use for pipeline \
+                            (default: multiprocessing.cpu_count())")
     parser.add_argument("time", type=int, nargs="?", default=5,
                         help="time on the clock in minutes (default: 5)")
 
@@ -30,6 +30,10 @@ def init_parser():
                         help="add evaluation to the pipeline")
     parser.add_argument("--nui", dest="no_ui", action="store_true",
                         help="no UI")
+    parser.add_argument("--black",  dest="play_as_black", action="store_true",
+                        help="play black")
+    parser.add_argument("--second",  dest="move_second", action="store_true",
+                        help="move second")
     return parser
 
 def get_config():
