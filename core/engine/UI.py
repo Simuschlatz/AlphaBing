@@ -1,4 +1,4 @@
-import pygame
+import pygame, os
 from core.engine import Piece, LegalMoveGenerator, Board#, NLPCommandHandler
 from core.engine.clock import Clock
 from core.engine.game_manager import GameManager
@@ -9,6 +9,7 @@ from core.engine.ai.slef import TrainingDataCollector
 from core.utils import BoardUtility
 from core.engine.config import UIConfig
 from core.utils import time_benchmark
+from datetime import datetime
 
 class Button:
     def __init__(self, x, y, image):
@@ -315,7 +316,17 @@ class UI:
     #         self.activate_ai = True
     #         self.make_AI_move()
     #         self.activate_ai = False
-            
+    
+    def screenshot(self, x=0, y=0, w=UIConfig.WIDTH, h=UIConfig.HEIGHT, filepath="assets/imgs/screenshots"):
+        """
+        Takes a screenshot of the window and saves it to ``filepath``.
+        """
+        if not os.path.exists(filepath):
+            os.mkdir(filepath)
+        rect = pygame.Rect(x, y, w, h)
+        sub = self.window.subsurface(rect)
+        pygame.image.save(sub, filepath + f"/in-game_at_{datetime.now()}.png")
+
     def event_handler(self):
         """
         Handles Human events
@@ -361,6 +372,10 @@ class UI:
                 if key == pygame.K_a:
                     print("Pressed A-key")
                     self.ai_vs_ai = not self.ai_vs_ai
+                if key == pygame.K_s:
+                    print("pressed S-key")
+                    self.screenshot(UIConfig.OFFSET_X, UIConfig.OFFSET_Y, 
+                                    UIConfig.BOARD_WIDTH, UIConfig.BOARD_HEIGHT)
                 # if key == pygame.K_c:
                 #     print("Pressed C-key")
                 #     self.command_response()
