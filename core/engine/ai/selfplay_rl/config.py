@@ -1,15 +1,9 @@
-from multiprocessing import cpu_count
 from core.engine import PrecomputingMoves
 import os
 import tensorflow as tf
 import keras
 from datetime import datetime
-
-class BaseConfig:
-    checkpoint_location = "core/Engine/ai/selfplay_rl/checkpoints"
-    new_model_checkpoint = "checkpoint_new.h5"
-    old_model_checkpoint = "checkpoint_old.h5"
-    max_processes = cpu_count()
+from ..config import BaseConfig
 
 class ModelConfig(BaseConfig):
     input_depth = 14
@@ -25,7 +19,7 @@ class ModelConfig(BaseConfig):
     
 
 class PlayConfig(BaseConfig):
-    simulations_per_move = 25
+    simulations_per_move = 200
     cpuct = 1.5
     noise_eps = .15
     dirichlet_alpha = .2
@@ -33,7 +27,7 @@ class PlayConfig(BaseConfig):
     min_resign_turn = 40
     enable_resign_rate = 0.5
 
-    tau_decay_rate = .9
+    tau_decay_rate = .95
     tau_decay_threshold = 30 # threshold of plies when tau starts to decay
     self_play_eps = 7
     training_iterations = 10
@@ -54,7 +48,7 @@ class TrainingConfig(BaseConfig, TensorboardBaseConfig):
         (150000, 3e-3),
         (400000, 1e-4)
         ]
-    epochs = 20
+    epochs = 1
     batch_size = 64
 
 class EvaluationConfig(BaseConfig, TensorboardBaseConfig):

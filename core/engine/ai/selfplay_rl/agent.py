@@ -24,6 +24,10 @@ class AlphaZeroAgent(Agent):
         Chooses the best action from pi.
         :param pi: MCTS probability distribution for current state of ``board``. If None, it's generated.
         """
-        pi = list(pi) or self.mcts.apply_tau(self.get_mcts_pi(board))
+        pi = list(pi) or self.mcts.apply_tau(self.get_mcts_pi(board), tau=0)
         action = self.mcts.select_action(board, pi)
+        board.make_move(action)
+        self.mcts.reset(board.zobrist_key)
+        print(f"{self.mcts.subtree=}, {len(self.mcts.subtree[board.zobrist_key])=}")
+        board.reverse_move()
         return action

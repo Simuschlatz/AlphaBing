@@ -1,4 +1,4 @@
-from .config import BaseConfig, ModelConfig, PlayConfig, TrainingConfig, EvaluationConfig
+from .config import ModelConfig, PlayConfig, TrainingConfig, EvaluationConfig
 from .nnet import CNN
 from .MCTS import MCTS
 from .selfplay import Pipeline

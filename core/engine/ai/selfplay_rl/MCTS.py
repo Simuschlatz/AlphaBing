@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from core.engine import Board, LegalMoveGenerator, PrecomputingMoves
-from core.engine.ai.selfplay_rl import PlayConfig, CNN
+from core.engine.ai.selfplay_rl import CNN, PlayConfig
 from core.utils import time_benchmark
 from typing import Iterable
 from logging import getLogger

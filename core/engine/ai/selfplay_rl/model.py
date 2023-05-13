@@ -1,4 +1,4 @@
-from .config import ModelConfig
+from . import ModelConfig
 
 import tensorflow as tf
 
