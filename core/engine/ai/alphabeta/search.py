@@ -3,7 +3,9 @@ from core.engine.board import Board
 from core.engine.ai.alphabeta.eval_utility import Evaluation
 from core.engine.ai.alphabeta import order_moves, order_moves_pst
 from core.utils.timer import time_benchmark
+from ..config import BaseConfig
 import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -13,7 +15,6 @@ class Dfs:
     positive_infinity = 9999
     negative_infinity = -positive_infinity
     search_depth = 4
-
     # Ananlytics
     cutoffs = 0
     evaluated_nodes = 0
@@ -25,7 +26,7 @@ class Dfs:
 
     @classmethod
     @time_benchmark
-    def multiprocess_search(cls, board: Board, batch: bool=False, get_evals=False, moves: list[tuple]=None) -> tuple:
+    def multiprocess_search(cls, board: Board, batch: bool=True, get_evals=False, moves: list[tuple]=None) -> tuple:
         """
         Runs a search for board position leveraging multiple processors.
         :return: best move from current position
@@ -35,10 +36,11 @@ class Dfs:
         # shared dict
         move_evals = mp.Manager().dict()
         moves = moves or LegalMoveGenerator.load_moves()
+        # with ProcessPoolExecutor(max_workers=BaseConfig.max_processes) as executor:
+        #     move_evals = {move: executor.submit(cls.search_for_move, move, cls.search_depth, board).result() for move in moves}
         if batch:
             jobs = [mp.Process(target=cls.search_for_move, args=(move, move_evals, cls.search_depth, board)) for move in moves]
-            max_processes = mp.cpu_count()
-            for processes in cls.batch(jobs, max_processes):
+            for processes in cls.batch(jobs, BaseConfig.max_processes):
                 for p in processes: p.start()
                 for p in processes: p.join()
         else:
@@ -107,6 +109,7 @@ class Dfs:
         TODO: Transposition tables
         """
         if not depth:
+            # print(f"Not quiet: {board.load_fen_from_board()}")
             # return cls.quiescence(board, alpha, beta)
             cls.evaluated_nodes += 1
             return Evaluation.pst_shef(board)
@@ -142,7 +145,7 @@ class Dfs:
             # Move is even better than best eval before,
             # opponent won't choose this move anyway so PRUNE YESSIR
             if evaluation >= beta:
-                cls.cutoffs += 1
+                # cls.cutoffs += 1
                 return beta # Return -alpha of opponent, which will be turned to alpha in depth - 1
             # Keep track of best move for moving color
             alpha = max(evaluation, alpha)
@@ -159,17 +162,20 @@ class Dfs:
         # Evaluate current position before doing any moves, so a potentially good state for non-capture moves
         # isn't ruined by bad captures
         # cls.evaluated_positions += 1
-        eval = Evaluation.pst_shef(board)
-        cls.evaluated_nodes += 1
-        # Typical alpha beta operations
-        if eval >= beta:
-            return beta
-        alpha = max(eval, alpha)
+        # eval = Evaluation.pst_shef(board)
+        # cls.evaluated_nodes += 1
+        # # Typical alpha beta operations
+        # if eval >= beta:
+        #     return beta
+        # alpha = max(eval, alpha)
 
-        moves = order_moves_pst(LegalMoveGenerator.load_moves(generate_quiets=False), board)
+        moves = order_moves_pst(LegalMoveGenerator.load_moves(board=board, generate_quiets=False), board)
         num_moves = len(moves)
+        print(num_moves)
         # Reached quiet position
         if not num_moves:
+            print(f"quiet: {board.load_fen_from_board()}")
+            exit(1)
             print("QUIET")
             # All possible moves
             num_moves = LegalMoveGenerator.load_moves(board)
