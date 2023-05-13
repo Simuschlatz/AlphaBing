@@ -179,6 +179,8 @@ class LegalMoveGenerator:
         target_squares = PrecomputingMoves.king_mm[cls.board.moving_side][current_square]
         for target_square in target_squares:
             target_piece = cls.board.squares[target_square]
+            if not target_piece and not cls.generate_quiets:
+                continue
             if Piece.is_color(target_piece, cls.board.moving_color):
                 continue
             if target_square in cls.attack_map:
