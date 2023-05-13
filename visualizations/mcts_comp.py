@@ -128,8 +128,8 @@ def visualize():
                     
     grid = plt.GridSpec(2, 2, hspace=0.5, wspace=0.2)
     ax_1 = fig.add_subplot(grid[0, 0])
-    ax_2 = fig.add_subplot(grid[1, 0])
-    ax_3 = fig.add_subplot(grid[0, 1])
+    ax_2 = fig.add_subplot(grid[0, 1])
+    ax_3 = fig.add_subplot(grid[1, 0])
     ax_4 = fig.add_subplot(grid[1, 1])
     
     bar_ax = [ax_3, ax_4]
