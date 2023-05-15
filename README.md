@@ -1,6 +1,8 @@
-<img src="./assets/imgs/Readmesrc/bannerTextTop.png" height="120">
+<center>
+<img src="./assets/imgs/Readmesrc/logo.png" height="120">
+</center>
 
-# CheapChess - Combining Algorithmic Powers With The Beauty of Machine Learning
+# AlphaBing - Combining Algorithmic Powers With The Beauty of Machine Learning
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 
@@ -151,4 +153,5 @@ options:
 - [x] Training Pipeline
 - [x] Evaluation - Elo & win-rate diagnostics
 - [x] Parallelism with tensorflow sessions - parallelized pipeline
+- [ ] Train the agent on server (in progress)
 
