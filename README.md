@@ -1,6 +1,6 @@
-<center>
-<img src="./assets/imgs/Readmesrc/logo.png" height="120">
-</center>
+<p align="center">
+<img src="./assets/imgs/Readmesrc/logo.png" width="30%" height="30%">
+</p>
 
 # AlphaBing - Combining Algorithmic Powers With The Beauty of Machine Learning
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
