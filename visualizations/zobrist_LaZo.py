@@ -25,8 +25,8 @@ plt.bar(br2, best_case, color='#2CBDFE', width=barWidth, label='Untergrenze')
 
  
 # Adding Xticks
-plt.xlabel('Methode', fontweight='bold')
-plt.ylabel('Anzahl XOR-Operationen für jeden Zug', fontweight='bold')
+plt.xlabel('Methode')
+plt.ylabel('Anzahl XOR-Operationen pro Zug')
 plt.xticks([r + barWidth / 2 for r in range(2)],
         ["Zobrist Hashing", "LaZo"])
  
