@@ -263,6 +263,8 @@ class MCTS(OldMCTS):
         self.subtree = {} # stores all reached sub-states from each state at depth 1
         self.saved_sims = 0
 
+        self.max_depth = 0
+
     def reset(self, moved_to: int):
         """
         Resets the MCTS search tree but keeps the old search's subtree of new position
@@ -280,9 +282,16 @@ class MCTS(OldMCTS):
         self.Vs = {s: self.Vs[s] for s in subtree_to_keep} 
     
         self.subtree = {moved_to: subtree_to_keep}
-    
 
-    def search(self, board: Board, is_root=False, subtree_root=False, bitboards: list=None, moves: list[tuple]=None):
+        self.max_depth = 0
+
+    def search(self, 
+                board: Board, 
+                is_root=False, 
+                subtree_root=None, 
+                bitboards: list=None, 
+                moves: list[tuple]=None,
+                depth: int=0):
         """
         This function performs one iteration of MCTS. It recursively calls itself until a leaf node 
         is found. The move chosen at each point maximizes the upper confidence bound (Q(s|a) + U(s|a))
@@ -299,6 +308,7 @@ class MCTS(OldMCTS):
         :param bitboards: bitboards of current state as a list. If None, they're generated
         """
 
+        self.max_depth = max(self.max_depth, depth)
         # NOTE: the term 'action' is synonymous with 'move' in this method for congruence with the paper
         s = board.zobrist_key
         moves = moves or LegalMoveGenerator.load_moves(board)
@@ -378,7 +388,7 @@ class MCTS(OldMCTS):
         # If we're at root state, we specify the next state (depth 1), then it stays the same
         if is_root:
             subtree_root = board.zobrist_key
-        v = self.search(board, subtree_root=subtree_root)
+        v = self.search(board, subtree_root=subtree_root, depth=depth+1)
 
         board.reverse_move(search_state=True)
 
