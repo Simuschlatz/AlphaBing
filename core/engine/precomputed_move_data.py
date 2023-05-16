@@ -1,5 +1,6 @@
 from collections import defaultdict, deque
-from core.engine import Board
+from core.engine import Piece, Board
+from itertools import chain
 class PrecomputingMoves:
     """
     precomputes all pseudo-legal moves for all pieces at all possible positions
@@ -251,7 +252,7 @@ class PrecomputingMoves:
                     target_squares.append(target_square)
                     start_square_stack.append(target_square)
                     if not side: cls.action_space_vector.append((square, target_square))
-        return list(map(lambda dd: dict(dd), elephant_moves))
+        return list(map(dict, elephant_moves))
 
     # This is the version prior to the one above. Here the problem wasn't that the method wasn't working, but rather the
     # unnecessary amount of computations it took. It returned a move map for squares where the elephant couldn't even go
@@ -305,3 +306,28 @@ class PrecomputingMoves:
         print(len(cls.move_vector) - num_moves_before)
         return elephant_moves
         '''
+
+    @classmethod
+    def get_targets_for(cls, square: int, board: Board):
+        """
+        returns a list of pesudo-legal moves for a given
+        square ``square`` on board ``board``.
+        """
+        piece_type = Piece.get_type_no_check(board.squares[square])
+        match piece_type:
+            case Piece.king:
+                return cls.king_mm[board.moving_side][square]
+            case Piece.advisor:
+                return cls.advisor_mm[board.moving_side][square]
+            case Piece.elephant:
+                return cls.elephant_mm[board.moving_side][square]
+            case Piece.horse:
+                return cls.horse_mm[square]
+            case Piece.pawn:
+                return cls.pawn_mm[board.moving_side][square]
+            case _:
+                return list(chain(*cls.orthogonal_mm[square].values()))
+                all_targets = []
+                for targets in cls.orthogonal_mm[square].values():
+                    all_targets.extend(targets)
+                return all_targets
