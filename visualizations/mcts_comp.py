@@ -16,9 +16,9 @@ from core.engine import Board, LegalMoveGenerator
 
 from core.engine.ai.selfplay_rl import MCTS, CNN
 from core.engine.ai.selfplay_rl.MCTS import OldMCTS
-import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# import logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
 fen = BoardUtility.get_inital_fen(True, True)
 
@@ -121,35 +121,67 @@ def preprocess(opt, multi, norm):
 
 def visualize():
     import matplotlib.pyplot as plt
+    import matplotlib as mpl
+    mpl.style.use("bmh")
     import seaborn as sns
     data_tau_0, data_tau_1, diags = preprocess(*get_diag())
 
-    fig = plt.figure(figsize=(12, 8))
+    fig = plt.figure(figsize=(6, 8))
                     
-    grid = plt.GridSpec(2, 2, hspace=0.5, wspace=0.2)
-    ax_1 = fig.add_subplot(grid[0, 0])
-    ax_2 = fig.add_subplot(grid[0, 1])
-    ax_3 = fig.add_subplot(grid[1, 0])
-    ax_4 = fig.add_subplot(grid[1, 1])
-    
-    bar_ax = [ax_3, ax_4]
-    
-    sns.histplot(data_tau_0, binwidth=.1, kde=True, ax=ax_1)
-    sns.histplot(data_tau_1, binwidth=.1, kde=True, ax=ax_2)
+    grid = plt.GridSpec(2, 1, hspace=0.5, wspace=0.2)
 
-    legend = {"Upper": "#C9EEFF", "Average": "#97DEFF", "Lower": "#62CDFF"}    
+    ax_1 = fig.add_subplot(grid[0, 0])
+    ax_2 = fig.add_subplot(grid[1, 0])
+    ax_1.set_xlabel("MCTS pro Sekunde")
+    ax_2.set_xlabel("MCTS pro Sekunde")
+
+    sns.histplot(data_tau_1, binwidth=.1, kde=True, ax=ax_1, palette=["darkorchid", "deepskyblue", "orange"])
+    
+    legend = {"Max": "#ff8f05", "Avg": "#ff7105", "Min": "#ff5805"}    
     colors = list(legend.values()) 
     labels = list(legend.keys())
     handles = [plt.Rectangle((0,0),1,1, color=legend[label]) for label in labels]
     plt.xlim(0, 220)
-    for tau in range(2):
-        for i in range(3):
-            bar_ax[tau].barh(["Opt", "Multi", "Original"], 
-                            [diags[tau][0][i], diags[tau][1][i], diags[tau][2][i]],
-                            color=colors[i])
-        bar_ax[tau].legend(handles, labels)
+    for i in range(3):
+        ax_2.barh(["Opt", "Multi", "Original"], 
+                                [diags[1][0][i], diags[1][1][i], diags[1][2][i]],
+                                color=colors[i])
+    ax_2.legend(handles, labels)
     plt.show()
-    fig.savefig("assets/imgs/mcts.pdf")
+
+    # ax_1 = fig.add_subplot(grid[0, 0])
+    # ax_2 = fig.add_subplot(grid[0, 1])
+    # ax_3 = fig.add_subplot(grid[1, 0])
+    # ax_4 = fig.add_subplot(grid[1, 1])
+    
+    # bar_ax = [ax_3, ax_4]
+
+    # ax_1.set_xlabel("MCTS pro Sekunde")
+    # ax_2.set_xlabel("MCTS pro Sekunde")
+    # ax_3.set_xlabel("MCTS pro Sekunde")
+    # ax_4.set_xlabel("MCTS pro Sekunde")
+
+    # ax_1.set_ylabel("Anzahl")
+    # ax_2.set_ylabel("Anzahl")
+    
+    # sns.histplot(data_tau_0, binwidth=.1, kde=True, ax=ax_1, palette=["darkorchid", "deepskyblue", "orange"])
+    # sns.histplot(data_tau_1, binwidth=.1, kde=True, ax=ax_2, palette=["darkorchid", "deepskyblue", "orange"])
+
+    # # legend = {"Upper": "#C9EEFF", "Average": "#97DEFF", "Lower": "#62CDFF"}    
+
+    # legend = {"Max": "#ff8f05", "Avg": "#ff7105", "Min": "#ff5805"}    
+    # colors = list(legend.values()) 
+    # labels = list(legend.keys())
+    # handles = [plt.Rectangle((0,0),1,1, color=legend[label]) for label in labels]
+    # plt.xlim(0, 220)
+    # for tau in range(2):
+    #     for i in range(3):
+    #         bar_ax[tau].barh(["Opt", "Multi", "Original"], 
+    #                         [diags[tau][0][i], diags[tau][1][i], diags[tau][2][i]],
+    #                         color=colors[i])
+    #     bar_ax[tau].legend(handles, labels)
+    # plt.show()
+    fig.savefig("assets/imgs/vis/mcts.pdf")
 
 if __name__ == "__main__":
     visualize()
