@@ -1,5 +1,5 @@
 import pygame, os
-from core.engine import Piece, LegalMoveGenerator, Board#, NLPCommandHandler
+from core.engine import Piece, PrecomputingMoves, LegalMoveGenerator, Board#, NLPCommandHandler
 from core.engine.clock import Clock
 from core.engine.game_manager import GameManager
 from core.engine.ai.alphabeta import Dfs, AlphaBetaAgent
@@ -148,6 +148,101 @@ class UI:
                 y = j * UIConfig.UNIT + UIConfig.OFFSET_Y + UIConfig.UNIT // 2
                 square_id = str(j * 9 + i)
                 self.render_text(square_id, UIConfig.RED, (x, y), False)
+
+    def draw_arrow(
+        self,
+        start: pygame.Vector2,
+        end: pygame.Vector2,
+        color: pygame.Color,
+        body_width: int = 10,
+        head_width: int = 30,
+        head_height: int = 20,
+    ):
+        """Draw an arrow between start and end with the arrow head at the end.
+
+        Args:
+            surface (pygame.Surface): The surface to draw on
+            start (pygame.Vector2): Start position
+            end (pygame.Vector2): End position
+            color (pygame.Color): Color of the arrow
+            body_width (int, optional): Defaults to 2.
+            head_width (int, optional): Defaults to 4.
+            head_height (float, optional): Defaults to 2.
+        """
+        arrow = start - end
+        angle = arrow.angle_to(pygame.Vector2(0, -1))
+        body_length = arrow.length() - head_height
+
+        # Create the triangle head around the origin
+        head_verts = [
+            pygame.Vector2(0, head_height / 2),  # Center
+            pygame.Vector2(head_width / 2, -head_height / 2),  # Bottomright
+            pygame.Vector2(-head_width / 2, -head_height / 2),  # Bottomleft
+        ]
+        # Rotate and translate the head into place
+        translation = pygame.Vector2(0, arrow.length() - (head_height / 2)).rotate(-angle)
+        for i in range(len(head_verts)):
+            head_verts[i].rotate_ip(-angle)
+            head_verts[i] += translation
+            head_verts[i] += start
+
+        pygame.draw.polygon(self.window, color, head_verts)
+
+        # Stop weird shapes when the arrow is shorter than arrow head
+        if arrow.length() >= head_height:
+            # Calculate the body rect, rotate and translate into place
+            body_verts = [
+                pygame.Vector2(-body_width / 2, body_length / 2),  # Topleft
+                pygame.Vector2(body_width / 2, body_length / 2),  # Topright
+                pygame.Vector2(body_width / 2, -body_length / 2),  # Bottomright
+                pygame.Vector2(-body_width / 2, -body_length / 2),  # Bottomleft
+            ]
+            translation = pygame.Vector2(0, body_length / 2).rotate(-angle)
+            for i in range(len(body_verts)):
+                body_verts[i].rotate_ip(-angle)
+                body_verts[i] += translation
+                body_verts[i] += start
+
+            pygame.draw.polygon(self.window, color, body_verts)
+
+    def render_move_arrows(self, legals_only=True, captures_only=False):
+        move_color = UIConfig.ARROW_COLORS[legals_only]
+        if legals_only:
+            get_targets = LegalMoveGenerator.get_legal_targets
+        else: 
+            get_targets = PrecomputingMoves.get_targets_for
+
+        for piece_list in self.board.piece_lists[self.board.moving_color]:
+            for square in piece_list:
+                file, rank = self.board.get_file_and_rank(square)
+                from_coords = BoardUtility.get_display_coords(
+                                        file, 
+                                        rank, 
+                                        UIConfig.UNIT, 
+                                        UIConfig.OFFSETS[0] + UIConfig.UNIT / 2,
+                                        UIConfig.OFFSETS[1] + UIConfig.UNIT / 2
+                                        )
+                targets = get_targets(square, self.board)
+                for i, target in enumerate(reversed(targets)):
+                    is_capture = bool(self.board.squares[target])
+                    if not is_capture and captures_only:
+                        continue
+                    i %= len(UIConfig.ARROW_MOVE)
+                    file, rank = self.board.get_file_and_rank(target)
+
+                    color = UIConfig.ARROW_CAPTURE if is_capture else move_color[i]
+                    to_coords = BoardUtility.get_display_coords(
+                                            file, 
+                                            rank, 
+                                            UIConfig.UNIT, 
+                                            UIConfig.OFFSETS[0] + UIConfig.UNIT / 2,
+                                            UIConfig.OFFSETS[1] + UIConfig.UNIT / 2
+                                            )
+                                            
+                    self.draw_arrow(pygame.Vector2(from_coords), 
+                                    pygame.Vector2(to_coords), 
+                                    color)
+                                    # UIConfig.ARROW_COLORS[is_capture])
 
     def is_selection_valid(self, piece):
         return Piece.is_color(piece, self.board.moving_color)
@@ -374,8 +469,10 @@ class UI:
                     self.ai_vs_ai = not self.ai_vs_ai
                 if key == pygame.K_s:
                     print("pressed S-key")
-                    self.screenshot(UIConfig.OFFSET_X, UIConfig.OFFSET_Y, 
-                                    UIConfig.BOARD_WIDTH, UIConfig.BOARD_HEIGHT)
+                    self.screenshot(UIConfig.OFFSET_X, 
+                                    UIConfig.OFFSET_Y, 
+                                    UIConfig.BOARD_WIDTH, 
+                                    UIConfig.BOARD_HEIGHT)
                 # if key == pygame.K_c:
                 #     print("Pressed C-key")
                 #     self.command_response()
@@ -389,7 +486,8 @@ class UI:
         Does all the rendering work on the window
         """
         self.window.fill(UIConfig.BG_COLOR)
-        self.window.blit(self.BOARD_IMG, UIConfig.OFFSETS)
+
+        self.window.blit(self.BOARD_IMG, UIConfig.BOARD_OFFSETS)
         # self.show_square_ids()
         self.move_responsiveness()
 
@@ -401,7 +499,9 @@ class UI:
 
         self.mark_moves()
 
+        
         self.render_pieces()
+        self.render_move_arrows(legals_only=True, captures_only=True)
         
         # Human selected a piece
         self.drag_piece()
@@ -419,6 +519,8 @@ class UI:
             # self.training_data_generator.store_training_data()
         
     def run(self):
+        if not LegalMoveGenerator.moves:
+            LegalMoveGenerator.load_moves()
         py_clock = pygame.time.Clock()
         run = True
         while run:   

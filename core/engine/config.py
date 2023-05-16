@@ -4,7 +4,8 @@ pygame.mixer.init()
 from core.engine.data_init import init_imgs
 
 class UIConfig:
-    BG_COLOR = (100, 100, 100)
+    BG_COLOR = (200, 200, 200)
+    # BG_COLOR = (215, 186, 137)
     RED = (190, 63, 64)
     BLUE = (26, 57, 185)
     BLACK = (0, 0, 0)
@@ -12,6 +13,20 @@ class UIConfig:
     GREY = (40, 40, 40)
     MOVE_RESPONSE_COLOR = (217, 255, 255)
     MOVE_HIGHLIGHT_COLORS = ((100, 100, 240), (255, 0, 0))
+    ARROW_CAPTURE = RED
+    ARROW_MOVE = [
+        pygame.Color("#03fcf4"),
+        pygame.Color("#03e3fc"),
+        pygame.Color("#03cefc"),
+        pygame.Color("#03c2fc"),
+    ]
+    ARROW_PSEUDO_LEGAL = [
+        pygame.Color("#ff4805"),
+        pygame.Color("#ff4c05"),
+        pygame.Color("#ff7105"),
+        pygame.Color("#ff8f05"),
+    ]
+    ARROW_COLORS = (ARROW_PSEUDO_LEGAL, ARROW_MOVE, ARROW_CAPTURE)
 
     WIDTH = 1200
     HEIGHT = 800
@@ -22,6 +37,8 @@ class UIConfig:
     OFFSET_X = (WIDTH - BOARD_WIDTH) // 2
     OFFSET_Y = (HEIGHT - BOARD_HEIGHT) // 2
     OFFSETS = (OFFSET_X, OFFSET_Y)
+    # BOARD_OFFSETS = (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2)
+    BOARD_OFFSETS = OFFSETS
 
     FPS = 45
     # Style of piece images
