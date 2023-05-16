@@ -15,7 +15,8 @@ class LegalMoveGenerator:
     PrecomputingMoves.init()
     dir_offsets = PrecomputingMoves.dir_offsets
     dist_to_edge = PrecomputingMoves.dist_to_edge
-    
+    moves = []
+
     @classmethod
     def init_board(cls, board: Board):
         cls.board = board
@@ -805,7 +806,8 @@ class LegalMoveGenerator:
         return moves_from_square
 
     @classmethod
-    def get_legal_targets(cls, square):
+    def get_legal_targets(cls, square, board: Board=None):
+        if board: cls.load_moves(board) # Updates cls.moves
         moves_from_square = cls.get_legal_moves(square)
         targets = list(map(lambda move: move[1], moves_from_square))
         return targets

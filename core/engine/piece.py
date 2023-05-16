@@ -13,23 +13,23 @@ class Piece:
     letters = "keacprhKEACPRH"
     colors = "bw"
     @staticmethod
-    def get_color(piece):
+    def get_color(piece: tuple[int, int]):
         if not piece:
             return False
         return piece[0]
     
     @staticmethod
-    def get_color_no_check(piece):
+    def get_color_no_check(piece: tuple[int, int]):
         return piece[0]
 
     @staticmethod
-    def get_type(piece):
+    def get_type(piece: tuple[int, int]):
         if not piece:
             return False
         return piece[1]
 
     @staticmethod
-    def get_type_no_check(piece):
+    def get_type_no_check(piece: tuple[int, int]):
         return piece[1]
 
     @staticmethod
