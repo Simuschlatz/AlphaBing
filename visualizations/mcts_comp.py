@@ -112,8 +112,8 @@ def preprocess(opt, multi, norm):
     multi_tau_0 = np.clip(multi_tau_0, 0, 10)
     opt_tau_0 = np.clip(opt_tau_0, 0, 10)
 
-    return {"Opt": opt_tau_0, "Multi": multi_tau_0, "Original": norm_tau_0}, \
-        {"Opt": opt_tau_1, "Multi": multi_tau_1, "Original": norm_tau_1}, \
+    return {"CMCTS": opt_tau_0, "Multi": multi_tau_0, "Original": norm_tau_0}, \
+        {"CMCTS": opt_tau_1, "Multi": multi_tau_1, "Original": norm_tau_1}, \
         [
             [opt_diag_tau_0, multi_diag_tau_0, norm_diag_tau_0],
             [opt_diag_tau_1, multi_diag_tau_1, norm_diag_tau_1]
@@ -126,13 +126,14 @@ def visualize():
     import seaborn as sns
     data_tau_0, data_tau_1, diags = preprocess(*get_diag())
 
-    fig = plt.figure(figsize=(6, 8))
+    fig = plt.figure(figsize=(7, 8))
                     
     grid = plt.GridSpec(2, 1, hspace=0.5, wspace=0.2)
 
     ax_1 = fig.add_subplot(grid[0, 0])
     ax_2 = fig.add_subplot(grid[1, 0])
     ax_1.set_xlabel("MCTS pro Sekunde")
+    ax_1.set_ylabel("Anzahl")
     ax_2.set_xlabel("MCTS pro Sekunde")
 
     sns.histplot(data_tau_1, binwidth=.1, kde=True, ax=ax_1, palette=["darkorchid", "deepskyblue", "orange"])
@@ -143,7 +144,7 @@ def visualize():
     handles = [plt.Rectangle((0,0),1,1, color=legend[label]) for label in labels]
     plt.xlim(0, 220)
     for i in range(3):
-        ax_2.barh(["Opt", "Multi", "Original"], 
+        ax_2.barh(["CMCTS", "Multi", "Original"], 
                                 [diags[1][0][i], diags[1][1][i], diags[1][2][i]],
                                 color=colors[i])
     ax_2.legend(handles, labels)
