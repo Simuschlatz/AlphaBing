@@ -6,8 +6,6 @@
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 
-## Disclaimer
-Feel free to clone this repo at any time, but keep in mind that sometimes the code may not be completely bug-free. I try my best to only push commits when the program runs smoothly, but sometimes I forget.
 
 ## Summary
 CheapChess is a lightweight Engine for chinese Chess (Xiangqi), designed to run on normal consumer hardware.
@@ -155,3 +153,6 @@ options:
 - [x] Parallelism with tensorflow sessions - parallelized pipeline
 - [ ] Train the agent on server (in progress)
 
+
+## Disclaimer
+Feel free to clone this repo at any time, but keep in mind that sometimes the code may not be completely bug-free. I try my best to only push commits when the program runs smoothly, but sometimes I forget.
