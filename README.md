@@ -44,7 +44,7 @@ Activate the environment
 conda activate cheapchess
 ```
 
-## Training th agent
+## Training the agent
 ```bash
 python3 main.py --pipeline --nui
 ```
