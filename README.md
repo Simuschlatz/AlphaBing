@@ -8,6 +8,7 @@
 
 ## Summary
 **The paper and posters (German) are available on [Google Drive](https://drive.google.com/drive/folders/1mfYbBH5obunfqS7T4HJk85F5FU-ZHF8u).**
+
 AlphaBing is a lightweight chinese Chess (Xiangqi) engine, implementing modified concepts of AlphaZero that allow the algorothm to be run on limited hardware. The user can challenge the AI on a minimalistic, user-friendly, and intuitive UI.
 
 The project's goal is to improve the accessibility of the Alpha(Go)Zero algorithm for developers. The new, downscaled, and highly optimized algorithm's full functionality and great efficiency on consumer hardware was demonstrated in the domain of xiangqi. 
