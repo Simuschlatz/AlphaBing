@@ -13,7 +13,7 @@ def start_search(board: Board):
         if depth > 0:
             break
     logger.info("starting perft search... This might take some time")
-    iterative = False
+    iterative = True
     depths = [depth]
     if iterative:
         depths = range(1, depth + 1)
@@ -28,15 +28,18 @@ def get_perft_result(depth: int, board: Board):
     The total number of possible positions found looking depth moves ahead
     """
     moves = LegalMoveGenerator.load_moves()
+    traversed_nodes = len(moves)
     num_positions = 0
     if not depth - 1:
         num_positions += len(moves)
-        return num_positions
+        return num_positions, traversed_nodes
     for move in moves:
         board.make_move(move, search_state=True)
-        num_positions += get_perft_result(depth - 1, board)
+        num_pos, traversed_n = get_perft_result(depth - 1, board)
+        num_positions += num_pos
+        traversed_nodes += traversed_n
         board.reverse_move(search_state=True)
-    return num_positions
+    return num_positions, traversed_nodes
 
 def multiprocess_perft(depth: int, board: Board):
     moves = LegalMoveGenerator.load_moves()
@@ -52,8 +55,8 @@ def multiprocess_perft(depth: int, board: Board):
 
 def get_num_positions(depth: int, board: Board):
     p_t = perf_counter()
-    num_positions = get_perft_result(depth, board)
+    num_leafs, traversed = get_perft_result(depth, board)
     time = perf_counter() - p_t
-    logger.info(f"depth: {depth} || nodes searched: {num_positions} || time: {round(time, 2)}")
+    logger.info(f"depth: {depth} || {num_leafs=} || {traversed=} || time: {round(time, 2)}")
 
     

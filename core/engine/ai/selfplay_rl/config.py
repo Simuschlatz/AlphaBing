@@ -19,7 +19,7 @@ class ModelConfig(BaseConfig):
     
 
 class PlayConfig(BaseConfig):
-    simulations_per_move = 200
+    simulations_per_move = 25
     cpuct = 1.5
     noise_eps = .15
     dirichlet_alpha = .2

@@ -26,6 +26,9 @@ def init_imgs(unit, window_dims, board_dims, button_dims, is_western_style: bool
     pieces_imgs = [pygame.transform.scale(img, (unit, unit)) for img in pieces_imgs]
     board_img = pygame.image.load(os.path.join(images_folder, "board_light.svg"))
     board_img = pygame.transform.scale(board_img, board_dims)
+    # board_img = pygame.image.load(os.path.join(images_folder, "board_transparent.png"))
+
+    board_img = pygame.transform.scale(board_img, board_dims)
 
     # bg = pygame.image.load(os.path.join(images_folder, "bg_light.jpg"))
     # bg = pygame.transform.scale(bg, window_dims)

@@ -500,8 +500,8 @@ class UI:
         self.mark_moves()
 
         
+        # self.render_move_arrows(legals_only=True)
         self.render_pieces()
-        self.render_move_arrows(legals_only=True, captures_only=True)
         
         # Human selected a piece
         self.drag_piece()

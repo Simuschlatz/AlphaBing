@@ -14,13 +14,13 @@ class UIConfig:
     MOVE_RESPONSE_COLOR = (217, 255, 255)
     MOVE_HIGHLIGHT_COLORS = ((100, 100, 240), (255, 0, 0))
     ARROW_CAPTURE = RED
-    ARROW_MOVE = [
+    ARROW_PSEUDO_LEGAL = [
         pygame.Color("#03fcf4"),
         pygame.Color("#03e3fc"),
         pygame.Color("#03cefc"),
         pygame.Color("#03c2fc"),
     ]
-    ARROW_PSEUDO_LEGAL = [
+    ARROW_MOVE = [
         pygame.Color("#ff4805"),
         pygame.Color("#ff4c05"),
         pygame.Color("#ff7105"),

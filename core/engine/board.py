@@ -262,7 +262,7 @@ class Board:
         self.lazo_update(piece_type, captured_piece, *move)
         if not search_state:
             self.repetition_history[self.zobrist_key] = self.repetition_history.get(self.zobrist_key, 0) + 1
-            # print(self.repetition_history)
+            print(self.repetition_history)
         # print(self.zobrist_key)
 
         self.switch_moving_color()
