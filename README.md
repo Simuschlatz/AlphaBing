@@ -6,22 +6,31 @@
 ![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
 ![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
 
-## Disclaimer
-Feel free to clone this repo at any time, but keep in mind that sometimes the code may not be completely bug-free. I try my best to only push commits when the program runs smoothly, but sometimes I forget.
-
 ## Summary
-CheapChess is a lightweight Engine for chinese Chess (Xiangqi), designed to run on normal consumer hardware.
-In summary, the idea of CheapChess is the amalgamation of traditional methods of AI with innovative concepts of reinforcement learning in order to create an agent that allows the strengths of each method to compensate for the detrimental weak points of the other. Its development is motivated by the inacccessibility of AlphaZero's codebase to the community and the unaffordable resources required just to run the system.
+**The paper and posters (German) are available on [Google Drive](https://drive.google.com/drive/folders/1mfYbBH5obunfqS7T4HJk85F5FU-ZHF8u).**
+AlphaBing is a lightweight chinese Chess (Xiangqi) engine, implementing modified concepts of AlphaZero that allow the algorothm to be run on limited hardware. The user can challenge the AI on a minimalistic, user-friendly, and intuitive UI.
 
+The project's goal is to improve the accessibility of the Alpha(Go)Zero algorithm for developers. The new, downscaled, and highly optimized algorithm's full functionality and great efficiency on consumer hardware was demonstrated in the domain of xiangqi. 
+
+At its core, AlphaBing is based on the amalgamation of traditional methods of AI (such as optimized alpha-beta-search) with innovative concepts of reinforcement learning in order to create an agent that allows the strengths of each method to compensate for the detrimental weak points of the other. 
+
+Its development is motivated by the inacccessibility of AlphaZero's codebase to the community and the unaffordable resources required just to run the system. AlphaBing runs smoothly on a single notebook and plays with adaptable
+
+For avid researchers, this repo comes with a number of visualization scripts using matplotlib.
 
 ## Installation
 ### Clone this repository:
 ```bash
-git clone https://github.com/Simuschlatz/CheapChess
-cd CheapChess
+git clone https://github.com/Simuschlatz/AlphaBing
+cd AlphaBing
+```
+## Dependencies
+### Using pip:
+```bash
+pip install -r requirements.txt
 ```
 ### Setting up the Environment with Conda
-Mac, Windows & Linux
+Mac, Windows & Linux - [Help](#linux-installation-guide)
 ```bash
 conda env create -f environment.yml
 ```
@@ -33,7 +42,18 @@ Activate the environment
 ```bash
 conda activate cheapchess
 ```
-## Running the code
+
+## Training th agent
+```bash
+python3 main.py --pipeline --nui
+```
+Open another terminal, then run:
+``` bash
+cd [path to this directory]
+conda activate cheapchess
+tensorboard --logdir core/engine/ai/selfplay_rl/checkpoints/logs
+```
+## Playing against AI
 ```bash
 python3 main.py
 ```
