@@ -32,7 +32,7 @@ cd AlphaBing
 pip install -r requirements.txt
 ```
 ### Setting up the Environment with Conda
-Mac, Windows & Linux - [Help](#linux-installation-guide)
+Mac, Windows & Linux
 ```bash
 conda env create -f environment.yml
 ```
