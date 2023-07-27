@@ -35,7 +35,7 @@ class Button:
 class UI:
     def __init__(self, board: Board, agent: str="ab"):
         self.window = pygame.display.set_mode((UIConfig.WIDTH, UIConfig.HEIGHT), pygame.RESIZABLE)
-        pygame.display.set_caption("JOE MAMA")
+        pygame.display.set_caption("AlphaBing Demo")
         self.board = board
         # This board is created solely for UI purposes, so that the visual board can be modified
         # without crating interdependencies with the internal board representation
@@ -49,6 +49,13 @@ class UI:
         self.selected_piece = None
         self.move_to = None
         self.legal_targets = []
+
+        self.is_ai_turn = False
+        self.is_animating_move = False
+        self.moving_piece_pos = None
+        self.moving_path = []
+        self.ai_target = None
+        self.current_frame = 0
 
         # Activate AI option
         self.AI_BUTTON_HEIGHT = self.BTN_ACTIVATE_IMG.get_height()
@@ -80,6 +87,8 @@ class UI:
         self.window.blit(self.PIECES_IMGS[color * 7 + piece_type], coords)
     
     def render_pieces(self):
+        """
+        TODO: ui_board into board object"""
         for square, piece in enumerate(self.ui_board):
             if not piece:
                 continue
@@ -265,15 +274,15 @@ class UI:
     def reset_values(self):
         self.reset_move_data()
         self.drop_reset()
-
-    def update_info(self):
-        self.fen = self.board.load_fen_from_board()
-        print(self.fen)
-        print(len(self.board.repetition_history))
-        self.zobrist_off = (UIConfig.WIDTH - len(bin(self.board.zobrist_key)) * UIConfig.FONT_WIDTH_SMALL) / 2
+        
         
     def drop_update(self):
-        self.update_info()
+        self.fen = self.board.load_fen_from_board()
+        print(self.fen)
+        # print(len(self.board.repetition_history))
+        self.zobrist_off = (UIConfig.WIDTH - len(bin(self.board.zobrist_key)) * UIConfig.FONT_WIDTH_SMALL) / 2
+        LegalMoveGenerator.load_moves()
+        GameManager.check_game_state()
 
     def update_move_str(self, move):
         self.move_str = self.board.get_move_notation(move)
@@ -285,20 +294,18 @@ class UI:
             return
         self.reset_move_data()
         self.ui_board[square] = 0
-        LegalMoveGenerator.load_moves()
-        self.legal_targets = LegalMoveGenerator.get_legal_targets(square)
         self.move_from = square
         self.selected_piece = piece
 
     def drop_piece(self, square): 
         if not self.selected_piece:
-            return - 1
+            return -1
         if not self.is_target_valid(square):
             self.reset_values()
             return -1
         self.move_to = square
         move = (self.move_from, self.move_to)
-        print(self.board.mirror_move(move))
+        # print(self.board.mirror_move(move))
         self.update_move_str(move)
         is_capture = self.board.make_move(move)
         self.drop_update()
@@ -306,8 +313,9 @@ class UI:
         return is_capture
 
     def drag_piece(self):
-        if not self.selected_piece:
+        if not self.selected_piece or self.is_animating_move:
             return
+        # Human selected a piece
         mouse_pos = pygame.mouse.get_pos()
         piece_pos = self.get_circle_center(mouse_pos, UIConfig.UNIT, factor=-1)
         color, piece_type = self.selected_piece
@@ -334,27 +342,24 @@ class UI:
                 continue
             # draw black's moves in red and red's moves in blue
             self.highlight_move(square, UIConfig.MOVE_HIGHLIGHT_COLORS[piece_color], False)
-    
-    @staticmethod
-    def audio_player(audiofile):
-        """
-        :param audiofile: pygame.mixer.Sound object
-        """
-        audiofile.play()
 
     def play_sfx(self, is_capture):
         if is_capture:
-            self.audio_player(UIConfig.CAPTURE_SFX)
+            UIConfig.CAPTURE_SFX.play()
         else:
-            self.audio_player(UIConfig.MOVE_SFX)
+            UIConfig.MOVE_SFX.play()
 
     def selection(self, mouse_pos):
+        if self.is_animating_move: return
         # Account for the OFFSETS the board's (0,0) coordinate is replaced by on the window
         file, rank = BoardUtility.get_board_pos(mouse_pos, UIConfig.UNIT, *UIConfig.OFFSETS)
-        current_square = self.board.get_square(file, rank)
-        self.select_square(current_square)
+        square = self.board.get_square(file, rank)
+        self.select_square(square)
+        self.legal_targets = LegalMoveGenerator.get_legal_targets(square)
+
 
     def make_human_move(self):
+        if self.is_animating_move: return False
         mouse_pos = pygame.mouse.get_pos()
         file, rank = BoardUtility.get_board_pos(mouse_pos, UIConfig.UNIT, *UIConfig.OFFSETS)
         target_square = rank * 9 + file
@@ -365,9 +370,6 @@ class UI:
         # Sound effects
         self.play_sfx(is_capture)
         # See if there is a mate or stalemate
-        LegalMoveGenerator.load_moves()
-        # print(self.board.piecelist_to_bitboard()[:2, 0])
-        GameManager.check_game_state()
         return True
     
     def unmake_move(self):
@@ -376,25 +378,75 @@ class UI:
         GameManager.reset_mate()
         self.board.reverse_move()
         self.reset_values()
-        self.update_info()
+        self.drop_update()
         LegalMoveGenerator.load_moves()
 
+    def shift_piece(self, piece: tuple, x: int, y: int, dx: int, dy: int):
+        self.render_piece(*piece, (x + dx, y + dy))
+    
+    def reset_animation(self):
+        self.move_to = self.ai_target
+        self.ai_target = None
+        is_capture = self.ui_board[self.move_to]
+        self.update_ui_board()
+
+        self.drop_reset()
+        self.drop_update()
+        self.moving_path = []
+        self.current_frame = 0
+        self.ai_target = None
+        self.is_animating_move = False
+        return is_capture
+
+    def run_animation(self):
+        if not self.is_animating_move: return
+        # Updating the sliding piece's position
+        self.render_piece(*self.selected_piece, self.path[self.current_frame])
+        self.current_frame += 1
+
+        if self.current_frame == UIConfig.MOVE_ANIMATION_FRAMES:
+            is_capture = self.reset_animation()
+            # Sound effects
+            self.play_sfx(is_capture)
+    
+    @staticmethod
+    def get_path(start_square, target_square, frames=UIConfig.MOVE_ANIMATION_FRAMES):
+        """
+        :return: a list of length ``frames`` with the points between two squares on the board
+        """
+        from_file, from_rank = Board.get_file_and_rank(start_square)
+        to_file, to_rank = Board.get_file_and_rank(target_square)
+        
+        from_pos = BoardUtility.get_display_coords(from_file, from_rank, UIConfig.UNIT, *UIConfig.OFFSETS)
+        to_pos = BoardUtility.get_display_coords(to_file, to_rank, UIConfig.UNIT, *UIConfig.OFFSETS)
+
+        (x1, x2), (y1, y2) = zip(from_pos, to_pos)
+        dx, dy = (x2 - x1) / frames, (y2 - y1) / frames
+
+        path_x = [int(x1 + i * dx) for i in range(frames)]
+        path_y = [int(y1 + i * dy) for i in range(frames)]
+
+        moving_path = list(zip(path_x, path_y))
+        return moving_path
+
     def make_AI_move(self):
+        if not self.is_ai_turn: return
         # AI_move = self.search(self.board, 250)
         AI_move = self.agent.choose_action(self.board)
         if AI_move == None:
             return
         self.update_move_str(AI_move)
-        is_capture = self.board.make_move(AI_move)
-        self.move_from, self.move_to = AI_move
-        self.drop_update()
-        self.update_ui_board()
-        # Sound effects
-        self.play_sfx(is_capture)
-        # See if there is a mate or stalemate
-        LegalMoveGenerator.load_moves()
-        GameManager.check_game_state()
-    
+        move_from, move_to = AI_move
+        self.move_to = None
+        self.ai_target = move_to
+        self.select_square(move_from)
+        self.board.make_move(AI_move)
+        # Calculate path for shifting-animation
+        self.path = self.get_path(move_from, move_to)
+        # Starts animation
+        self.is_animating_move = True
+        self.is_ai_turn = False
+
     def get_button_img(self):
         return self.BTN_DEACTIVATE_IMG if self.activate_ai else self.BTN_ACTIVATE_IMG
 
@@ -429,17 +481,13 @@ class UI:
         mousebuttonup: drop a piece
         space: reverse the last move
         enter: save board config and evaluation in csv file
+        "s"-key: screenshot
+        "a"-key: activate AI vs. AI mode
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit()
-            
-            if self.ai_vs_ai:
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_a:
-                        self.ai_vs_ai = not self.ai_vs_ai
-                continue
-
+                        
             # Piece selection
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
@@ -456,7 +504,7 @@ class UI:
                     continue
                 if GameManager.gameover:
                     continue
-                self.make_AI_move()
+                self.is_ai_turn = True
 
             if event.type == pygame.KEYDOWN:
                 # Move reverse
@@ -464,30 +512,31 @@ class UI:
                 if key == pygame.K_SPACE:
                     print("Pressed Space-key")
                     self.unmake_move()
-                if key == pygame.K_a:
+                elif key == pygame.K_a:
                     print("Pressed A-key")
                     self.ai_vs_ai = not self.ai_vs_ai
-                if key == pygame.K_s:
+                elif key == pygame.K_s:
                     print("pressed S-key")
                     self.screenshot(UIConfig.OFFSET_X, 
                                     UIConfig.OFFSET_Y, 
                                     UIConfig.BOARD_WIDTH, 
                                     UIConfig.BOARD_HEIGHT)
-                # if key == pygame.K_c:
+                # elif key == pygame.K_c:
                 #     print("Pressed C-key")
                 #     self.command_response()
-                if key == pygame.K_RETURN:
+                elif key == pygame.K_RETURN:
                     print("ENTER")
                     self.training_data_generator.store_training_data()
                     
 
-    def render(self):
+    def loop(self):
         """
         Does all the rendering work on the window
         """
         self.window.fill(UIConfig.BG_COLOR)
 
         self.window.blit(self.BOARD_IMG, UIConfig.BOARD_OFFSETS)
+
         # self.show_square_ids()
         self.move_responsiveness()
 
@@ -498,20 +547,18 @@ class UI:
         self.render_zobrist()
 
         self.mark_moves()
-
-        
         # self.render_move_arrows(legals_only=True)
         self.render_pieces()
-        
-        # Human selected a piece
+        self.make_AI_move()
+        self.run_animation()
         self.drag_piece()
 
         pygame.display.update()
 
     def update(self):
         Clock.run(self.board.moving_color) 
-        self.render()
         self.event_handler()
+        self.loop()
         if GameManager.gameover:
             return
         if self.ai_vs_ai:

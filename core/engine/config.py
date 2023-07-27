@@ -40,7 +40,7 @@ class UIConfig:
     # BOARD_OFFSETS = (OFFSET_X + UNIT / 2, OFFSET_Y + UNIT / 2)
     BOARD_OFFSETS = OFFSETS
 
-    FPS = 45
+    FPS = 60
     # Style of piece images
     piece_style_western = True
 
@@ -63,6 +63,8 @@ class UIConfig:
 
     BIG_CIRCLE_D = UNIT * 1.1
     SMALL_CIRCLE_D = UNIT // 5
+
+    MOVE_ANIMATION_FRAMES = 20
 
     @classmethod
     def init_imgs(cls):
