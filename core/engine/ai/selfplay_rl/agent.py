@@ -27,7 +27,8 @@ class AlphaZeroAgent(Agent):
         pi = list(pi) or self.mcts.apply_tau(self.get_mcts_pi(board), tau=0)
         action = self.mcts.select_action(board, pi)
         board.make_move(action)
+        # print(f"{self.mcts.max_depth=}")
         self.mcts.reset(board.zobrist_key)
-        print(f"{self.mcts.subtree=}, {len(self.mcts.subtree[board.zobrist_key])=}")
+        # print(f"{self.mcts.subtree=}, {len(self.mcts.subtree[board.zobrist_key])=}")
         board.reverse_move()
         return action

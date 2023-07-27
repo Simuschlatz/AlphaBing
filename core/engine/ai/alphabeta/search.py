@@ -174,8 +174,7 @@ class Dfs:
         print(num_moves)
         # Reached quiet position
         if not num_moves:
-            print(f"quiet: {board.load_fen_from_board()}")
-            exit(1)
+            # print(f"quiet: {board.load_fen_from_board()}")
             print("QUIET")
             # All possible moves
             num_moves = LegalMoveGenerator.load_moves(board)
