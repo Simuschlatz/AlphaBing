@@ -299,7 +299,7 @@ class Board:
                 del self.repetition_history[self.zobrist_key]
             else:
                 self.repetition_history[self.zobrist_key] -= 1
-            logger.info(self.repetition_history)
+            # logger.info(self.repetition_history)
         self.lazo_update(piece_type, captured_piece, previous_square, moved_to)
 
         #     return 

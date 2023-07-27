@@ -359,18 +359,20 @@ class UI:
 
 
     def make_human_move(self):
-        if self.is_animating_move: return False
+        if self.is_animating_move: return
         mouse_pos = pygame.mouse.get_pos()
         file, rank = BoardUtility.get_board_pos(mouse_pos, UIConfig.UNIT, *UIConfig.OFFSETS)
         target_square = rank * 9 + file
 
         is_capture = self.drop_piece(target_square)
         if is_capture == -1:
-            return False
+            return
         # Sound effects
         self.play_sfx(is_capture)
         # See if there is a mate or stalemate
-        return True
+        if not self.activate_ai or GameManager.gameover:
+            return
+        self.is_ai_turn = True
     
     def unmake_move(self):
         if not self.board.game_history:
@@ -391,7 +393,6 @@ class UI:
         self.update_ui_board()
 
         self.drop_reset()
-        self.drop_update()
         self.moving_path = []
         self.current_frame = 0
         self.ai_target = None
@@ -416,7 +417,7 @@ class UI:
         """
         from_file, from_rank = Board.get_file_and_rank(start_square)
         to_file, to_rank = Board.get_file_and_rank(target_square)
-        
+
         from_pos = BoardUtility.get_display_coords(from_file, from_rank, UIConfig.UNIT, *UIConfig.OFFSETS)
         to_pos = BoardUtility.get_display_coords(to_file, to_rank, UIConfig.UNIT, *UIConfig.OFFSETS)
 
@@ -430,7 +431,7 @@ class UI:
         return moving_path
 
     def make_AI_move(self):
-        if not self.is_ai_turn: return
+        if not (self.is_ai_turn or self.ai_vs_ai): return
         # AI_move = self.search(self.board, 250)
         AI_move = self.agent.choose_action(self.board)
         if AI_move == None:
@@ -441,6 +442,7 @@ class UI:
         self.ai_target = move_to
         self.select_square(move_from)
         self.board.make_move(AI_move)
+        self.drop_update()
         # Calculate path for shifting-animation
         self.path = self.get_path(move_from, move_to)
         # Starts animation
@@ -499,13 +501,8 @@ class UI:
   
             # Piece placement
             if event.type == pygame.MOUSEBUTTONUP:
-                move_succes = self.make_human_move()
-                if not move_succes or not self.activate_ai:
-                    continue
-                if GameManager.gameover:
-                    continue
-                self.is_ai_turn = True
-
+                self.make_human_move()
+                
             if event.type == pygame.KEYDOWN:
                 # Move reverse
                 key = event.key
@@ -529,7 +526,7 @@ class UI:
                     self.training_data_generator.store_training_data()
                     
 
-    def loop(self):
+    def update(self):
         """
         Does all the rendering work on the window
         """
@@ -549,27 +546,25 @@ class UI:
         self.mark_moves()
         # self.render_move_arrows(legals_only=True)
         self.render_pieces()
-        self.make_AI_move()
-        self.run_animation()
         self.drag_piece()
-
+        self.run_animation()
         pygame.display.update()
 
-    def update(self):
+
+    def loop(self):
         Clock.run(self.board.moving_color) 
         self.event_handler()
-        self.loop()
+        self.update()
         if GameManager.gameover:
             return
-        if self.ai_vs_ai:
-            self.make_AI_move()
-            # self.training_data_generator.store_training_data()
-        
+        # Has to be taken out of loop to ensure stopping after game over
+        self.make_AI_move()
+    
     def run(self):
         if not LegalMoveGenerator.moves:
             LegalMoveGenerator.load_moves()
         py_clock = pygame.time.Clock()
         run = True
         while run:   
-            self.update()
+            self.loop()
             py_clock.tick(UIConfig.FPS)    
