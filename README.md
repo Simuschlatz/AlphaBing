@@ -3,9 +3,7 @@
 <h1> 
     <img src="./assets/imgs/Readmesrc/logo.png" width=30> 
     AlphaBing - Combining Algorithmic Powers With The Beauty of Machine Learning
-</h1
-![license](https://img.shields.io/github/license/SiiiMiii/Chess-AI)
-![activity](https://img.shields.io/github/commit-activity/m/SiiiMiii/Chess-AI)
+</h1>
 
 ## Summary
 **The paper and posters (German) are available on [Google Drive](https://drive.google.com/drive/folders/1mfYbBH5obunfqS7T4HJk85F5FU-ZHF8u).**
