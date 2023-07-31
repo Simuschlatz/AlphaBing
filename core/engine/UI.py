@@ -375,7 +375,7 @@ class UI:
         self.is_ai_turn = True
     
     def unmake_move(self):
-        if not self.board.game_history:
+        if not self.board.game_history or self.is_animating_move:
             return
         GameManager.reset_mate()
         self.board.reverse_move()
@@ -441,6 +441,7 @@ class UI:
         self.move_to = None
         self.ai_target = move_to
         self.select_square(move_from)
+        Clock.run(self.board.moving_color) 
         self.board.make_move(AI_move)
         self.drop_update()
         # Calculate path for shifting-animation
@@ -541,7 +542,7 @@ class UI:
         self.render_move_str
 
         self.AI_BUTTON.render(self.window)
-        self.render_zobrist()
+        # self.render_zobrist()
 
         self.mark_moves()
         # self.render_move_arrows(legals_only=True)
@@ -552,9 +553,9 @@ class UI:
 
 
     def loop(self):
-        Clock.run(self.board.moving_color) 
         self.event_handler()
         self.update()
+        Clock.run(self.board.moving_color) 
         if GameManager.gameover:
             return
         # Has to be taken out of loop to ensure stopping after game over

@@ -23,20 +23,20 @@ def init_imgs(unit, window_dims, board_dims, button_dims, is_western_style: bool
                                     piece_width, piece_height)) 
                     for color in [1, 0] for img in _pieces_imgs]
 
-    pieces_imgs = [pygame.transform.scale(img, (unit, unit)) for img in pieces_imgs]
+    pieces_imgs = [pygame.transform.smoothscale(img, (unit, unit)) for img in pieces_imgs]
     board_img = pygame.image.load(os.path.join(images_folder, "board_light.svg"))
-    board_img = pygame.transform.scale(board_img, board_dims)
+    board_img = pygame.transform.smoothscale(board_img, board_dims)
     # board_img = pygame.image.load(os.path.join(images_folder, "board_transparent.png"))
 
-    board_img = pygame.transform.scale(board_img, board_dims)
+    board_img = pygame.transform.smoothscale(board_img, board_dims)
 
     # bg = pygame.image.load(os.path.join(images_folder, "bg_light.jpg"))
-    # bg = pygame.transform.scale(bg, window_dims)
+    # bg = pygame.transform.smoothscale(bg, window_dims)
 
     ai_button_activate = pygame.image.load(os.path.join(images_folder, "Buttons/button_activate-ai_black.png"))
     ai_button_deactivate = pygame.image.load(os.path.join(images_folder, "Buttons/button_deactivate-ai_black.png"))
     btns = (ai_button_activate, ai_button_deactivate)
     btn_dims = ai_button_activate.get_size()
     btn_dims = [btn_dims[axis] * 1 for axis in range(2)]
-    btns = [pygame.transform.scale(btns[i], btn_dims) for i in range(len(btns))]
+    btns = [pygame.transform.smoothscale(btns[i], btn_dims) for i in range(len(btns))]
     return pieces_imgs, board_img, *btns
