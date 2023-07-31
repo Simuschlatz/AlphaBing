@@ -5,6 +5,9 @@
     AlphaBing - Combining Algorithmic Powers With The Beauty of Machine Learning
 </h1>
 
+<br></br>
+![Gameplay](./assets/imgs/Readmesrc/gameplay.gif)
+
 ## Summary
 **The paper and posters (German) are available on [Google Drive](https://drive.google.com/drive/folders/1mfYbBH5obunfqS7T4HJk85F5FU-ZHF8u).**
 
@@ -155,8 +158,6 @@ options:
 - [x] FEN utility
 - [x] Bitboard representation
 - [x] UI / UX - pygame, provisional, drag & drop, sound-effects, move-highlighting etc.
-<br></br>
-![Gameplay](./assets/imgs/Readmesrc/gameplay.gif)
 
 ### Alpha-Beta-Search
 - [x] Piece-square-table implementation
